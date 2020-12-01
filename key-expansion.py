@@ -18,6 +18,8 @@ def key_expand(key):
 
     return w
 
+
+
 import time
 
 def seconds_func(key):
@@ -38,35 +40,31 @@ def extact_the_c_way(word):
     for i in range(4):
         wordlist.append(tmp % 0x100)
         tmp = word >> 8
-    return(wordlist)
+    return(list(map(hex, wordlist)))
 
 
 def g(word, round):
     wordlist = []
     tmp = word
     for i in range(4):
-        wordlist.append(tmp % 256)
-        tmp = word >> 8
-
+        wordlist.append(tmp % 0x100)
+        tmp = tmp >> 8
+    wordlist = wordlist[::-1]
 
     # Rotate input word
     subword = wordlist[1:] + wordlist[0:1]
-
-    # print("after rotation: ", list(map(hex, subword)))
 
     # S-Box substitution
     for idx, v in enumerate(subword):
         subword[idx] = sbox[v]
 
-    # print("after substitution: ", list(map(hex, subword)))
-
     # add round constant
-    subword[0] = subword[0] ^ rcons[round-1]
+    subword[0] = subword[0] ^ rcons[round]
 
+    # combine into one 32-bit number
     return_word = 0
     for idx, s in enumerate(subword):
         return_word += s << (8*(3-idx))
-
     return return_word
 
 
@@ -84,7 +82,9 @@ if __name__ == "__main__":
     # test_key = [0x09, 0xcf, 0x4f, 0x3c]
     # print([hex(i) for i in g(test_key, 1)])
     a = key_expand(format_key(key))
-    print(list(map(hex, a)))
+    hexlist = list(map(hex, a))
+    print(hexlist)
+    assert a[4] == 0xa0fafe17
 
 
 
