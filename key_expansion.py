@@ -57,13 +57,31 @@ def g(word, round):
     return return_word
 
 
+# IDEA: write one general conversion function that takes some input + the size of the chunks it should separate it into
+
+# recursive, uses bit shifts
 def separate_into_8bit_chunks_recursive(key):
-    """Recursive splitting of a 32-bit number into a list of 8-bit numbers"""
+    """Recursive splitting of a 32-bit number into a list of 8-bit numbers.
+
+    Args:
+        key: 32-bit number
+
+    Returns:
+        list of four 8-bit numbers
+    """
     return [key] if key < 0x100 else separate_into_8bit_chunks_recursive(key >> 8) + [key % 0x100]
 
 
+# iterative, uses string processing
 def format_key(key):
-    """Formats hex key string into four 32-bit chunks"""
+    """Formats hex key string into four 32-bit chunks.
+
+    Args:
+        key: string of a 128-bit hex number
+
+    Returns:
+        list of four 32-bit numbers
+    """
     key_formatted = [int(key[a:a+8], 16) for a in range(0, len(key), 8)]
     return key_formatted
 
