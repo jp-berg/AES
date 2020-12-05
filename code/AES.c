@@ -1,5 +1,9 @@
+#include "AES.h"
 #include <omp.h>
-const uint8_t sbox = 
+#include <string.h>
+#include <stdio.h>
+
+const static uint8_t sbox[256] = 
 {   0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x1, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76, 
     0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0, 
     0xb7, 0xfd, 0x93, 0x26, 0x36, 0x3f, 0xf7, 0xcc, 0x34, 0xa5, 0xe5, 0xf1, 0x71, 0xd8, 0x31, 0x15, 
@@ -15,36 +19,46 @@ const uint8_t sbox =
     0xba, 0x78, 0x25, 0x2e, 0x1c, 0xa6, 0xb4, 0xc6, 0xe8, 0xdd, 0x74, 0x1f, 0x4b, 0xbd, 0x8b, 0x8a, 
     0x70, 0x3e, 0xb5, 0x66, 0x48, 0x3, 0xf6, 0xe, 0x61, 0x35, 0x57, 0xb9, 0x86, 0xc1, 0x1d, 0x9e, 
     0xe1, 0xf8, 0x98, 0x11, 0x69, 0xd9, 0x8e, 0x94, 0x9b, 0x1e, 0x87, 0xe9, 0xce, 0x55, 0x28, 0xdf, 
-    0x8c, 0xa1, 0x89, 0xd, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0xf, 0xb0, 0x54, 0xbb, 0x16    }
-                        
-
-uint8_t* encryptBlock(uint8_t *block, uint8_t *w, const uint8_t rounds)
-{
-    AddRoundKey(block,  
-                
-    for(uint8_t i = 0; i < rounds - 1, i++)
-    {
-        for(uint8_t i = 0; i < 16; i++)
-        {
-            block[i] = sbox[block[i]];
-        }
-        ShiftRows(block);
-        MixColumns(block);
-        AddRoundKey(block
-        
-    }
+    0x8c, 0xa1, 0x89, 0xd, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0xf, 0xb0, 0x54, 0xbb, 0x16    };
     
-    for(uint8_t i = 0; i < 16; i++)
+static uint8_t gal_mult_lookup[3][256];
+    
+void genMultLookup(uint8_t multlookup[3][256])
+{
+    uint8_t temp;
+    for(size_t i = 0; i < 256; i++)
     {
-        block[i] = sbox[block[i]];
-    }
-    ShiftRows(block);
-    AddRoundKey(block
+        multlookup[0][i] = i;
+        
+        temp = i & 0x80;
+        multlookup[1][i] = i << 1;
+        if(temp)
+        {
+            multlookup[1][i] ^= 0x1b;
+        }
             
-    return block;
+        multlookup[2][i] = multlookup[1][i] ^ i;
+    }
 }
 
-inline void ShiftRows(uint8_t *block)
+inline void AddRoundKey(uint8_t *bytes, uint8_t *keys)
+{
+    for(uint8_t i = 0; i < 16; i++)
+    {
+        bytes[i] ^= keys;
+    }
+}
+
+inline void SubBytes(uint8_t *bytes)
+{
+    for(uint8_t i = 0; i < 16; i++)
+    {
+        bytes[i] = sbox[bytes[i];
+    }
+}
+    
+
+void ShiftRows(uint8_t *block)
 {
     uint8_t tempblock[16];
     memcpy(tempblock, block, 16 * sizeof(uint8_t));
@@ -63,36 +77,81 @@ inline void ShiftRows(uint8_t *block)
     block[15] = tempblock[11];
 }
 
-inline void MixColumns(uint8_t *block)
+void MixColumns(uint8_t *block)
 {
     uint8_t tempblock[16];
     memcpy(tempblock, block, 16 * sizeof(uint8_t));
+    genMultLookup(gal_mult_lookup);
 
-    for(uint8_t i = 0; i < 16; i+4)
+    for(uint8_t i = 0; i < 16; i += 4)
     {
-        block[i] = multlookup[1][tempblock[i]] ^ multlookup[2][tempblock[i+1]] ^ multlookup[0][tempblock[i+2]] ^ multlookup[0][tempblock[i+3]];
-        block[i+1] = multlookup[0][tempblock[i]] ^ multlookup[1][tempblock[i+1]] ^ multlookup[2][tempblock[i+2]] ^ multlookup[0][tempblock[i+3]];
-        block[i+2] = multlookup[0][templock[i]] ^ multlookup[0][tempblock[i+1]] ^ multlookup[1][tempblock[i+2]] ^ multlookup[2][tempblock[i+3]];
-        block[i+3] = multlookup[3][tempblock[i]] ^ multlookup[0][tempblock[i+1]] ^ multlookup[0][tempblock[i+2]] ^ multlookup[2][tempblock[i+3]];
+     
+        block[i] = gal_mult_lookup[1][tempblock[i]] ^ 
+                   gal_mult_lookup[2][tempblock[i+1]] ^ 
+                   gal_mult_lookup[0][tempblock[i+2]] ^ 
+                   gal_mult_lookup[0][tempblock[i+3]];
+        
+        block[i+1] = gal_mult_lookup[0][tempblock[i]] ^ 
+                     gal_mult_lookup[1][tempblock[i+1]] ^ 
+                     gal_mult_lookup[2][tempblock[i+2]] ^ 
+                     gal_mult_lookup[0][tempblock[i+3]];
+        
+        block[i+2] = gal_mult_lookup[0][tempblock[i]] ^ 
+                     gal_mult_lookup[0][tempblock[i+1]] ^ 
+                     gal_mult_lookup[1][tempblock[i+2]] ^ 
+                     gal_mult_lookup[2][tempblock[i+3]];
+        
+        block[i+3] = gal_mult_lookup[2][tempblock[i]] ^ 
+                     gal_mult_lookup[0][tempblock[i+1]] ^ 
+                     gal_mult_lookup[0][tempblock[i+2]] ^ 
+                     gal_mult_lookup[1][tempblock[i+3]];
     }
 }
-    
-int main(int argc, char* argv[])
+                    
+
+uint8_t* encryptBlock(uint8_t *block, const uint8_t *keys, const uint8_t rounds)
 {
     
-    size_t cpucount;
-    size_t bytecount;
-    uint8_t *bytes;
+    uint8_t ikeys = 0
     
+    AddRoundKey(block, keys);
+    ikeyss +=16
+                
+    for(uint8_t i = 0; i < rounds - 1, i++)
+    {
+        SubBytes(block);
+        ShiftRows(block);
+        MixColumns(block);
+        AddRoundKey(block, keys[ikeys]);
+        ikeys += 16
+        
+    }
+    
+    SubBytes(block);
+    ShiftRows(block);
+    AddRoundKey(block, keys[ikeys]);
+            
+    return block;
+}
+
+
+
+    
+void encryptAES(uint8_t *bytes, uint8_t *keys, size_t bytecount, size_t cpucount, uint8_t rounds)
+{
+    
+    genMultLookup(gal_mult_lookup);
 #pragma omp parallel shared(i) num_threads(cpucount)
     {
 #pragma omp for
     for(size_t i = 0; i < bytecount; i+16)  //TODO: Play with Blockwidth
     {
-        encryptBlock(bytes[i]);
+       // encryptBlock(&bytes[i], &keys[i], rounds);
     }
     }
-    
+}
+
+
     
         
         
