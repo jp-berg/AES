@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 
-const static uint8_t sbox[256] = 
+const uint8_t sbox[256] = 
 {   0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x1, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76, 
     0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0, 
     0xb7, 0xfd, 0x93, 0x26, 0x36, 0x3f, 0xf7, 0xcc, 0x34, 0xa5, 0xe5, 0xf1, 0x71, 0xd8, 0x31, 0x15, 
@@ -22,7 +22,14 @@ const static uint8_t sbox[256] =
     0x8c, 0xa1, 0x89, 0xd, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0xf, 0xb0, 0x54, 0xbb, 0x16    };
     
 static uint8_t gal_mult_lookup[3][256];
-    
+
+void pb(char *r,const uint8_t *block){
+    printf("\n\n Round %s:", r);
+    for(uint8_t i = 0; i < 16; i++)
+        printf("%x ", block[i]);
+    puts("\n");    
+}
+
 void genMultLookup(uint8_t multlookup[3][256])
 {
     uint8_t temp;
@@ -41,11 +48,11 @@ void genMultLookup(uint8_t multlookup[3][256])
     }
 }
 
-inline void AddRoundKey(uint8_t *bytes, uint8_t *keys)
+inline void AddRoundKey(uint8_t *bytes, const uint8_t *keys)
 {
     for(uint8_t i = 0; i < 16; i++)
     {
-        bytes[i] ^= keys;
+        bytes[i] ^= keys[i];
     }
 }
 
@@ -53,7 +60,7 @@ inline void SubBytes(uint8_t *bytes)
 {
     for(uint8_t i = 0; i < 16; i++)
     {
-        bytes[i] = sbox[bytes[i];
+        bytes[i] = sbox[bytes[i]];
     }
 }
     
@@ -109,29 +116,28 @@ void MixColumns(uint8_t *block)
 }
                     
 
-uint8_t* encryptBlock(uint8_t *block, const uint8_t *keys, const uint8_t rounds)
+void encryptBlock(uint8_t *block, const uint8_t *keys, const uint8_t rounds)
 {
-    
-    uint8_t ikeys = 0
+   
+    uint8_t ikeys = 0;
     
     AddRoundKey(block, keys);
-    ikeyss +=16
+    ikeys += 16;
                 
-    for(uint8_t i = 0; i < rounds - 1, i++)
+    for(uint8_t i = 0; i < rounds - 1; i++)
     {
         SubBytes(block);
         ShiftRows(block);
         MixColumns(block);
-        AddRoundKey(block, keys[ikeys]);
-        ikeys += 16
+        AddRoundKey(block, &keys[ikeys]);
+        ikeys += 16;
         
     }
     
     SubBytes(block);
     ShiftRows(block);
-    AddRoundKey(block, keys[ikeys]);
-            
-    return block;
+    AddRoundKey(block, &keys[ikeys]);
+
 }
 
 
