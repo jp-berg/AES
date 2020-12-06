@@ -1,4 +1,5 @@
 import ctypes
+from key_expansion import expand_key, format_key
 import pathlib
 from os.path import isfile, join
 from os import getcwd
@@ -23,6 +24,31 @@ if not isfile("libaes.so"):
     
 aeslib = ctypes.CDLL(join(getcwd(),"libaes.so"))
 
+def keyToByteArray(key):
+    key = expand_key(format_key(key))
+   
+    keystr = ""
+    tempstr = "12345678"
+    tempdiff = 0
+    for i in key:
+        tempstr = hex(i).replace('0x', '')
+        tempdiff = 8 - len(tempstr)
+        keystr += tempdiff * "0" + tempstr
+
+    keystr2 = ""
+    index = 1
+    for i in keystr:
+        if index%3 == 0:
+            keystr2 += " "
+            index +=1
+        keystr2 += i
+        index += 1
+
+    keylist = keystr2.split()
+    return bytearray().fromhex(keystr2)
+
+
+
 def testShiftRows():
     ba = bytearray.fromhex('d4 27 11 ae e0 bf 98 f1 b8 b4 5d e5 1e 41 52 30')
     byte_array = ctypes.c_ubyte * len(ba)
@@ -46,14 +72,18 @@ def testAddKeyRound():
 def testEncryptBlock():
     baBlock = bytearray.fromhex('32 43 f6 a8 88 5a 30 8d 31 31 98 a2 e0 37 07 34')
     byte_array_block = ctypes.c_ubyte * len(baBlock)
-    baKey = bytearray.fromhex('2b 7e 15 16 28 ae d2 a6 ab f7 15 88 09 cf 4f 3c')
-    byte_array_key = ctypes.c_ubyte * len(baBlock)
-   
+
+    testkey = "2b7e151628aed2a6abf7158809cf4f3c"
+    baKey = keyToByteArray(testkey)
+    byte_array_key = ctypes.c_ubyte * len(baKey)
     aeslib.encryptBlock(byte_array_block.from_buffer(baBlock), byte_array_key.from_buffer(baKey), 10)
     print(" ".join(hex(n) for n in baBlock))
 
 
-testMixColumns()
+    
+
+
+testEncryptBlock()
 
             
     
