@@ -12,7 +12,7 @@ def expand_key(key):
         key: 128-bit hexadecimal key in a list four 32-bit numbers (see format_key function)
 
     Returns:
-        List of 32-bit numbers representing roundkeys resulting from the original input key
+        Bytearray of all roundkeys appended.
     """
     key = format_key_32bit(key)
     w = [word for word in key]
@@ -63,26 +63,27 @@ def g(word, round):
 
 
 def separate_into_chunks(num, chunksize=8):
-    """Recursive splitting of a number into a list of 8-bit numbers.
+    """Recursive splitting of a number into a list of numbers with the bitlength of chunksize.
 
     Args:
         key: any number
+        chunksize (default = 8): desired bitlength of the chunks
 
     Returns:
-        list of four 8-bit numbers
+        list numbers with bitlength chunksize
     """
     compare_constant = 0x01 << chunksize
     return [num] if num < compare_constant else separate_into_chunks(num >> chunksize, chunksize) + [num % compare_constant]
 
 
 def format_key_32bit(key):
-    """Formats hex key string into four 32-bit chunks.
+    """Formats hex key string 32-bit chunks.
 
     Args:
         key: string of a 128-bit hex number
 
     Returns:
-        list of four 32-bit numbers
+        list 32-bit numbers
     """
     return separate_into_chunks(int(key, 16), 32)
 
