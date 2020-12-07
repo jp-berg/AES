@@ -1,14 +1,20 @@
 import ctypes
-from key_expansion import expand_key, format_key
+from key_expansion import expand_key, format_key_32bit
 import pathlib
-from os.path import isfile, join
-from os import getcwd
+from os.path import isfile, join, splitext, expanduser
+from os import getcwd, cpu_count
 import subprocess
 from sys import exit
+from getpass import getpass
+import hashlib
+import random
+
+
 
 
 compile_gcc = "gcc -O2 -shared -fpic -Wl,-soname,AES -o libaes.so AES.c".split()
 compile_clang = "clang -O2 -shared -fpic -Wl,-soname,AES -o libaes.so AES.c".split()
+cpucount = cpu_count()
 
 if not isfile("libaes.so"):
     if not isfile("AES.c"):
@@ -24,30 +30,34 @@ if not isfile("libaes.so"):
     
 aeslib = ctypes.CDLL(join(getcwd(),"libaes.so"))
 
-def keyToByteArray(key):
-    key = expand_key(format_key(key))
-   
-    keystr = ""
-    tempstr = "12345678"
-    tempdiff = 0
-    for i in key:
-        tempstr = hex(i).replace('0x', '')
-        tempdiff = 8 - len(tempstr)
-        keystr += tempdiff * "0" + tempstr
+def readFile(filepath):
+    b = bytearray(0)
+    with open(filepath, "rb") as file:
+        f = file.read()
+        b = bytearray(f)
+    return b
 
-    keystr2 = ""
-    index = 1
-    for i in keystr:
-        if index%3 == 0:
-            keystr2 += " "
-            index +=1
-        keystr2 += i
-        index += 1
+def writeFile(filepath, towrite):
+    filepath = splitext(filepath)[0] + ".enc"
+    with open(filepath, "wb") as file:
+        f = file.write(towrite)
+        
 
-    keylist = keystr2.split()
-    return bytearray().fromhex(keystr2)
-
-
+def preparePassword(pwd):
+    p = hashlib.pbkdf2_hmac(hash_name = 'sha256', password = pwd.encode("utf-8"), salt = "1234".encode("utf-8"), iterations = 10, dklen=16)
+    return expand_key(p.hex())
+    
+def padBytearray(len_ba):
+    
+    topad = 16 - len_ba%16
+    if not topad:
+        topad = 16
+    b = [0] * topad
+    for i in range(len(b)-1):
+        b[i] = random.randrange(0, 255)
+    b[topad - 1] = topad
+    
+    return bytearray(b)
 
 def testShiftRows():
     ba = bytearray.fromhex('d4 27 11 ae e0 bf 98 f1 b8 b4 5d e5 1e 41 52 30')
@@ -74,16 +84,35 @@ def testEncryptBlock():
     byte_array_block = ctypes.c_ubyte * len(baBlock)
 
     testkey = "2b7e151628aed2a6abf7158809cf4f3c"
-    baKey = keyToByteArray(testkey)
+    baKey = expand_key(testkey)
     byte_array_key = ctypes.c_ubyte * len(baKey)
     aeslib.encryptBlock(byte_array_block.from_buffer(baBlock), byte_array_key.from_buffer(baKey), 10)
     print(" ".join(hex(n) for n in baBlock))
 
+def testEncryptAES():
+    
+##    toencrypt = expanduser(input("Filepath:"))
+##    while not isfile(toencrypt):
+##        print("Not a file!")
+##        toencrypt = expanduser(input("Filepath:"))
+##    
+##    password  = getpass()
+    toencrypt = "/home/pc/Documents/C.7z"
+    password = "aeskurs"
+    password = preparePassword(password)
+    byte_array_key = ctypes.c_ubyte * len(password)
+    file = readFile(toencrypt)
+    file += padBytearray(len(file))
+    byte_array_file = ctypes.c_ubyte * len(file)
+   
+    aeslib.encryptAES(byte_array_file.from_buffer(file), byte_array_key.from_buffer(password), len(file), cpucount, 10)
+    writeFile(toencrypt, file)
 
+
+testEncryptAES()
     
 
 
-testEncryptBlock()
 
             
     

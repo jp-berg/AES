@@ -145,14 +145,17 @@ void encryptBlock(uint8_t *block, const uint8_t *keys, const uint8_t rounds)
     
 void encryptAES(uint8_t *bytes, uint8_t *keys, size_t bytecount, size_t cpucount, uint8_t rounds)
 {
-    
     genMultLookup(gal_mult_lookup);
-#pragma omp parallel shared(i) num_threads(cpucount)
+    printf("DEBUG bytecount %lu cpucount %lu rounds %lu \n", bytecount, cpucount, rounds);
+    
+    size_t i;
+#pragma omp parallel shared(i) num_threads(1)
     {
 #pragma omp for
-    for(size_t i = 0; i < bytecount; i+16)  //TODO: Play with Blockwidth
+    for(i = 0; i <= 417792; i += 16)  //TODO: Play with Blockwidth
     {
-       // encryptBlock(&bytes[i], &keys[i], rounds);
+        
+        encryptBlock(&bytes[i], &keys[i], rounds);
     }
     }
 }
