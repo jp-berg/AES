@@ -14,6 +14,7 @@ def expand_key(key):
     Returns:
         List of 32-bit numbers representing roundkeys resulting from the original input key
     """
+    key = format_key(key)
     w = [word for word in key]
 
     for i in range(4, 44):
