@@ -14,7 +14,7 @@ def expand_key(key):
     Returns:
         List of 32-bit numbers representing roundkeys resulting from the original input key
     """
-    key = format_key(key)
+    key = format_key_32bit(key)
     w = [word for word in key]
 
     for i in range(4, 44):
@@ -24,7 +24,11 @@ def expand_key(key):
         else:
             w.append(w[i-4] ^ w[i-1])
 
-    return w
+    # create list of bytes from list of 32-bit numbers
+    bytelist = [byte for word in w for byte in separate_into_chunks(word, chunksize=8)]
+
+    return bytearray(bytelist)
+
 
 
 def g(word, round):
@@ -37,8 +41,8 @@ def g(word, round):
     Returns:
         32-bit number
     """
-    # separate the 32-bit input into four 8-bit words
-    wordlist = separate_into_8bit_chunks_recursive(word)
+
+    wordlist = separate_into_chunks(word, chunksize=8)
 
     # Rotate input word
     subword = wordlist[1:] + wordlist[0:1]
@@ -58,23 +62,20 @@ def g(word, round):
     return return_word
 
 
-# IDEA: write one general conversion function that takes some input + the size of the chunks it should separate it into
-
-# recursive, uses bit shifts
-def separate_into_8bit_chunks_recursive(key):
-    """Recursive splitting of a 32-bit number into a list of 8-bit numbers.
+def separate_into_chunks(num, chunksize=8):
+    """Recursive splitting of a number into a list of 8-bit numbers.
 
     Args:
-        key: 32-bit number
+        key: any number
 
     Returns:
         list of four 8-bit numbers
     """
-    return [key] if key < 0x100 else separate_into_8bit_chunks_recursive(key >> 8) + [key % 0x100]
+    compare_constant = 0x01 << chunksize
+    return [num] if num < compare_constant else separate_into_chunks(num >> chunksize, chunksize) + [num % compare_constant]
 
 
-# iterative, uses string processing
-def format_key(key):
+def format_key_32bit(key):
     """Formats hex key string into four 32-bit chunks.
 
     Args:
@@ -83,12 +84,11 @@ def format_key(key):
     Returns:
         list of four 32-bit numbers
     """
-    key_formatted = [int(key[a:a+8], 16) for a in range(0, len(key), 8)]
-    return key_formatted
+    return separate_into_chunks(int(key, 16), 32)
+
 
 
 if __name__ == "__main__":
     key = "2b7e151628aed2a6abf7158809cf4f3c"
-    a = expand_key(format_key(key))
-    assert a[4] == 0xa0fafe17
-    print(list(map(hex, a)))
+    a = expand_key(key)
+    assert list(map(hex, a[16:20])) == ["0xa0", "0xfa", "0xfe", "0x17"]
