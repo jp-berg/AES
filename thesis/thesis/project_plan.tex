@@ -174,12 +174,43 @@ As discussed in section~\ref{ch:stakeholders}, the main stakeholders for this pr
 
 \section{Execution Phase}
 \label{ch:executionphase}
+The execution phase is the main part of the project. The team members work on their assigned \ac{Wp}s and create the deliverables for the project. All parts of the project done in this phase can be found in execution branch of the \ac{WBS}. While implementation and documentation takes place, the communication needs to be managed according to the communications management plan laid out in section~\ref{ch:communicationsmanagement}. Regular meetings between team members take place to discuss progress and problems that might have arisen. Progress presentations to the stakeholders happen biweekly. In addition to the main tasks, these presentations need to be prepared. This is an important step in order for the team to mark the progress.
+
+While the main \ac{WP}s get worked on, the monitoring and controlling processes detailed in section~\ref{ch:monitoringcontrolling} need to be carried out alongside. This mainly includes the testing of implemented functionality. Rigorous testing and validation ensures the final software is inside the defined quality and scope. Readjustments to scope and requirements need to be made whenever there is new input from the stakeholders or the current scope or requirements are not achievable any more. Regular reassessment and verification is crucial to project success.
+
 
 \section{Monitoring and Controlling}
 \label{ch:monitoringcontrolling}
+This section details the processes that take place alongside the main schedule. They serve the purpose to keep the project on track, meaning in scope, in quality, and on schedule. Without these processes project success is much harder to achieve. As these monitoring and controlling functions are regular tasks each team member needs to do they are listed in the \ac{WBS}. In the following, these processes are described in further detail.
+
+\subsection{Validate Scope}
+\label{ch:validatescope}
+Every time a \ac{WP} is completed, the project team will validate that the deliverable is inside project scope. If it is not sufficient, a change request will be made to the assigned team member. They will start implementing the changes decided on. This workflow ensures all deliverables meet the requirements and that the project is in scope.
+
+In regular intervals the project team will reassess whether the scope statement (see section~\ref{ch:scopestatement}) is still accurate. The project scope will be adjusted if stakeholders demand changes or if the schedule cannot be met. Such changes need to be decided on with the whole project team. They need to be formalized in a new scope statement and changes to the \ac{WBS} and schedule need to be made accordingly. This formalization of changes is important to ensure all team members are on the same page regarding the scope of the project.
+
+\subsection{Verify Requirements}
+\label{ch:verifyrequirements}
+In accordance with the workflow laid out in section~\ref{ch:validatescope}, finished \ac{WP}s need to be assessed against the project requirements. If the deliverable is lacking, change requests are implemented. Alongside the verification of requirements for each \ac{WP}, the project requirements need to be reevaluated analogous to scope reassessment. New requirements can only be added if formalized. Sources of changes to the requirements are schedule conflicts and stakeholder requests.
+
+\subsection{Validate Quality}
+\label{ch:validatequality}
+Each function in the program code needs to be validated on its quality. The guidelines for quality can be found in section~\ref{ch:qualitymanagement}. In regular progress meetings the team members talk each other through all \ac{WP}s they are working on (finish as well as in progress). Assessments regarding code quality and conformity to style conventions can be made in these meetings. Checking for style conventions will also be automated in the Git repository.
+
+Each team member is responsible for testing their code throughout the process. Bugs are to be fixed in order to maintain a working program. When user input is taken, it needs to be properly escaped. Testing for edge-cases needs to be done. Testing for program performance will at the delivery of each larger component (\ac{WP} 3.1, 3.2, 3.3, 3.4). If performance is lacking, the team member assigned to that component needs to optimize the code. Solutions for optimization problems can be found in weekly meetings.
+
+\subsection{Present Progress}
+\label{ch:presentprogress}
+As detailed in section~\ref{ch:stakeholerengagement}, biweekly progress presentations will take place during the project duration. In these presentations each project team member will present what they have accomplished over the last two weeks. This monitoring process is important in order to keep the work going at a steady rate and ensure an equal work split between team members. These presentations are as much for the stakeholders as they are for the project team. The regularity of presentations keeps the team schedule by having external deadlines.
+
 
 \section{Project Closing and Delivery}
 \label{ch:projectclosing}
+When all project work is done, all deliverables will be combined into one release. The release will contain the final software as defined by the scope statement in section~\ref{ch:scopestatement}. Alongside the software the final delivery will include the thesis and program documentation as mentioned in section~\ref{ch:requirements}. Before delivering, the project team will run through the monitoring processes again to ensure the final delivery is in scope and up to the defined quality standards. The last progress presentations will be a demonstration of the final software as well as short presentation of all its source code. This presentation constitutes the delivery of the final product.
+
+After the conclusion of the project, a reflection phase might occur. The team will meet to discuss what did and what did not go to plan in order to learn from shortcomings.
+
+
 
 
 % \bibliography{references.bib} needed to fix autocompletion for citation in my editor
