@@ -8,15 +8,16 @@ from sys import exit
 from getpass import getpass
 import hashlib
 import random
+import time
 
 
 
 
-compile_gcc = "gcc -O2 -shared -fpic -Wl,-soname,AES -o libaes.so AES.c".split()
-compile_clang = "clang -O2 -shared -fpic -Wl,-soname,AES -o libaes.so AES.c".split()
+compile_gcc = "gcc -O2 -shared -fpic -Wl,-soname,AES -o libaes.so AES.c -fopenmp".split()
+compile_clang = "clang -O2 -shared -fpic -Wl,-soname,AES -o libaes.so AES.c -fopenmp".split()
 cpucount = cpu_count()
 
-if not isfile("libaes.so"):
+if not isfile("libaess.so"): #remove s
     if not isfile("AES.c"):
         raise FileNotFoundError("No C-library-source-code available. Please include a 'libtest.c'-file")
     try:
@@ -45,6 +46,7 @@ def writeFile(filepath, towrite):
 
 def preparePassword(pwd):
     p = hashlib.pbkdf2_hmac(hash_name = 'sha256', password = pwd.encode("utf-8"), salt = "1234".encode("utf-8"), iterations = 10, dklen=16)
+    #print("Key: "+ p.hex())
     return expand_key(p.hex())
     
 def padBytearray(len_ba):
@@ -58,6 +60,13 @@ def padBytearray(len_ba):
     b[topad - 1] = topad
     
     return bytearray(b)
+
+def encryptAES(toencrypt, key):
+    toencrypt += padBytearray(len(toencrypt))
+    byte_array_key = ctypes.c_ubyte * len(key)
+    byte_array_file = ctypes.c_ubyte * len(toencrypt)
+    aeslib.encryptAES(byte_array_file.from_buffer(toencrypt), byte_array_key.from_buffer(key), len(toencrypt), cpucount, 10)
+    return toencrypt
 
 def testShiftRows():
     ba = bytearray.fromhex('d4 27 11 ae e0 bf 98 f1 b8 b4 5d e5 1e 41 52 30')
@@ -89,6 +98,7 @@ def testEncryptBlock():
     aeslib.encryptBlock(byte_array_block.from_buffer(baBlock), byte_array_key.from_buffer(baKey), 10)
     print(" ".join(hex(n) for n in baBlock))
 
+
 def testEncryptAES():
     
 ##    toencrypt = expanduser(input("Filepath:"))
@@ -97,19 +107,56 @@ def testEncryptAES():
 ##        toencrypt = expanduser(input("Filepath:"))
 ##    
 ##    password  = getpass()
-    toencrypt = "/home/pc/Documents/C.7z"
+    toencrypt = "/home/pc/Documents/vkt.pdf"
     password = "aeskurs"
     password = preparePassword(password)
-    byte_array_key = ctypes.c_ubyte * len(password)
     file = readFile(toencrypt)
-    file += padBytearray(len(file))
-    byte_array_file = ctypes.c_ubyte * len(file)
-   
-    aeslib.encryptAES(byte_array_file.from_buffer(file), byte_array_key.from_buffer(password), len(file), cpucount, 10)
+
+    tic = time.perf_counter()
+    file = encryptAES(file, password)
+    tac = time.perf_counter() - tic
+    print("Time: " + str(tac))
     writeFile(toencrypt, file)
 
+def gba():
+    x = bytearray(16)
+    for i in range(16):
+        x[i] = random.randrange(0, 255)
+    return x
 
+def testEncryptAEStext():
+    bl = []
+    num = 5
+    print("Values: ")
+    for i in range(num):
+        
+        y = gba()
+        print(y.hex())
+        bl.append(y)
+       
+    blc = bytearray(0)
+    for i in bl:
+        blc += i
+    key = preparePassword("aeskurs")
+    ble = encryptAES(blc, key)
+    index = 0
+    print("\nEncrypted Values: ")
+    s = ble.hex()
+    
+    while((index + 32)< len(s)):
+            print(s[index:index+32])
+            index += 32
+
+   
+        
+            
+    
+    
+        
 testEncryptAES()
+    
+    
+
     
 
 

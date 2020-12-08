@@ -6,12 +6,13 @@
 
 void genMultLookup(uint8_t multlookup[3][256]);
 
-inline void AddRoundKey(uint8_t *bytes, const uint8_t *keys);
-inline void SubBytes(uint8_t *bytes);
+void AddRoundKey(uint8_t *bytes, const uint8_t *keys);
+void SubBytes(uint8_t *bytes);
 void ShiftRows(uint8_t *block);
 void MixColumns(uint8_t *block);
 void encryptBlock(uint8_t *block, const uint8_t *keys, const uint8_t rounds);
+void encryptBlocks(uint8_t *block, const uint8_t *keys, const size_t bytecount, const uint8_t rounds);
 
-void encryptAES(uint8_t *bytes, uint8_t *keys, size_t bytecount, size_t cpucount, uint8_t rounds);
+void encryptAES(uint8_t *bytes, const uint8_t *keys, const size_t bytecount, const size_t cpucount, const uint8_t rounds);
 
 #endif

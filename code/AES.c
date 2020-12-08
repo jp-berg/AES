@@ -48,7 +48,7 @@ void genMultLookup(uint8_t multlookup[3][256])
     }
 }
 
-inline void AddRoundKey(uint8_t *bytes, const uint8_t *keys)
+void inline AddRoundKey(uint8_t *bytes, const uint8_t *keys)
 {
     for(uint8_t i = 0; i < 16; i++)
     {
@@ -56,7 +56,7 @@ inline void AddRoundKey(uint8_t *bytes, const uint8_t *keys)
     }
 }
 
-inline void SubBytes(uint8_t *bytes)
+void inline SubBytes(uint8_t *bytes)
 {
     for(uint8_t i = 0; i < 16; i++)
     {
@@ -118,14 +118,14 @@ void MixColumns(uint8_t *block)
 
 void encryptBlock(uint8_t *block, const uint8_t *keys, const uint8_t rounds)
 {
-   
+
     uint8_t ikeys = 0;
     
     AddRoundKey(block, keys);
     ikeys += 16;
                 
     for(uint8_t i = 0; i < rounds - 1; i++)
-    {
+    {   
         SubBytes(block);
         ShiftRows(block);
         MixColumns(block);
@@ -140,24 +140,34 @@ void encryptBlock(uint8_t *block, const uint8_t *keys, const uint8_t rounds)
 
 }
 
+void encryptBlocks(uint8_t *bytes, const uint8_t *keys, const size_t bytecount, const uint8_t rounds){
+    for(size_t i = 0; i < bytecount; i++)
+    {
+        encryptBlock(&bytes[i], keys, rounds);
+    }
+}
 
 
     
-void encryptAES(uint8_t *bytes, uint8_t *keys, size_t bytecount, size_t cpucount, uint8_t rounds)
+void encryptAES(uint8_t *bytes, const uint8_t *keys, const size_t bytecount, const size_t cpucount, const uint8_t rounds)
 {
     genMultLookup(gal_mult_lookup);
-    printf("DEBUG bytecount %lu cpucount %lu rounds %lu \n", bytecount, cpucount, rounds);
+    size_t chunk = (size_t) (bytecount / cpucount);
+    printf("chunk: %lu\n", chunk);
     
     size_t i;
-#pragma omp parallel shared(i) num_threads(1)
+#pragma omp parallel num_threads(cpucount)
     {
 #pragma omp for
-    for(i = 0; i <= 417792; i += 16)  //TODO: Play with Blockwidth
+    for(i = 0; i < bytecount; i += chunk)  //TODO: Play with Blockwidth
     {
-        
-        encryptBlock(&bytes[i], &keys[i], rounds);
+        puts("HERE\n");
+        encryptBlocks(&bytes[i], keys, chunk, rounds);
+        //if(i%62500 == 0) printf("Byte %lu of %lu (%lf Prozent)\n", i, bytecount,  100 * ((double)i) / ((double)bytecount));
     }
     }
+    printf("i: %lu, bytecount: %lu\n", i, bytecount);
+    encryptBlocks(&bytes[i], keys, bytecount - i, rounds);
 }
 
 
