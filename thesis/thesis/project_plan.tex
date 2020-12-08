@@ -21,13 +21,13 @@ The project initiation is the first stage of every project. Firstly, the overall
 \subsection{Project Charter}
 \label{ch:projectcharter}
 \begin{tcolorbox}
-  The overall goal of the project is a well documented implementation of the Advanced Encryption Standard. The end result should be a working piece of software that can encrypt and decrypt some input in the way defined in chapter~\ref{ch:aes}.
+  The overall goal of the project is a well documented implementation of the \ac{AES}. The end result should be a working piece of software that can encrypt and decrypt some input in the way defined in chapter~\ref{ch:aes}.
 \end{tcolorbox}
 
 
 \subsection{Project Team}
 \label{ch:projectteam}
-In order for the project to start the group working on the project needs to be defined. As this project (the implementation of the Advanced Encryption Standard) will be carried out by a team of two, all team decisions have to be made at this stage. At the kick-off meeting for the project teams could be formed. After short private conversation the team for this project was decided. A meeting was setup so the first stages of planning could take place. The team for this project are Jan Phillip Berg and Simon Keil.
+In order for the project to start the project team needs to be defined. As this project (the implementation of the \ac{AES}) will be carried out by a team of two, all team decisions have to be made at this stage. At the kick-off meeting for the project teams could be formed. After short private conversation the team for this project was decided. A meeting was setup so the first stages of planning could take place. The team for this project are Jan Phillip Berg and Simon Keil.
 
 \subsection{Stakeholders}
 \label{ch:stakeholders}
@@ -58,7 +58,7 @@ The high level goal of the project defined in chapter~\ref{ch:projectcharter} ca
 
 \paragraph{Requirements on the implementation:}
 \begin{itemize}
-  \item implementation of AES key expansion
+  \item implementation of \ac{AES} key expansion
   \item separate implementations of en- and decryption
   \item visible and even work-split between team members
   \item steady progress with biweekly presentable results
@@ -68,23 +68,28 @@ The high level goal of the project defined in chapter~\ref{ch:projectcharter} ca
 \begin{itemize}
   \item thesis of 20 pages containing:
   \begin{itemize}
-    \item theoretical background on symmetric encryption and its use-cases
-    \item detailed explanation of the AES algorithm
+    \item theoretical background on symmetric encryption
+    \item symmetric encryption use-cases
+    \item detailed explanation of the \ac{AES} algorithm
     \item project plan
+    \item requirements
+    \item deliverables
   \end{itemize}
-  \item program documentation 30 pages containing:
+  \item program documentation of 30 pages containing:
   \begin{itemize}
-    \item functions
     \item usage
     \item implementation
+    \item functions
     \item performance
+    \item software stack
+    \item limitations
   \end{itemize}
 \end{itemize}
 
 \subsubsection{Scope Statement}
 \label{ch:scopestatement}
 \begin{tcolorbox}
-  The project of implementing the Advanced Encryption Standard has to goal of creating a software that can encrypt and decrypt text inputs in AES-128 with a given key. Specifically excluded from the scope are the handling of binary input, AES-256 and up, and the unification of en- and decryption functionality into one callable executable. The software has run on one common operating system only. Further compatibility is excluded from the scope. Documentation of the software and explanations of the Advanced Encryption Standard's functionality are to be included.
+  The project of implementing the \ac{AES} has to goal of creating a software that can encrypt and decrypt text inputs in AES-128 with a given key. Specifically excluded from the scope are the handling of binary input, AES-256 and up, and the unification of en- and decryption functionality into one callable executable. The software only has run on one common operating system. Further compatibility is excluded from the scope. Documentation of the software and explanations of the \ac{AES}'s functionality are to be included.
 \end{tcolorbox}
 
 
@@ -96,6 +101,75 @@ In order to develop a schedule the activities must be defined. We will use a wor
 \subsubsection{Work Breakdown Structure}
 \label{ch:wbs}
 
+The work breakdown structure is shown in figure~\ref{fig:wbs}. It is a hierarchical decomposition of the work that is needed to be done in order to complete the project. The top level of this hierarchy are the five project phases detailed in section~\ref{ch:projectplanoutline}. All components of the \ac{WBS} are numbered. The lowest level component of each branch is a work package that can be scheduled and assigned. The \ac{WBS} does not represent scheduling information. The deliverables of the project can be found in the "Execution" branch.
+
+\begin{figure}
+  \makebox[\textwidth]{
+  \includegraphics[scale=0.82]{data/figures/WBS.pdf}}
+  \caption{Word Breakdown Structure}
+  \label{fig:wbs}
+\end{figure}
+
+
+\subsubsection{Sequencing and Assignment of Work Packages}
+\label{ch:sequencingandassignment}
+
+
+
+
+\section{Quality Management}
+\label{ch:qualitymanagement}
+This is a software project and as such we will measure the quality of the work being done in two primary dimensions: Conformity of code to style conventions and performance or efficiency of the program. Conformity to style conventions is important in order to keep the code readable and understandable for third parties. The performance of the program has real world effects for the use of an encryption program. If the runtime is too long, encrypting large files becomes impractical.
+
+\subsection{Code Quality}
+\label{ch:codequality}
+For Python code we will refer to the PEP-8 style guide \cite{pep8}. Code files will be organized by logical program parts. For C Code we will refer to the .... style guide. We will include C source files as well as header files in the code directories. Functions should have docstrings. Where inline comments are necessary to explain actions, their use is encouraged. In general, the use of inline comments should be minimal.
+
+\subsection{Program performance}
+\label{ch:programperformance}
+Program performance highly depends on the time complexity of the algorithms, the inputs to the program, as well as the software stack that is used. As the algorithm and the inputs are given for this project, the software stack is the major contributing factor to program performance. In general, the lower level a language is, the faster you can make a program. Writing the software in assembly or even a hardware description language to program a \ac{FPGA} would yield the best results. However, we deem these options to be out of scope for this project. Which software stack was chosen and why is detailed in section~\ref{ch:softwarestack}.
+
+To measure the performance of our implementation, reference implementations in various higher level languages are given the same inputs. We then compare the results with our solution. For the different subparts of the program, different implementations of single functions are to be tested against each other to find the best compromise between performance and code quality. An example of this would be converting string inputs into bytes through string operations versus through bit-shifts.
+
+The quality goal for performance is an implementation that is faster than implementations in pure Python.
+
+DIFFERENT TIMINGS HERE
+
+\subsection{Software Stack}
+\label{ch:softwarestack}
+The selection of the software stack depends on a few major factors. Those factors are the platform the program should run on, developer experience, and performance. The stack that was chosen for this project is shown in figure~\ref{fig:stack}
+
+In the team formation process discussed in section~\ref{ch:projectteam} the literacy in various programming languages was a key component. We decided on Python 3 as our wrapper language. This means all one-time operations will be written in Python. This makes the code readable without incurring major performance penalties. Another advantage of using Python is that the software will run on most platforms. Both team members are fluent and have experience writing code in Python.
+
+The performance goals defined in section~\ref{ch:programperformance} are not reachable with pure Python. Therefore, we select to write the core algorithms in C. The main benefit of this hybrid approach is performance. The disadvantage is the increased code complexity inherent to C. The approach also requires an interface between C and Python.
+
+After testing different interface solutions we settled on the ctypes module for Python 3 \cite{ctypes}. The major advantage is that we can write normal independent C code and compile it separately. Other solutions would have required non-standard interpreters or compilers (see Cython \cite{cython}). The interface works by compiling the C code into libraries and importing those into a Python program. The functions within are then callable in Python. Intercompatibility between platforms is maintained by shipping with C source and header files. Compilation can be done according to the platform.
+
+\begin{figure}
+  \centering
+  \includegraphics{data/figures/stack.pdf}
+  \caption{Software Stack}
+  \label{fig:projectphases}
+\end{figure}
+
+
+\subsection{Communications Management}
+\label{ch:communicationsmanagement}
+Communication is a key part of every project. Even though the team for this project only has two members communication channels need to be well defined. In software project such as this one the source code management is also a concern. Another key component of the communications management is the engagement with the projects stakeholders. The communication channels for all these purposes are detailed below.
+
+\subsubsection{Source Code Management and Version Control}
+\label{ch:versioncontrol}
+The version control tool of choice is Git \cite{git}. A remote repository will be hosted on \url{github.com}. We follow a loose feature-branch workflow. Separate branches are created for the key components (work packages 3.1, 3.2, 3.4 see~\ref{ch:wbs}) of the software, as well as for the documentation and thesis documents. Team members work on the branches of the work packages they are assigned to (see ~\ref{ch:sequencingandassignment}). Merging into other branches occurs when the component is complete. Testing is done on each component separately before merging.
+
+
+\subsubsection{Day to Day Communications}
+\label{ch:daytodaycomms}
+For day to day issues a WhatsApp chat is used as the primary communications channel. It ensures high availability. Reasons to use this channel might be: arranging of code interfaces, scheduling of meetings, and questions or problems regarding project. Progress is discussed in regular meetings via Zoom. These meetings are scheduled at least weekly.
+
+
+\subsubsection{Stakeholder Engagement}
+\label{ch:stakeholerengagement}
+As discussed in section~\ref{ch:stakeholders}, the main stakeholders for this project are the lecturers grading the final work. They are engaged in the process through biweekly presentations of the progress. These presentations are around ten minutes in length and entail both team members discussing their progress during the time in between sessions. Both team members need to present their respective work and demonstrate the even split of workload during the whole project. Stakeholder engagement is important in order to keep on track and avoid scope- or schedule creep.
 
 
 \section{Execution Phase}
