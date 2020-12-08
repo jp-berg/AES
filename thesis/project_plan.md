@@ -13,6 +13,7 @@
   - __Requirements tracability matrix__
 - Define Quality
   - Speed (look at measurable comparisons)
+- tools used (python-c)
 - Schedule
   - Define Activities __WBS__
   - Sequence Activities
