@@ -1,73 +1,7 @@
 % !TEX root = thesis.tex
-%!TEX root = _thesis_template.tex
-%This is only relevant for TeXShop
-\chapter{Appendix A}
-\label{ch:appendixa}
-This appendix illustrates the bar charts of recognizing mobile device models and unique mobile devices. The tests were conducted in three stages for both device and model recognition separately. In the first stage, we trained and tested the classifiers with a mix of noisy and noiseless fingerprints. In the second test, we omitted those fingerprints that were created from accelerometer readings having a fake (noise) value of more than 50\%. Finally, the classifiers were trained and tested with a data set containing only noiseless fingerprints. The minimum number of available fingerprints per model or device was increased in each test. The scores are the average of running the recognition process for each set of minimum number of fingerprints 10 times. Each time, the training and test set were the same for all the classifiers so that a better comparison can be made. It is necessary to mention that due to having not enough fingerprints, regarding device recognition, only tests with a minimum number of 4, 9, and 14 fingerprints per device were possible.\\
-For clarification purposes, the hardware specifications of the used computer system and applied software are as follows:
-\begin{compactitem}
-	\item OS: Ubuntu 14.04.1
-	\item Python distribution: Anaconda 2.0.1 - 2.1.0
-	\item CPU: Dual Core i7-3520m
-	\item Memory: 8 GB
-\end{compactitem}
-\begin{figure}[htb]
-	\subfloat[Bagging decision tree]{\includegraphics[width=\textwidth]{./data/figures/model_BT_mixed}}\,
-	\subfloat[Random forests]{\includegraphics[width=\textwidth]{./data/figures/model_RF_mixed}}\,
-\end{figure}
+\chapter{Appendix}
 \begin{figure}
-	\ContinuedFloat
-	\subfloat[Extra-trees]{\includegraphics[width=\textwidth]{./data/figures/model_ET_mixed}}\,
-	\subfloat[Gradient Boosting]{\includegraphics[width=\textwidth]{./data/figures/model_GB_mixed}}\,
-	\caption{Recall and precision score of model recognition including all of the fingerprints regardless of whether they were created from noisy accelerometer readings or not.}
-\end{figure}
-\begin{figure}[htb]
-	\subfloat[Bagging decision tree]{\includegraphics[width=\textwidth]{./data/figures/model_BT_fake50}}\,
-	\subfloat[Random forests]{\includegraphics[width=\textwidth]{./data/figures/model_RF_fake50}}\,
-\end{figure}
-\begin{figure}
-	\ContinuedFloat
-	\subfloat[Extra-trees]{\includegraphics[width=\textwidth]{./data/figures/model_ET_fake50}}\,
-	\subfloat[Gradient Boosting]{\includegraphics[scale=0.28]{./data/figures/model_GB_fake50}}\,
-	\caption{Recall and precision score of model recognition including fingerprints that were created from accelerometer readings that have a fake value of less than 50\%.}
-\end{figure}
-\begin{figure}[htb]
-	\subfloat[Bagging decision tree]{\includegraphics[width=\textwidth]{./data/figures/model_BT_fake00}}\,
-	\subfloat[Random forests]{\includegraphics[width=\textwidth]{./data/figures/model_RF_fake00}}\,
-\end{figure}
-\begin{figure}
-	\ContinuedFloat
-	\subfloat[Extra-trees]{\includegraphics[width=\textwidth]{./data/figures/model_ET_fake00}}\,
-	\subfloat[Gradient Boosting]{\includegraphics[width=\textwidth]{./data/figures/model_GB_fake00}}\,
-	\caption{Recall and precision score of model recognition including fingerprints that were created from accelerometer readings that have a fake value of 0\%.}
-\end{figure}
-\begin{figure}[htb]
-	\subfloat[Bagging decision tree]{\includegraphics[width=\textwidth]{./data/figures/device_BT_mixed}}\,
-	\subfloat[Random forests]{\includegraphics[width=\textwidth]{./data/figures/device_RF_mixed}}\,
-\end{figure}
-\begin{figure}
-	\ContinuedFloat
-	\subfloat[Extra-trees]{\includegraphics[width=\textwidth]{./data/figures/device_ET_mixed}}\,
-	\subfloat[Gradient Boosting]{\includegraphics[width=\textwidth]{./data/figures/device_GB_mixed}}\,
-	\caption{Recall and precision score of device recognition including all fingerprints regardless of whether they were created from noisy accelerometer readings or not.}
-\end{figure}
-\begin{figure}[htb]
-	\subfloat[Bagging decision tree]{\includegraphics[width=\textwidth]{./data/figures/device_BT_fake50}}\,
-	\subfloat[Random forests]{\includegraphics[width=\textwidth]{./data/figures/device_RF_fake50}}\,
-\end{figure}
-\begin{figure}
-	\ContinuedFloat
-	\subfloat[Extra-trees]{\includegraphics[width=\textwidth]{./data/figures/device_ET_fake50}}\,
-	\subfloat[Gradient Boosting]{\includegraphics[width=\textwidth]{./data/figures/device_GB_fake50}}\,
-	\caption{Recall and precision score of device recognition including fingerprints that were created from accelerometer readings that have a fake value of less than 50\%.}
-\end{figure}
-\begin{figure}[htb]
-	\subfloat[Bagging decision tree]{\includegraphics[width=\textwidth]{./data/figures/device_BT_fake00}}\,
-	\subfloat[Random forests]{\includegraphics[width=\textwidth]{./data/figures/device_RF_fake00}}\,
-\end{figure}
-\begin{figure}
-	\ContinuedFloat
-	\subfloat[Extra-trees]{\includegraphics[width=\textwidth]{./data/figures/device_ET_fake00}}\,
-	\subfloat[Gradient Boosting]{\includegraphics[width=\textwidth]{./data/figures/device_GB_fake00}}\,
-	\caption{Recall and precision score of device recognition including fingerprints that were created from accelerometer readings that have a fake value of 0\%.}
+  \includegraphics[scale=0.4, angle=270]{data/figures/gantt.pdf}
+	\caption{Project Schedule}
+	\label{fig:gantt}
 \end{figure}

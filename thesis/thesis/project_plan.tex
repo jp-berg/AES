@@ -28,7 +28,7 @@ The project initiation is the first stage of every project. Firstly, the overall
 
 \subsection{Project Team}
 \label{ch:projectteam}
-In order for the project to start the project team needs to be defined. As this project (the implementation of the \ac{AES}) will be carried out by a team of two, all team decisions have to be made at this stage. At the kick-off meeting for the project teams could be formed. After short private conversation the team for this project was decided. A meeting was setup so the first stages of planning could take place. The team for this project are Jan Phillip Berg and Simon Keil.
+In order for the project to start the project team needs to be defined. As this project (the implementation of the \ac{AES}) will be carried out by a team of two, all team decisions have to be made at this stage. At the kick-off meeting for the project teams could be formed. After short private conversation the team for this project was decided. A meeting was setup so the first stages of planning could take place. The team for this project are Jan Philipp Berg and Simon Keil.
 
 \subsection{Stakeholders}
 \label{ch:stakeholders}
@@ -115,7 +115,9 @@ The work breakdown structure is shown in figure~\ref{fig:wbs}. It is a hierarchi
 \subsubsection{Sequencing and Assignment of Work Packages}
 \label{ch:sequencingandassignment}
 
+The sequencing of project tasks is defined in figure~\ref{fig:gantt}. Different colors in the chart signify different levels of task. The initiation and planning tasks listed in sections~\ref{ch:projectinitiation} and \ref{ch:planningphase} are carried out first. Requirements and scope need to be well defined before the listing and sequencing of activities can take place. The initiation and planning of the project is scheduled to take the first three weeks. The main execution phase (see section~\ref{ch:executionphase}) starts on December 10th. First \ac{WP} 3.1 needs to be completed in order for the main en- and decryption components to be build. The main execution portion of the project is scheduled to take six weeks. Monitoring tasks are scheduled throughout and show in green in the chart. The last week before the deadline on February 5th is reserved for all the project closing processes.
 
+All initiating, planning, monitoring and closing tasks are carried out with the whole project team. The execution portion of the project is divided into an even work split. The margin color of \ac{WP} blocks in figure~\ref{fig:gantt} denotes which team member is assigned to it. If the margin is grey, the work is carried out in plenum. Team member A (Jan Philipp Berg) is assigned to blue margined \ac{WP}s, team member B (Simon Keil) is assigned to the ones with red margins. This means team member A is responsible for the SBox computation (\ac{WP} 3.1.2) as well as the whole encryption component (\ac{WP} 3.2). Team member B will work on the Round Constant computation (\ac{WP} 3.1.1) and all parts of the decryption component (\ac{WP} 3.3). All other parts of the implementation will be executed together in order to not introduce  incompatibilities between components.
 
 
 \section{Quality Management}
@@ -124,7 +126,7 @@ This is a software project and as such we will measure the quality of the work b
 
 \subsection{Code Quality}
 \label{ch:codequality}
-For Python code we will refer to the PEP-8 style guide \cite{pep8}. Code files will be organized by logical program parts. For C Code we will refer to the .... style guide. We will include C source files as well as header files in the code directories. Functions should have docstrings. Where inline comments are necessary to explain actions, their use is encouraged. In general, the use of inline comments should be minimal.
+For Python code we will refer to the PEP-8 style guide \cite{pep8}. Code files will be organized by logical program parts. For C Code we will refer to the linux kernel style guide \cite{linuxkernel}. We will include C source files as well as header files in the code directories. Functions should have docstrings. Where inline comments are necessary to explain actions, their use is encouraged. In general, the use of inline comments should be minimal.
 
 \subsection{Program performance}
 \label{ch:programperformance}
@@ -150,7 +152,7 @@ After testing different interface solutions we settled on the ctypes module for 
   \centering
   \includegraphics{data/figures/stack.pdf}
   \caption{Software Stack}
-  \label{fig:projectphases}
+  \label{fig:stack}
 \end{figure}
 
 
@@ -160,7 +162,7 @@ Communication is a key part of every project. Even though the team for this proj
 
 \subsubsection{Source Code Management and Version Control}
 \label{ch:versioncontrol}
-The version control tool of choice is Git \cite{git}. A remote repository will be hosted on \url{github.com}. We follow a loose feature-branch workflow. Separate branches are created for the key components (work packages 3.1, 3.2, 3.4 see~\ref{ch:wbs}) of the software, as well as for the documentation and thesis documents. Team members work on the branches of the work packages they are assigned to (see ~\ref{ch:sequencingandassignment}). Merging into other branches occurs when the component is complete. Testing is done on each component separately before merging.
+The version control tool of choice is Git \cite{git}. A remote repository will be hosted on \url{github.com}. We loosely follow the feature branch workflow \cite{featurebranch}. Separate branches are created for the key components (work packages 3.1, 3.2, 3.4 see~\ref{ch:wbs}) of the software, as well as for the documentation and thesis documents. Team members work on the branches of the work packages they are assigned to (see ~\ref{ch:sequencingandassignment}). Merging into other branches occurs when the component is complete. Testing is done on each component separately before merging.
 
 
 \subsubsection{Day to Day Communications}
