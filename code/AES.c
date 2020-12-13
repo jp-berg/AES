@@ -141,7 +141,7 @@ void encryptBlock(uint8_t *block, const uint8_t *keys, const uint8_t rounds)
 }
 
 void encryptBlocks(uint8_t *bytes, const uint8_t *keys, const size_t bytecount, const uint8_t rounds){
-    for(size_t i = 0; i < bytecount; i++)
+    for(size_t i = 0; i < bytecount; i += 16)
     {
         encryptBlock(&bytes[i], keys, rounds);
     }

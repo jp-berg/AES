@@ -1,159 +1,148 @@
 import ctypes
-from key_expansion import expand_key, format_key_32bit
-import pathlib
 from os.path import isfile, join, splitext, expanduser
-from os import getcwd, cpu_count
-import subprocess
-from sys import exit
+from os import cpu_count, getcwd, urandom
+from subprocess import check_output
 from getpass import getpass
 import hashlib
-import random
-import time
 
+from key_expansion import expand_key, format_key_32bit
 
-
-
-compile_gcc = "gcc -O2 -shared -fpic -Wl,-soname,AES -o libaes.so AES.c -fopenmp".split()
-compile_clang = "clang -O2 -shared -fpic -Wl,-soname,AES -o libaes.so AES.c -fopenmp".split()
+compile_gcc = """gcc -O2 -w -shared -fpic -Wl,-soname,AES
+                -o libaes.so AES.c -fopenmp""".split()
+compile_clang = """clang -O2 -w -shared -fpic -Wl,-soname,AES
+                -o libaes.so AES.c -fopenmp""".split()
 cpucount = cpu_count()
+chunksize = 2**20 #needs to be a multiple of 16 (otherwise padding is needed)
 
-if not isfile("libaess.so"): #remove s
+if not isfile("libaes.so"): 
     if not isfile("AES.c"):
-        raise FileNotFoundError("No C-library-source-code available. Please include a 'libtest.c'-file")
+        raise FileNotFoundError("""No C-library-source-code available.
+                                Please include a 'AES.c'-file""")
     try:
-        print(subprocess.check_output(compile_gcc))
+        o = check_output(compile_gcc)
+        if o:
+            raise RuntimeError("""While compiling AES.c
+                               GCC encountered an Error:\n""" + o)
     except FileNotFoundError:
         try:
-            print(subprocess.check_output(compile_clang))
+            o = check_output(compile_clang)
+            if o:
+                raise RuntimeError("""While compiling AES.c
+                               Clang encountered an Error:\n""" + o)
         except FileNotFoundError:
-            raise FileNotFoundError("GCC or Clang not found. Please install either or compile libtest.c to test.lib on your own.")
-            sys.exit(1)
-    
-aeslib = ctypes.CDLL(join(getcwd(),"libaes.so"))
+            raise FileNotFoundError("""GCC or Clang not found.
+                                    Please install either
+                                    or compile AES.c to libaes.so
+                                    on your own.""")  
+aeslib = ctypes.CDLL(join(getcwd(),"libaes.so"))             
 
-def readFile(filepath):
-    b = bytearray(0)
-    with open(filepath, "rb") as file:
-        f = file.read()
-        b = bytearray(f)
-    return b
 
-def writeFile(filepath, towrite):
-    filepath = splitext(filepath)[0] + ".enc"
-    with open(filepath, "wb") as file:
-        f = file.write(towrite)
-        
-
-def preparePassword(pwd):
-    p = hashlib.pbkdf2_hmac(hash_name = 'sha256', password = pwd.encode("utf-8"), salt = "1234".encode("utf-8"), iterations = 10, dklen=16)
-    #print("Key: "+ p.hex())
+def prep_password(pwd):
+    """
+    Generates bytearray containing the consecutive
+    round keys from an arbitrary string.
+    """
+    #Use higher iteration values (>3000000) for more security:
+    p = hashlib.pbkdf2_hmac(hash_name = 'sha256',
+                            password = pwd.encode("utf-8"),
+                            salt = "1234".encode("utf-8"),
+                            iterations = 10, dklen = 16) 
     return expand_key(p.hex())
-    
-def padBytearray(len_ba):
-    
-    topad = 16 - len_ba%16
+
+
+def pad_bytearray(len_ba):
+    """Generates Bytearray with random values for padding AES-input.
+
+    Args:
+        len_ba: length of the bytearray that (may) needs padding
+
+    Returns:
+        Bytearray b, that completes an Bytearray with the length len_ba
+        in a way that (len_ba + len(b)) % 16 == 0 . Last byte indicates
+        length of b, i.e. the number of bytes to be discarded from the
+        end of the decrypted file.
+    """
+    topad = 16 - len_ba % 16
+    # Add padding, even if not needed (to guarantee consistency
+    # in purpose of the last byte of a file):
     if not topad:
-        topad = 16
-    b = [0] * topad
-    for i in range(len(b)-1):
-        b[i] = random.randrange(0, 255)
+        topad = 16 
+    b = bytearray(urandom(topad))
     b[topad - 1] = topad
-    
     return bytearray(b)
 
-def encryptAES(toencrypt, key):
-    toencrypt += padBytearray(len(toencrypt))
+
+def encrypt_aes(toencrypt, key):
+    """Encrypts a bytearray with AES using a key.
+
+    Args:
+        toencrypt: Bytearray that is supposed to be encrypted.
+            Length must be a multiple of 16.
+        key: Bytearray with roundkeys for encryption.
+            Must have a length of 11 (rounds) * 16 (bytes) = 176
+
+    Returns:
+        Bytearray with encrypted Bytes
+    """
+    toencrypt = bytearray(toencrypt)
+    if len(toencrypt)%16 != 0:
+        raise ValueError("Bytearray needs padding for encryption, but has none")
     byte_array_key = ctypes.c_ubyte * len(key)
     byte_array_file = ctypes.c_ubyte * len(toencrypt)
-    aeslib.encryptAES(byte_array_file.from_buffer(toencrypt), byte_array_key.from_buffer(key), len(toencrypt), cpucount, 10)
+    aeslib.encryptBlocks(byte_array_file.from_buffer(toencrypt),
+                         byte_array_key.from_buffer(key), len(toencrypt), 10)
     return toencrypt
 
-def testShiftRows():
-    ba = bytearray.fromhex('d4 27 11 ae e0 bf 98 f1 b8 b4 5d e5 1e 41 52 30')
-    byte_array = ctypes.c_ubyte * len(ba)
 
-    aeslib.ShiftRows(byte_array.from_buffer(ba), len(ba))
-    print(" ".join(hex(n) for n in ba))
+def encrypt_file(filepath_in, key):
+    """Encrypts a file with AES.
 
-def testMixColumns():
-    ba = bytearray.fromhex('d4 bf 5d 30 e0 b4 52 ae b8 41 11 f1 1e 27 98 e5')
-    byte_array = ctypes.c_ubyte * len(ba)
+    The function processes the file from filepath_in in chunks to avoid
+    high memory usage (see variable chunksize).
 
-    aeslib.MixColumns(byte_array.from_buffer(ba), len(ba))
-    print(" ".join(hex(n) for n in ba))
+    Args:
+        filepath_in: String containing the filepath of the unencrypted file
+        key: Bytearray with roundkeys for encryption.
+            Must have a length of 11 (rounds) * 16 (bytes) = 176
 
-def testSubBytes():
-    pass
+    Returns:
+        None
+    """
+    b = bytearray(chunksize)
+    cont = True
+    filepath_out = splitext(filepath_in)[0] + ".enc" # add new fileending
+    with open(filepath_in, "rb") as file_in:
+        with open(filepath_out, "wb") as file_out:
+            while cont:
+                b = file_in.read(chunksize)
+                if len(b) < chunksize:
+                    b += pad_bytearray(len(b)) #pad last chunk
+                    cont = False
+                b = encrypt_aes(b, key)
+                file_out.write(b) 
 
-def testAddKeyRound():
-    pass
-
-def testEncryptBlock():
-    baBlock = bytearray.fromhex('32 43 f6 a8 88 5a 30 8d 31 31 98 a2 e0 37 07 34')
-    byte_array_block = ctypes.c_ubyte * len(baBlock)
-
-    testkey = "2b7e151628aed2a6abf7158809cf4f3c"
-    baKey = expand_key(testkey)
-    byte_array_key = ctypes.c_ubyte * len(baKey)
-    aeslib.encryptBlock(byte_array_block.from_buffer(baBlock), byte_array_key.from_buffer(baKey), 10)
-    print(" ".join(hex(n) for n in baBlock))
-
-
-def testEncryptAES():
-    
-##    toencrypt = expanduser(input("Filepath:"))
-##    while not isfile(toencrypt):
-##        print("Not a file!")
-##        toencrypt = expanduser(input("Filepath:"))
-##    
-##    password  = getpass()
-    toencrypt = "/home/pc/Documents/vkt.pdf"
-    password = "aeskurs"
-    password = preparePassword(password)
-    file = readFile(toencrypt)
-
-    tic = time.perf_counter()
-    file = encryptAES(file, password)
-    tac = time.perf_counter() - tic
-    print("Time: " + str(tac))
-    writeFile(toencrypt, file)
-
-def gba():
-    x = bytearray(16)
-    for i in range(16):
-        x[i] = random.randrange(0, 255)
-    return x
-
-def testEncryptAEStext():
-    bl = []
-    num = 5
-    print("Values: ")
-    for i in range(num):
-        
-        y = gba()
-        print(y.hex())
-        bl.append(y)
-       
-    blc = bytearray(0)
-    for i in bl:
-        blc += i
-    key = preparePassword("aeskurs")
-    ble = encryptAES(blc, key)
-    index = 0
-    print("\nEncrypted Values: ")
-    s = ble.hex()
-    
-    while((index + 32)< len(s)):
-            print(s[index:index+32])
-            index += 32
 
    
+if __name__ == "__main__":
+    filepath_in = ""
+    while not filepath_in:
+        filepath_in = expanduser(input("Provide a filepath: "))
+        if not isfile(filepath_in):
+            print("Not a valid filepath!")
+            filepath_in = ""
+    key = ""
+    key2 = ""
+    while not key:
+        key = getpass()
+        key2 = getpass("Repeat:")
+        if key != key2:
+            print("Passwords do not match")
+            key = ""
+
+    key = prep_password(key)
+    encrypt_file(filepath_in, key)
         
-            
     
-    
-        
-testEncryptAES()
     
     
 
