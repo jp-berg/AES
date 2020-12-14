@@ -1,3 +1,4 @@
 sbox.txt
 code/libaes.so
 code/__pycache__/
+build/
