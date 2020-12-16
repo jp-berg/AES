@@ -65,13 +65,25 @@ def test_inverseShiftRows():
 
 
 def test_inverseMixColumns():
-    pass
+    """FIPS 197 Appendix C, Round 1 inverse"""
+    test_block = bytearray.fromhex("bd6e7c3df2b5779e0b61216e8b10b689")
+    reference = bytearray.fromhex("4773b91ff72f354361cb018ea1e6cf2c")
+    byte_array = ctypes.c_ubyte * len(test_block)
+    aeslib.inverseMixColumns(byte_array.from_buffer(test_block))
+
+    try:
+        assert test_block == reference
+        print("inverseMixColumns test passed")
+    except AssertionError:
+        print("inverseMixColumns test failed")
+        print("inverseMixColumns in C results in: ", list(map(hex, test_block)))
 
 
 def main():
     test_addRoundKey()
     test_inverseSubBytes()
     test_inverseShiftRows()
+    test_inverseMixColumns()
 
 
 

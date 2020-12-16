@@ -52,22 +52,20 @@ void addRoundKey(uint8_t *block, const uint8_t *keys)
 
 void inverseShiftRows(uint8_t *block)
 {
-
-  uint8_t tmp[16];
-  memcpy(tmp, block, 16 * sizeof(uint8_t));
-
-  block[1] = tmp[13];
-  block[2] = tmp[10];
-  block[3] = tmp[7];
-  block[5] = tmp[1];
-  block[6] = tmp[14];
-  block[7] = tmp[11];
-  block[9] = tmp[5];
-  block[10] = tmp[2];
-  block[11] = tmp[15];
-  block[13] = tmp[9];
-  block[14] = tmp[6];
-  block[15] = tmp[3];
+    uint8_t tmp[16];
+    memcpy(tmp, block, 16 * sizeof(uint8_t));
+    block[1] = tmp[13];
+    block[2] = tmp[10];
+    block[3] = tmp[7];
+    block[5] = tmp[1];
+    block[6] = tmp[14];
+    block[7] = tmp[11];
+    block[9] = tmp[5];
+    block[10] = tmp[2];
+    block[11] = tmp[15];
+    block[13] = tmp[9];
+    block[14] = tmp[6];
+    block[15] = tmp[3];
 }
 
 
@@ -89,14 +87,11 @@ void inverseMixColumns(uint8_t *block)
 void decryptBlock(uint8_t *block, const uint8_t *keys)
 {
     // Round without mixcolumns
-
     addRoundKey(block, keys);
     inverseShiftRows(block);
     inverseSubBytes(block);
 
-
     // full rounds
-
     for(uint8_t i = 0; i < 9; i++)
     {
         addRoundKey(block, &keys[16*(i+1)]);
@@ -106,6 +101,5 @@ void decryptBlock(uint8_t *block, const uint8_t *keys)
     }
 
     // one additional key-addition
-
     addRoundKey(block, keys);
 }
