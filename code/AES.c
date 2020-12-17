@@ -1,7 +1,27 @@
 #include "AES.h"
 #include <omp.h>
+#include <time.h>
 #include <string.h>
 #include <stdio.h>
+
+#define DEBUG 1
+
+struct timespec start, end;
+
+static double ShiftRowsTime, MixColumnsTime, SubBytesTime, AddRoundKeyTime;
+
+void timers(void){
+   clock_gettime(CLOCK_REALTIME, &start);
+}
+
+double timere(void){
+    clock_gettime(CLOCK_REALTIME, &end);
+    double elapsed = (end.tv_sec - start.tv_sec) +
+						(end.tv_nsec - start.tv_nsec) / 1000000000.0;
+//      printf("%lf seconds elapsed\n", elapsed);
+    return elapsed;
+}
+
 
 const uint8_t sbox[256] = 
 {   0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x1, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76, 
@@ -29,6 +49,7 @@ void pb(char *r,const uint8_t *block){
         printf("%x ", block[i]);
     puts("\n");    
 }
+
 
 void genMultLookup(uint8_t multlookup[3][256])
 {
@@ -121,22 +142,38 @@ void encryptBlock(uint8_t *block, const uint8_t *keys, const uint8_t rounds)
 
     uint8_t ikeys = 0;
     
+    timers();
     AddRoundKey(block, keys);
+    AddRoundKeyTime += timere();
     ikeys += 16;
                 
     for(uint8_t i = 0; i < rounds - 1; i++)
     {   
+        timers();
         SubBytes(block);
+        SubBytesTime += timere();
+        timers();
         ShiftRows(block);
+        ShiftRowsTime += timere();
+        timers();
         MixColumns(block);
+        MixColumnsTime += timere();
+        timers();
         AddRoundKey(block, &keys[ikeys]);
+        AddRoundKeyTime += timere();
         ikeys += 16;
         
     }
     
+    timers();
     SubBytes(block);
+    SubBytesTime += timere();
+    timers();
     ShiftRows(block);
+    ShiftRowsTime += timere();
+    timers();
     AddRoundKey(block, &keys[ikeys]);
+    AddRoundKeyTime += timere();
 
 }
 
@@ -145,29 +182,35 @@ void encryptBlocks(uint8_t *bytes, const uint8_t *keys, const size_t bytecount, 
     {
         encryptBlock(&bytes[i], keys, rounds);
     }
+    printf("TIMINGS:\nShiftRows: %lf\nMixColumns: %lf\nSubBytes: %lf\nAddRoundKey: %lf\n", ShiftRowsTime, MixColumnsTime, SubBytesTime, AddRoundKeyTime);
 }
 
 
     
 void encryptAES(uint8_t *bytes, const uint8_t *keys, const size_t bytecount, const size_t cpucount, const uint8_t rounds)
 {
+    timers();
     genMultLookup(gal_mult_lookup);
+    printf("genMultLookup: %lu\n", timere());
     size_t chunk = (size_t) (bytecount / cpucount);
     printf("chunk: %lu\n", chunk);
     
     size_t i;
-#pragma omp parallel num_threads(cpucount)
+    if(DEBUG) timers();
+#pragma omp parallel num_threads(2)
     {
 #pragma omp for
     for(i = 0; i < bytecount; i += chunk)  //TODO: Play with Blockwidth
     {
+        printf("I: %lu\n", i);
         puts("HERE\n");
         encryptBlocks(&bytes[i], keys, chunk, rounds);
         //if(i%62500 == 0) printf("Byte %lu of %lu (%lf Prozent)\n", i, bytecount,  100 * ((double)i) / ((double)bytecount));
     }
     }
-    printf("i: %lu, bytecount: %lu\n", i, bytecount);
-    encryptBlocks(&bytes[i], keys, bytecount - i, rounds);
+    encryptBlocks(&bytes[i], keys, bytecount%chunk, rounds);
+    if(DEBUG) printf("C-Timer: %lf\n", timere());
+    printf("TIMINGS:\nShiftRows: %lf\nMixColumns: %lf\nSubBytes: %lf\nAddRoundKey: %lf\n", ShiftRowsTime, MixColumnsTime, SubBytesTime, AddRoundKeyTime);
 }
 
 

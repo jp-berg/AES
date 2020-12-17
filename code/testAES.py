@@ -1,5 +1,6 @@
 from time import perf_counter
-import wrapper
+from os import urandom
+from wrapper import prep_password, encrypt_aes, encrypt_file
 import key_expansion
 
 
@@ -40,41 +41,41 @@ def testEncryptBlock():
     print(" ".join(hex(n) for n in baBlock))
 
 
-def testEncryptAES():
+def test_encrypt_file():
     """Tests the C-implementation of the AES-Encryption of a file"""
-    toencrypt = "/home/pc/Documents/vkt.pdf"
+    toencrypt = "/home/pc/Documents/C.7z"
     password = "aeskurs"
-    password = preparePassword(password)
-    file = readFile(toencrypt)
+    password = prep_password(password)
 
     tic = perf_counter()
-    file = encryptAES(file, password)
+    file = encrypt_file(toencrypt, password)
     tac = perf_counter() - tic
     print("Time: " + str(tac))
 
-    writeFile(toencrypt, file)
 
-
-def testEncryptAEStext():
-    """Tests the C-implementation of the AES-Encryption of multiple blocks"""
-    bl = []
-    num = 5 # number of blocks
-    print("Values: ")
+def test_encrypt_aes():
+    """Tests the C-implementation of the AES-Encryption of multiple blocks.
+    Compare with https://www.hanewin.net/encrypt/aes/aes-test.htm
+    """
+    b = bytearray(0)
+    num = 100 # number of blocks
+    print("Blocks: ")
     for i in range(num):
-        y = urandom(16)
-        print(y.hex()) #prints a block before encryption
-        bl.append(y)   
-    blc = bytearray(0)
-    for i in bl:
-        blc += i
-    key = preparePassword("aeskurs")
-    ble = encryptAES(blc, key)
+        y = bytearray(urandom(16))
+        print(str(i) + ": " + y.hex()) #prints a block before encryption
+        b += y   
+    key = prep_password("aeskurs")
+    print("\nKey: " + key.hex()[0:32])
+    b = encrypt_aes(b, key)
     index = 0
-    print("\nEncrypted Values: ")
-    s = ble.hex()
+    nr = 0
+    print("\nEncrypted Blocks: ")
+    s = b.hex()
     #Prints one block per line:
-    while((index + 32) < len(s)):
-            print(s[index:index + 32])
+    while((index + 32) <= len(s)):
+            print(str(nr) + ": " + s[index:index + 32])
             index += 32
+            nr += 1
+test_encrypt_file()
 
 #[FIPS 197]: FIPS 197, Advanced Encryption Standard

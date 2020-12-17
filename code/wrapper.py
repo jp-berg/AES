@@ -12,7 +12,7 @@ compile_gcc = """gcc -O2 -w -shared -fpic -Wl,-soname,AES
 compile_clang = """clang -O2 -w -shared -fpic -Wl,-soname,AES
                 -o libaes.so AES.c -fopenmp""".split()
 cpucount = cpu_count()
-chunksize = 2**20 #needs to be a multiple of 16 (otherwise padding is needed)
+chunksize = 2**30 #needs to be a multiple of 16 (otherwise padding is needed)
 
 if not isfile("libaes.so"): 
     if not isfile("AES.c"):
