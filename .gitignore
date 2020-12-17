@@ -1,3 +1,6 @@
 a.out
 sbox.txt
 build/
+*.enc
+*.so
+__pycache__/
