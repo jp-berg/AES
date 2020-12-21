@@ -43,10 +43,6 @@ const uint8_t inv_sbox[256] = {
 };
 
 
-const uint8_t inverse_mult_matrix[16] = {
-    0x0e, 0x09, 0x0d, 0x0b, 0x0b, 0x0e, 0x09, 0x0d, 0x0d, 0x0b, 0x0e, 0x09, 0x09, 0x0d, 0x0b, 0x0e
-};
-
 const uint8_t state_matrix_flipped[16] = {
       0x0e, 0x0b, 0x0d, 0x09,
       0x09, 0x0e, 0x0b, 0x0d,
@@ -92,8 +88,6 @@ void inverseSubBytes(uint8_t *block)
     }
 }
 
-
-
 //peassants algorithm as per the wikipedia article on finite field arithmatic
 uint8_t multiply(uint8_t a, uint8_t b)
 {
@@ -112,7 +106,6 @@ uint8_t multiply(uint8_t a, uint8_t b)
 
     return product;
 }
-
 
 void inverseMixColumns(uint8_t *block)
 {
@@ -144,19 +137,19 @@ void inverseMixColumns(uint8_t *block)
 void decryptBlock(uint8_t *block, const uint8_t *keys)
 {
     // Round without mixcolumns
-    addRoundKey(block, keys);
+    addRoundKey(block, &keys[0]);
     inverseShiftRows(block);
     inverseSubBytes(block);
 
     // full rounds
-    for(uint8_t i = 0; i < 9; i++)
+    for(uint8_t i = 1; i < 10; i++)
     {
-        addRoundKey(block, &keys[16*(i+1)]);
-        //inverseMixColumns(block);
+        addRoundKey(block, &keys[16*i]);
+        inverseMixColumns(block);
         inverseShiftRows(block);
         inverseSubBytes(block);
     }
 
     // one additional key-addition
-    addRoundKey(block, keys);
+    addRoundKey(block, &keys[16*10]);
 }

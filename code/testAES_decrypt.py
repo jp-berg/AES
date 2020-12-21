@@ -48,7 +48,10 @@ def test_addRoundKey():
     test_key = expand_key("d045ecd109c7c51c044415968635d665")[::-1][:16]
     byte_array = ctypes.c_ubyte * len(test_block)
     byte_array_key = ctypes.c_ubyte * len(test_key)
-    aeslib.addRoundKey(byte_array.from_buffer(test_block), byte_array_key.from_buffer(test_key))
+    aeslib.addRoundKey(
+        byte_array.from_buffer(test_block),
+        byte_array_key.from_buffer(test_key)
+    )
 
     reference = bytearray([])
     for bk, bb in zip(test_key, test_block_copy):
@@ -98,12 +101,79 @@ def test_inverseShiftRows():
         print("inverseShiftRows in C results in: ", list(map(hex, test_block)))
 
 
+def test_decryptBlock():
+    test_block = bytearray.fromhex("69c4e0d86a7b0430d8cdb78070b4c55a")
+    reference = bytearray.fromhex("00112233445566778899aabbccddeeff")
+    keys = expand_key("000102030405060708090a0b0c0d0e0f")[::-1]
+    byte_array = ctypes.c_ubyte * len(test_block)
+    byte_array_keys = ctypes.c_ubyte * len(keys)
+    aeslib.decryptBlock(
+        byte_array.from_buffer(test_block),
+        byte_array_keys.from_buffer(keys)
+    )
+
+    try:
+        assert test_block == reference
+        print("decryptBlock test passed")
+    except AssertionError:
+        print("decryptBlock test failed")
+        print("decryptBlock in C results in: ", list(map(hex, test_block)))
+
+
+def test_decryptBlock_python():
+    test_block = bytearray.fromhex("69c4e0d86a7b0430d8cdb78070b4c55a")
+    test_block_copy = test_block[:]
+    reference = bytearray.fromhex("00112233445566778899aabbccddeeff")
+    keys = expand_key("000102030405060708090a0b0c0d0e0f")[::-1]
+    keys.append(0x00)
+    byte_array = ctypes.c_ubyte * len(test_block)
+    byte_array_keys = ctypes.c_ubyte * len(test_block)
+
+    aeslib.addRoundKey(
+        byte_array.from_buffer(test_block),
+        byte_array_keys.from_buffer(keys[:16])
+    )
+    aeslib.inverseShiftRows(byte_array.from_buffer(test_block))
+    aeslib.inverseSubBytes(byte_array.from_buffer(test_block))
+
+    print("after sub bytes round 0")
+    print( list(map(hex, test_block)))
+
+    for i in range(1, 10):
+        aeslib.addRoundKey(
+            byte_array.from_buffer(test_block),
+            byte_array_keys.from_buffer(keys[16*i:16*i+16])
+        )
+        aeslib.inverseShiftRows(byte_array.from_buffer(test_block))
+        aeslib.inverseShiftRows(byte_array.from_buffer(test_block))
+        aeslib.inverseSubBytes(byte_array.from_buffer(test_block))
+
+        print(f"after sub bytes round {i}")
+        print( list(map(hex, test_block)))
+
+    aeslib.addRoundKey(
+        byte_array.from_buffer(test_block),
+        byte_array_keys.from_buffer(keys[16*10:])
+    )
+
+    print("after last add key")
+    print(list(map(hex, test_block)))
+
+    try:
+        assert test_block == reference
+        print("decryptBlock test passed")
+    except AssertionError:
+        print("decryptBlock test failed")
+        print("decryptBlock in python results in: ", list(map(hex, test_block)))
+
 
 def main():
     test_addRoundKey()
     test_inverseSubBytes()
     test_inverseShiftRows()
     test_inverseMixColumns()
+    # test_decryptBlock_python()
+    test_decryptBlock()
 
 
 
