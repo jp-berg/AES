@@ -8,6 +8,40 @@ inv_sbox = [82, 9, 106, 213, 48, 54, 165, 56, 191, 64, 163, 158, 129, 243, 215, 
 
 aeslib = ctypes.CDLL(join(getcwd(),"libaesdecrypt.so"))
 
+
+
+def test_multiply():
+    tests = [
+        (127, 13, 77),
+        (7, 9, 63),
+        (65, 11, 253)
+    ]
+    for test in tests:
+        try:
+            res = aeslib.multiply(test[0], test[1])
+            assert res == test[2]
+            print(f"successful for {test[0], test[1]}, was {res} as expected")
+        except AssertionError as ae:
+            print(f"failed for {test[0], test[1]}, should have been {test[2]} but was {res}")
+
+
+def test_inverseMixColumns():
+    test_block = bytearray.fromhex("fde3bad205e5d0d73547964ef1fe37f1")
+    reference = bytearray.fromhex("2d7e86a339d9393ee6570a1101904e16")
+    byte_array = ctypes.c_ubyte * len(test_block)
+    aeslib.inverseMixColumns(byte_array.from_buffer(test_block))
+
+    try:
+        assert test_block == reference
+        print("inverse MixColumns test passed")
+    except AssertionError as ae:
+        print("mixColmns test failed", ae)
+        print("mixColumns test C result: ", list(map(hex, test_block)))
+        print("reference was: ", list(map(hex, reference)))
+
+
+
+
 def test_addRoundKey():
     test_block = bytearray.fromhex("c89991ee7e0c62a54664efc6c781207e")
     test_block_copy = test_block[:]
