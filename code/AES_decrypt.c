@@ -47,6 +47,13 @@ const uint8_t inverse_mult_matrix[16] = {
     0x0e, 0x09, 0x0d, 0x0b, 0x0b, 0x0e, 0x09, 0x0d, 0x0d, 0x0b, 0x0e, 0x09, 0x09, 0x0d, 0x0b, 0x0e
 };
 
+const uint8_t state_matrix_flipped[16] = {
+      0x0e, 0x0b, 0x0d, 0x09,
+      0x09, 0x0e, 0x0b, 0x0d,
+      0x0d, 0x09, 0x0e, 0x0b,
+      0x0b, 0x0d, 0x09, 0x0e
+};
+
 
 void addRoundKey(uint8_t *block, const uint8_t *keys)
 {
@@ -113,22 +120,22 @@ void inverseMixColumns(uint8_t *block)
     memcpy(tmp, block, 16 * sizeof(uint8_t));
 
     for(uint8_t i = 0; i < 16; i+=4) {
-        block[i] = multiply(tmp[i], inverse_mult_matrix[i]) ^
-                   multiply(tmp[i+1], inverse_mult_matrix[i+1]) ^
-                   multiply(tmp[i+2], inverse_mult_matrix[i+2]) ^
-                   multiply(tmp[i+3], inverse_mult_matrix[i+3]);
-        block[i+1] = multiply(tmp[i], inverse_mult_matrix[i]) ^
-                   multiply(tmp[i+1], inverse_mult_matrix[i+1]) ^
-                   multiply(tmp[i+2], inverse_mult_matrix[i+2]) ^
-                   multiply(tmp[i+3], inverse_mult_matrix[i+3]);
-        block[i+2] = multiply(tmp[i], inverse_mult_matrix[i]) ^
-                   multiply(tmp[i+1], inverse_mult_matrix[i+1]) ^
-                   multiply(tmp[i+2], inverse_mult_matrix[i+2]) ^
-                   multiply(tmp[i+3], inverse_mult_matrix[i+3]);
-        block[i+3] = multiply(tmp[i], inverse_mult_matrix[i]) ^
-                   multiply(tmp[i+1], inverse_mult_matrix[i+1]) ^
-                   multiply(tmp[i+2], inverse_mult_matrix[i+2]) ^
-                   multiply(tmp[i+3], inverse_mult_matrix[i+3]);
+        block[i] = multiply(tmp[i], state_matrix_flipped[0]) ^
+                   multiply(tmp[i+1], state_matrix_flipped[1]) ^
+                   multiply(tmp[i+2], state_matrix_flipped[2]) ^
+                   multiply(tmp[i+3], state_matrix_flipped[3]);
+        block[i+1] = multiply(tmp[i], state_matrix_flipped[4]) ^
+                   multiply(tmp[i+1], state_matrix_flipped[5]) ^
+                   multiply(tmp[i+2], state_matrix_flipped[6]) ^
+                   multiply(tmp[i+3], state_matrix_flipped[7]);
+        block[i+2] = multiply(tmp[i], state_matrix_flipped[8]) ^
+                   multiply(tmp[i+1], state_matrix_flipped[9]) ^
+                   multiply(tmp[i+2], state_matrix_flipped[10]) ^
+                   multiply(tmp[i+3], state_matrix_flipped[11]);
+        block[i+3] = multiply(tmp[i], state_matrix_flipped[12]) ^
+                   multiply(tmp[i+1], state_matrix_flipped[13]) ^
+                   multiply(tmp[i+2], state_matrix_flipped[14]) ^
+                   multiply(tmp[i+3], state_matrix_flipped[15]);
 
     }
 }
