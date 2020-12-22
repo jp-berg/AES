@@ -43,9 +43,9 @@ def test_inverseMixColumns():
 
 
 def test_addRoundKey():
-    test_block = bytearray.fromhex("c89991ee7e0c62a54664efc6c781207e")
-    test_block_copy = test_block[:]
-    test_key = expand_key("d045ecd109c7c51c044415968635d665")[::-1][:16]
+    test_block = bytearray.fromhex("fde3bad205e5d0d73547964ef1fe37f1")
+    reference = bytearray.fromhex("baa03de7a1f9b56ed5512cba5f414d23")
+    test_key = bytearray.fromhex("47438735a41c65b9e016baf4aebf7ad2")
     byte_array = ctypes.c_ubyte * len(test_block)
     byte_array_key = ctypes.c_ubyte * len(test_key)
     aeslib.addRoundKey(
@@ -53,28 +53,20 @@ def test_addRoundKey():
         byte_array_key.from_buffer(test_key)
     )
 
-    reference = bytearray([])
-    for bk, bb in zip(test_key, test_block_copy):
-        reference.append(bk ^ bb)
-
     try:
         assert test_block == reference
         print("addRoundKey test passed")
     except AssertionError as ae:
         print("addRoundKey test failed", ae)
         print("addRoundKey in C results in: ", list(map(hex, test_block)))
-        print("addRoundKey in python results in: ", list(map(hex, reference)))
+        print("addRoundKey reference was: ", list(map(hex, reference)))
 
 
 def test_inverseSubBytes():
-    test_block = bytearray.fromhex("c89991ee7e0c62a54664efc6c781207e")
-    test_block_copy = test_block[:]
+    test_block = bytearray.fromhex("b458124c68b68a014b99f82e5f15554c")
     byte_array = ctypes.c_ubyte * len(test_block)
+    reference = bytearray.fromhex("c65e395df779cf09ccf9e1c3842fed5d")
     aeslib.inverseSubBytes(byte_array.from_buffer(test_block))
-
-    reference = bytearray([])
-    for byte in test_block_copy:
-        reference.append(inv_sbox[byte])
 
     try:
         assert test_block == reference
@@ -88,8 +80,8 @@ def test_inverseSubBytes():
 def test_inverseShiftRows():
     """test vector from FIPS 197 Appendix C, Round 5.is_row, istart"""
 
-    test_block = bytearray.fromhex("e8dab6901477d4653ff7f5e2e747dd4f")
-    reference = bytearray.fromhex("e847f56514dadde23f77b64fe7f7d490")
+    test_block = bytearray.fromhex("bdb52189f261b63d0b107c9e8b6e776e")
+    reference = bytearray.fromhex("bd6e7c3df2b5779e0b61216e8b10b689")
     byte_array = ctypes.c_ubyte * len(test_block)
     aeslib.inverseShiftRows(byte_array.from_buffer(test_block))
 
@@ -104,7 +96,7 @@ def test_inverseShiftRows():
 def test_decryptBlock():
     test_block = bytearray.fromhex("69c4e0d86a7b0430d8cdb78070b4c55a")
     reference = bytearray.fromhex("00112233445566778899aabbccddeeff")
-    keys = expand_key("000102030405060708090a0b0c0d0e0f")[::-1]
+    keys = expand_key("000102030405060708090a0b0c0d0e0f")
     byte_array = ctypes.c_ubyte * len(test_block)
     byte_array_keys = ctypes.c_ubyte * len(keys)
     aeslib.decryptBlock(

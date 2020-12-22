@@ -137,19 +137,19 @@ void inverseMixColumns(uint8_t *block)
 void decryptBlock(uint8_t *block, const uint8_t *keys)
 {
     // Round without mixcolumns
-    addRoundKey(block, &keys[0]);
+    addRoundKey(block, &keys[16*10]);
     inverseShiftRows(block);
     inverseSubBytes(block);
 
     // full rounds
     for(uint8_t i = 1; i < 10; i++)
     {
-        addRoundKey(block, &keys[16*i]);
+        addRoundKey(block, &keys[16*(10-i)]);
         inverseMixColumns(block);
         inverseShiftRows(block);
         inverseSubBytes(block);
     }
 
     // one additional key-addition
-    addRoundKey(block, &keys[16*10]);
+    addRoundKey(block, &keys[0]);
 }
