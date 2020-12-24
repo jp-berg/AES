@@ -43,7 +43,7 @@ def testEncryptBlock():
 
 def test_encrypt_file():
     """Tests the C-implementation of the AES-Encryption of a file"""
-    toencrypt = "/home/pc/Documents/C.7z"
+    toencrypt = "/home/pc/Documents/vkt.pdf"
     password = "aeskurs"
     password = prep_password(password)
 
