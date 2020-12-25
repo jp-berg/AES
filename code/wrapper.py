@@ -7,9 +7,9 @@ import hashlib
 
 from key_expansion import expand_key, format_key_32bit
 
-compile_gcc = """gcc -O2 -w -shared -fpic -Wl,-soname,AES
+compile_gcc = """gcc -O3 -w -shared -fpic -fstrict-aliasing -Wl,-soname,AES
                 -o libaes.so AES.c -fopenmp""".split()
-compile_clang = """clang -O2 -w -shared -fpic -Wl,-soname,AES
+compile_clang = """clang -O3 -w -shared -fpic -fstrict-aliasing -Wl,-soname,AES
                 -o libaes.so AES.c -fopenmp""".split()
 cpucount = cpu_count()
 chunksize = 2**30 #needs to be a multiple of 16 (otherwise padding is needed)
