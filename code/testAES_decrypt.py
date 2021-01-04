@@ -1,131 +1,136 @@
-from key_expansion import expand_key, separate_into_chunks, rcon_compute, g, format_key_32bit
+from key_expansion import expand_key
 import ctypes
 from os.path import join
 from os import getcwd
-
-inv_sbox = [82, 9, 106, 213, 48, 54, 165, 56, 191, 64, 163, 158, 129, 243, 215, 251, 124, 227, 57, 130, 155, 47, 255, 135, 52, 142, 67, 68, 196, 222, 233, 203, 84, 123, 148, 50, 166, 194, 35, 61, 238, 76, 149, 11, 66, 250, 195, 78, 8, 46, 161, 102, 40, 217, 36, 178, 118, 91, 162, 73, 109, 139, 209, 37, 114, 248, 246, 100, 134, 104, 152, 22, 212, 164, 92, 204, 93, 101, 182, 146, 108, 112, 72, 80, 253, 237, 185, 218, 94, 21, 70, 87, 167, 141, 157, 132, 144, 216, 171, 0, 140, 188, 211, 10, 247, 228, 88, 5, 184, 179, 69, 6, 208, 44, 30, 143, 202, 63, 15, 2, 193, 175, 189, 3, 1, 19, 138, 107, 58, 145, 17, 65, 79, 103, 220, 234, 151, 242, 207, 206, 240, 180, 230, 115, 150, 172, 116, 34, 231, 173, 53, 133, 226, 249, 55, 232, 28, 117, 223, 110, 71, 241, 26, 113, 29, 41, 197, 137, 111, 183, 98, 14, 170, 24, 190, 27, 252, 86, 62, 75, 198, 210, 121, 32, 154, 219, 192, 254, 120, 205, 90, 244, 31, 221, 168, 51, 136, 7, 199, 49, 177, 18, 16, 89, 39, 128, 236, 95, 96, 81, 127, 169, 25, 181, 74, 13, 45, 229, 122, 159, 147, 201, 156, 239, 160, 224, 59, 77, 174, 42, 245, 176, 200, 235, 187, 60, 131, 83, 153, 97, 23, 43, 4, 126, 186, 119, 214, 38, 225, 105, 20, 99, 85, 33, 12, 125]
+import pytest
 
 
 aeslib = ctypes.CDLL(join(getcwd(),"libaesdecrypt.so"))
 
 
-
-def test_multiply():
-    tests = [
+@pytest.mark.parametrize(
+    ('factor_x', 'factor_y', 'expected'),
+    (
         (127, 13, 77),
         (7, 9, 63),
-        (65, 11, 253)
-    ]
-    for test in tests:
-        try:
-            res = aeslib.multiply(test[0], test[1])
-            assert res == test[2]
-            print(f"successful for {test[0], test[1]}, was {res} as expected")
-        except AssertionError as ae:
-            print(f"failed for {test[0], test[1]}, should have been {test[2]} but was {res}")
+        (65, 11, 253),
+    )
+)
+def test_multiply(factor_x, factor_y, expected):
+    res = aeslib.multiply(factor_x, factor_y)
+    assert res == expected
 
 
-def test_inverseMixColumns():
-    test_block = bytearray.fromhex("fde3bad205e5d0d73547964ef1fe37f1")
-    reference = bytearray.fromhex("2d7e86a339d9393ee6570a1101904e16")
+# Test vectors from rounds 2, 3, 4 of the equivalent inverse cipher
+# FIPS 197 Appendix C
+@pytest.mark.parametrize(
+    ('input_block', 'expected'),
+    (
+        ("fde3bad205e5d0d73547964ef1fe37f1", "2d7e86a339d9393ee6570a1101904e16"),
+        ("d1876c0f79c4300ab45594add66ff41f","39daee38f4f1a82aaf432410c36d45b9"),
+        ("c62fe109f75eedc3cc79395d84f9cf5d", "9a39bf1d05b20a3a476a0bf79fe51184"),
+    )
+)
+def test_inverseMixColumns(input_block, expected):
+    test_block = bytearray.fromhex(input_block)
+    reference = bytearray.fromhex(expected)
     byte_array = ctypes.c_ubyte * len(test_block)
     aeslib.inverseMixColumns(byte_array.from_buffer(test_block))
-
-    try:
-        assert test_block == reference
-        print("inverse MixColumns test passed")
-    except AssertionError as ae:
-        print("mixColmns test failed", ae)
-        print("mixColumns test C result: ", list(map(hex, test_block)))
-        print("reference was: ", list(map(hex, reference)))
+    assert test_block == reference
 
 
-
-
-def test_addRoundKey():
-    test_block = bytearray.fromhex("fde3bad205e5d0d73547964ef1fe37f1")
-    reference = bytearray.fromhex("baa03de7a1f9b56ed5512cba5f414d23")
-    test_key = bytearray.fromhex("47438735a41c65b9e016baf4aebf7ad2")
+# Test vectors from rounds 2, 3, 4 of the inverse cipther
+# FIPS 197 Appendix C
+@pytest.mark.parametrize(
+    ('input_block', 'round_key', 'expected'),
+    (
+        (
+            "fde3bad205e5d0d73547964ef1fe37f1",
+            "47438735a41c65b9e016baf4aebf7ad2",
+            "baa03de7a1f9b56ed5512cba5f414d23"
+        ),
+        (
+            "d1876c0f79c4300ab45594add66ff41f",
+            "14f9701ae35fe28c440adf4d4ea9c026",
+            "c57e1c159a9bd286f05f4be098c63439"
+        ),
+        (
+            "c62fe109f75eedc3cc79395d84f9cf5d",
+            "5e390f7df7a69296a7553dc10aa31f6b",
+            "9816ee7400f87f556b2c049c8e5ad036"
+        ),
+    )
+)
+def test_addRoundKey(input_block, round_key, expected):
+    test_block = bytearray.fromhex(input_block)
+    reference = bytearray.fromhex(round_key)
+    test_key = bytearray.fromhex(expected)
     byte_array = ctypes.c_ubyte * len(test_block)
     byte_array_key = ctypes.c_ubyte * len(test_key)
     aeslib.addRoundKey(
         byte_array.from_buffer(test_block),
         byte_array_key.from_buffer(test_key)
     )
+    assert test_block == reference
 
-    try:
-        assert test_block == reference
-        print("addRoundKey test passed")
-    except AssertionError as ae:
-        print("addRoundKey test failed", ae)
-        print("addRoundKey in C results in: ", list(map(hex, test_block)))
-        print("addRoundKey reference was: ", list(map(hex, reference)))
-
-
-def test_inverseSubBytes():
-    test_block = bytearray.fromhex("b458124c68b68a014b99f82e5f15554c")
+# Test vectors from rounds 2, 3, 4 of the equivalent inverse cipher
+# FIPS 197 Appendix C
+@pytest.mark.parametrize(
+    ('input_block', 'expected'),
+    (
+        ("54d990a16ba09ab596bbf40ea111702f", "fde596f1054737d235febad7f1e3d04e"),
+        ("3e1c22c0b6fcbf768da85067f6170495", "d1c4941f7955f40fb46f6c0ad68730ad"),
+        ("b458124c68b68a014b99f82e5f15554c", "c65e395df779cf09ccf9e1c3842fed5d")
+    )
+)
+def test_inverseSubBytes(input_block, expected):
+    test_block = bytearray.fromhex(input_block)
+    reference = bytearray.fromhex(expected)
     byte_array = ctypes.c_ubyte * len(test_block)
-    reference = bytearray.fromhex("c65e395df779cf09ccf9e1c3842fed5d")
     aeslib.inverseSubBytes(byte_array.from_buffer(test_block))
-
-    try:
-        assert test_block == reference
-        print("inverseSubBytes test passed")
-    except AssertionError:
-        print("inverseSubBytes test failed")
-        print("inverseSubBytes in C results in: ", list(map(hex, test_block)))
-        print("inverseSubBytes in python results in: ", list(map(hex, reference)))
+    assert test_block == reference
 
 
-def test_inverseShiftRows():
+# Test vectors from rounds 2, 3, 4 of the equivalent inverse cipher
+# FIPS 197 Appendix C
+@pytest.mark.parametrize(
+    ('input_block', 'expected'),
+    (
+        ("fde596f1054737d235febad7f1e3d04e", "fde3bad205e5d0d73547964ef1fe37f1"),
+        ("d1c4941f7955f40fb46f6c0ad68730ad", "d1876c0f79c4300ab45594add66ff41f"),
+        ("c65e395df779cf09ccf9e1c3842fed5d", "c62fe109f75eedc3cc79395d84f9cf5d")
+    )
+)
+def test_inverseShiftRows(input_block, expected):
     """test vector from FIPS 197 Appendix C, Round 5.is_row, istart"""
-
-    test_block = bytearray.fromhex("bdb52189f261b63d0b107c9e8b6e776e")
-    reference = bytearray.fromhex("bd6e7c3df2b5779e0b61216e8b10b689")
+    test_block = bytearray.fromhex(input_block)
+    reference = bytearray.fromhex(expected)
     byte_array = ctypes.c_ubyte * len(test_block)
     aeslib.inverseShiftRows(byte_array.from_buffer(test_block))
-
-    try:
-        assert test_block == reference
-
-        print("inverseShiftRows test passed")
-    except AssertionError:
-        print("inverseShiftRows test failed")
-        print("inverseShiftRows in C results in: ", list(map(hex, test_block)))
+    assert test_block == reference
 
 
-def test_decryptBlock():
-    test_block = bytearray.fromhex("69c4e0d86a7b0430d8cdb78070b4c55a")
-    reference = bytearray.fromhex("00112233445566778899aabbccddeeff")
-    keys_expand = expand_key("000102030405060708090a0b0c0d0e0f")
-    keys = bytearray.fromhex("00") + keys_expand
-    print(len(keys))
+@pytest.mark.parametrize(
+    ('input_block', 'key', 'expected'),
+    (
+        (
+            "69c4e0d86a7b0430d8cdb78070b4c55a",
+            "000102030405060708090a0b0c0d0e0f",
+            "00112233445566778899aabbccddeeff"
+        ),
+    )
+)
+def test_decryptBlock(input_block, key, expected):
+    test_block = bytearray.fromhex(input_block)
+    reference = bytearray.fromhex(expected)
+    if key.startswith("00"):
+        keys = bytearray.fromhex("00") + expand_key(key)
+    else:
+        keys = expand_key(key)
     byte_array = ctypes.c_ubyte * len(test_block)
     byte_array_keys = ctypes.c_ubyte * len(keys)
     aeslib.decryptBlock(
         byte_array.from_buffer(test_block),
         byte_array_keys.from_buffer(keys)
     )
-
-    try:
-        assert test_block == reference
-        print("decryptBlock test passed")
-    except AssertionError:
-        print("decryptBlock test failed")
-        print("decryptBlock in C results in: ", list(map(hex, test_block)))
-
-
-
-
-def main():
-    test_addRoundKey()
-    test_inverseSubBytes()
-    test_inverseShiftRows()
-    test_inverseMixColumns()
-    # test_decryptBlock_python()
-    test_decryptBlock()
-
-
-
-if __name__ == '__main__':
-    exit(main())
+    assert test_block == reference
