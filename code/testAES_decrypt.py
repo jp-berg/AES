@@ -123,10 +123,7 @@ def test_inverseShiftRows(input_block, expected):
 def test_decryptBlock(input_block, key, expected):
     test_block = bytearray.fromhex(input_block)
     reference = bytearray.fromhex(expected)
-    if key.startswith("00"):
-        keys = bytearray.fromhex("00") + expand_key(key)
-    else:
-        keys = expand_key(key)
+    keys = expand_key(key)
     byte_array = ctypes.c_ubyte * len(test_block)
     byte_array_keys = ctypes.c_ubyte * len(keys)
     aeslib.decryptBlock(
