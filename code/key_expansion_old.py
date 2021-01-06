@@ -11,33 +11,23 @@ def expand_key(key):
     Returns:
         Bytearray of all roundkeys appended.
     """
-    key = bytearray.fromhex(key)
-    keywords = [bytes(key[i:i+4]) for i in range(0, 16, 4)]
-
-    w = [word for word in keywords]
+    key = format_key_32bit(key)
+    w = [word for word in key]
 
     rcons = rcon_compute()
 
     for i in range(4, 44):
         round = i // 4 - 1
         if i % 4 == 0:  # the first 32-bits of every key get processed differently
-            w.append(byte_xor(w[i-4], g(w[i-1], round, rcons)))
+            w.append(w[i-4] ^ g(w[i-1], round, rcons))
         else:
-            w.append(byte_xor(w[i-4], w[i-1]))
+            w.append(w[i-4] ^ w[i-1])
 
-    return bytearray(b''.join(word for word in w))
+    # create list of bytes from list of 32-bit numbers
+    bytelist = [byte for word in w for byte in separate_into_chunks(word, chunksize=8)]
 
+    return bytearray(bytelist)
 
-def byte_xor(ba1, ba2):
-    """Execute XOR on two bytestrings.
-
-    Args:
-        None
-
-    Returns:
-        The bitwise XOR of two bytestrings.
-    """
-    return bytes([a ^ b for a, b in zip(ba1, ba2)])
 
 
 def g(word, round, rcons):
@@ -50,9 +40,10 @@ def g(word, round, rcons):
     Returns:
         32-bit number
     """
+    wordlist = separate_into_chunks(word, chunksize=8)
 
     # Rotate input word
-    subword = bytearray(word[1:] + word[0:1])
+    subword = wordlist[1:] + wordlist[0:1]
 
     # S-Box substitution
     for idx, v in enumerate(subword):
@@ -61,7 +52,38 @@ def g(word, round, rcons):
     # add round constant
     subword[0] = subword[0] ^ rcons[round]
 
-    return bytes(subword)
+    # combine into one 32-bit number
+    return_word = 0
+    for idx, s in enumerate(subword):
+        return_word += s << (8*(3-idx))
+
+    return return_word
+
+
+def separate_into_chunks(num, chunksize=8):
+    """Recursive splitting of a number into a list of numbers with the bitlength of chunksize.
+
+    Args:
+        key: any number
+        chunksize (default = 8): desired bitlength of the chunks
+
+    Returns:
+        list numbers with bitlength chunksize
+    """
+    compare_constant = 0x01 << chunksize
+    return [num] if num < compare_constant else separate_into_chunks(num >> chunksize, chunksize) + [num % compare_constant]
+
+
+def format_key_32bit(key):
+    """Formats hex key string 32-bit chunks.
+
+    Args:
+        key: string of a 128-bit hex number
+
+    Returns:
+        list 32-bit numbers
+    """
+    return separate_into_chunks(int(key, 16), 32)
 
 
 def rcon_compute():

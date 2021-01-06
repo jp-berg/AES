@@ -5,3 +5,4 @@ build/
 misc.py
 *.so
 *.enc
+*.out
