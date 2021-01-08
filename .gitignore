@@ -1,8 +1,7 @@
 sbox.txt
-code/libaes.so
-code/__pycache__/
-build/
-misc.py
 *.so
 *.enc
+code/__pycache__/
+build/
 *.out
+.pytest_cache/
