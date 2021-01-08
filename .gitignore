@@ -1,7 +1,7 @@
 sbox.txt
 *.so
 *.enc
-code/__pycache__/
+__pycache__/
 build/
 *.out
 .pytest_cache/
