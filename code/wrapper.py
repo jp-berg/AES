@@ -1,6 +1,6 @@
 import ctypes
-from os.path import isfile, join, splitext, expanduser
-from os import cpu_count, getcwd, urandom
+from os.path import isfile, join, splitext, expanduser, exists
+from os import cpu_count, getcwd, urandom, mkdir
 from subprocess import check_output
 import hashlib
 import binascii
@@ -9,6 +9,9 @@ from src.key_expansion import expand_key
 
 
 def setup():
+    if not exists("lib"):
+        mkdir("lib")
+
     compile_gcc_encrypt = """gcc -O2 -w -shared -fpic -Wl,-soname,AES_encrypt -o lib/libaes_encrypt.so src/AES_encrypt.c -fopenmp""".split()
     compile_clang_encrypt = """clang-O2 -w -shared -fpic -Wl,
                     -soname,AES_encrypt -o ../lib/libaes_encrypt.so src/AES_encrypt.c -fopenmp""".split()
