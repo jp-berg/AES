@@ -36,19 +36,27 @@ if not isfile("libaesdecrypt.so"):
 aeslib = ctypes.CDLL(join(getcwd(),"libaesdecrypt.so"))
 
 
+def pad_input(ba):
+    """pads bytearray to have a length % 16 = 0"""
+    return ba + bytearray(urandom(len(ba) % 16))
+
+
 @click.command()
 @click.option("--text", help="ciphertext", prompt="Text to be decrypted")
 @click.option("--key", help="128 bit AES key", prompt="AES-128 Key")
 def decrypt(text, key):
-    cipherblock = bytearray.fromhex(text)
+    cipherinput = bytearray(text.encode("utf-8"))
+    if len(cipherinput)%16 != 0:
+        cipherinput = pad_input(cipherinput)
     keys = expand_key(key)
-    byte_array = ctypes.c_ubyte * len(cipherblock)
+    byte_array = ctypes.c_ubyte * len(cipherinput)
     byte_array_keys = ctypes.c_ubyte * len(keys)
-    aeslib.decryptBlock(
-        byte_array.from_buffer(cipherblock),
-        byte_array_keys.from_buffer(keys)
+    aeslib.decryptBlocks(
+        byte_array.from_buffer(cipherinput),
+        byte_array_keys.from_buffer(keys),
+        len(cipherinput)
     )
-    print(binascii.hexlify(cipherblock).decode("utf-8"))
+    print(binascii.hexlify(cipherinput).decode("utf-8"))
 
 
 if __name__ == '__main__':

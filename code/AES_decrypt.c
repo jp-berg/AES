@@ -154,3 +154,11 @@ void decryptBlock(uint8_t *block, const uint8_t *keys)
     inverseSubBytes(block);
     addRoundKey(block, &keys[0]);
 }
+
+
+void decryptBlocks(uint8_t *bytes, const uint8_t *keys, const size_t length){
+    for(size_t i = 0; i < length; i += 16)
+    {
+        decryptBlock(&bytes[i], keys);
+    }
+}
