@@ -1,28 +1,10 @@
 #include "AES.h"
 #include <omp.h>
-#include <time.h>
 #include <string.h>
 #include <stdio.h>
 
-#define DEBUG 1
-
 //avoid multiple memcpy, global to local, local functions static, loop countdown for(i = 16; i--; ), loop unrolling, macros, restrict, size of loop-index == size of pointer
 
-struct timespec start, end;
-
-static double ShiftRowsTime, MixColumnsTime, SubBytesTime, AddRoundKeyTime;
-
-void timers(void){
-   clock_gettime(CLOCK_REALTIME, &start);
-}
-
-double timere(void){
-    clock_gettime(CLOCK_REALTIME, &end);
-    double elapsed = (end.tv_sec - start.tv_sec) +
-						(end.tv_nsec - start.tv_nsec) / 1000000000.0;
-//      printf("%lf seconds elapsed\n", elapsed);
-    return elapsed;
-}
 
 
 const uint8_t sbox[256] = 
@@ -79,11 +61,11 @@ inline static void AddRoundKey(uint8_t * restrict bytes, const uint8_t * restric
     }
 }
 
-inline static void SubBytes(uint8_t * restrict bytes, const uint8_t * restrict tempbox)
+inline static void SubBytes(uint8_t * restrict bytes)
 {
     for(uint8_t i = 0; i < 16; i++)
     {
-        bytes[i] = tempbox[bytes[i]];
+        bytes[i] = sbox[bytes[i]];
     }
     
 }
@@ -137,47 +119,31 @@ static void MixColumns(uint8_t * restrict block, uint8_t * restrict tempblock)
 }
                     
 
-static void encryptBlock(uint8_t * restrict block, uint8_t * restrict tempblock, const uint8_t * restrict tempbox, const uint8_t * restrict keys, const uint8_t rounds)
+static void encryptBlock(uint8_t * restrict block, uint8_t * restrict tempblock, const uint8_t * restrict keys, const uint8_t rounds)
 {
 
     uint8_t ikeys = 0;
-    
-    timers();
     AddRoundKey(block, keys);
-     AddRoundKeyTime += timere();
     ikeys += 16;
                 
     for(uint8_t i = 0; i < rounds - 1; i++)
     {   
-         timers();
-        SubBytes(block, tempbox);
-         SubBytesTime += timere();
-         timers();
+        SubBytes(block);
         ShiftRows(block, tempblock);
-         ShiftRowsTime += timere();
-         timers();
         MixColumns(block, tempblock);
-         MixColumnsTime += timere();
-         timers();
         AddRoundKey(block, &keys[ikeys]);
-         AddRoundKeyTime += timere();
         ikeys += 16;
         
     }
     
-     timers();
-    SubBytes(block, tempbox);
-     SubBytesTime += timere();
-     timers();
+    SubBytes(block);
     ShiftRows(block, tempblock);
-     ShiftRowsTime += timere();
-     timers();
     AddRoundKey(block, &keys[ikeys]);
-     AddRoundKeyTime += timere();
 
 }
 
-void encryptBlocks(uint8_t * restrict bytes, const uint8_t * restrict keys, const size_t bytecount, const uint8_t rounds){
+void encryptBlocks(uint8_t * restrict bytes, const uint8_t * restrict keys, const size_t bytecount, const uint8_t rounds)
+{
     genMultLookup(gal_mult_lookup);
     uint8_t tempbox[256];
     uint8_t tempblock[16];
@@ -185,9 +151,8 @@ void encryptBlocks(uint8_t * restrict bytes, const uint8_t * restrict keys, cons
     
     for(size_t i = 0; i < bytecount; i += 16)
     {
-        encryptBlock(&bytes[i], tempblock, tempbox, keys, rounds);
+        encryptBlock(&bytes[i], tempblock, keys, rounds);
     }
-     printf("TIMINGS:\nShiftRows: %lf\nMixColumns: %lf\nSubBytes: %lf\nAddRoundKey: %lf\n", ShiftRowsTime, MixColumnsTime, SubBytesTime, AddRoundKeyTime);
 }
 
 
@@ -196,24 +161,20 @@ void encryptAES(uint8_t *bytes, const uint8_t *keys, const size_t bytecount, con
 {
     genMultLookup(gal_mult_lookup);
     size_t chunk = (size_t) (bytecount / cpucount);
-    printf("chunk: %lu\n", chunk);
-    
+    printf("ChUNK: %lu\n", chunk);
     size_t i;
-    if(DEBUG) timers();
-#pragma omp parallel num_threads(2)
+#pragma omp parallel num_threads(1)
     {
 #pragma omp for
     for(i = 0; i < bytecount; i += chunk)  //TODO: Play with Blockwidth
     {
-        printf("I: %lu\n", i);
-        puts("HERE\n");
         encryptBlocks(&bytes[i], keys, chunk, rounds);
-        //if(i%62500 == 0) printf("Byte %lu of %lu (%lf Prozent)\n", i, bytecount,  100 * ((double)i) / ((double)bytecount));
-    }
+//         printf("chunk: %lu\n", i);
     }
     encryptBlocks(&bytes[i], keys, bytecount%chunk, rounds);
-    if(DEBUG) printf("C-Timer: %lf\n", timere());
-    printf("TIMINGS:\nShiftRows: %lf\nMixColumns: %lf\nSubBytes: %lf\nAddRoundKey: %lf\n", ShiftRowsTime, MixColumnsTime, SubBytesTime, AddRoundKeyTime);
+    }
+    
+
 }
 
 

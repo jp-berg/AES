@@ -43,14 +43,14 @@ def testEncryptBlock():
 
 def test_encrypt_file():
     """Tests the C-implementation of the AES-Encryption of a file"""
-    toencrypt = "/home/pc/Documents/C.7z"
+    toencrypt = "/home/pc/Downloads/monero-gui-linux-x64-v0.16.0.0.tar.bz2"
     password = "aeskurs"
     password = prep_password(password)
 
     tic = perf_counter()
-    file = encrypt_file(toencrypt, password)
+    file = encrypt_file(toencrypt, password, chunksize)
     tac = perf_counter() - tic
-    print("Time: " + str(tac))
+    print(tac)
 
 
 def test_encrypt_aes():
@@ -76,6 +76,7 @@ def test_encrypt_aes():
             print(str(nr) + ": " + s[index:index + 32])
             index += 32
             nr += 1
-test_encrypt_file()
+
+        
 
 #[FIPS 197]: FIPS 197, Advanced Encryption Standard
