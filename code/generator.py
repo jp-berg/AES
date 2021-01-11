@@ -79,19 +79,20 @@ def gen_sbox():
         j += 1
     return sbox
         
-        
-tic = perf_counter()
-x = gen_sbox()
-tac = perf_counter() - tic
-print(tac)
-x = gen_sbox()
-k = 0
-
-
-##for i in range(16):
-##    satz = ""
-##    for j in range(16):
-##        satz += hex(x[k]) + " "
-##        k += 1
-##    print(satz)
+if __name__ == "__main__":
+    x = gen_sbox()
+    y = gen_mult_lookup()
+    k = 0
+    print("Sbox:")
+    for i in range(16):
+        satz = ""
+        for j in range(16):
+            satz += hex(x[k]) + " "
+            k += 1
+        print(satz)
+    print("\n\nGalois Field Multiplication Lookup Table:")
+    for i in range(256):
+        print(str(y[i]) + "     " + str(y[i+256]) + "     " + str(y[i+512]))
+    
+    
 

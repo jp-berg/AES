@@ -6,6 +6,7 @@ from getpass import getpass
 import hashlib
 
 from key_expansion import expand_key, format_key_32bit
+from generator import gen_mult_lookup, gen_sbox
 
 compile_gcc = """gcc -O3 -w -shared -fpic -fstrict-aliasing -Wl,-soname,AES
                 -o libaes.so AES.c -fopenmp""".split()
@@ -84,13 +85,16 @@ def encrypt_aes(toencrypt, key):
     Returns:
         Bytearray with encrypted Bytes
     """
+    sbox = gen_sbox()
+    mult_lookup = gen_mult_lookup()
+    const = sbox + mult_lookup + key
     toencrypt = bytearray(toencrypt)
     if len(toencrypt)%16 != 0:
         raise ValueError("Bytearray needs padding for encryption, but has none")
-    byte_array_key = ctypes.c_ubyte * len(key)
-    byte_array_file = ctypes.c_ubyte * len(toencrypt)
-    aeslib.encryptBlocks(byte_array_file.from_buffer(toencrypt),
-                         byte_array_key.from_buffer(key), len(toencrypt), 10)
+    byte_array_const = ctypes.c_ubyte * len(const)
+    byte_array_toencrypt = ctypes.c_ubyte * len(toencrypt)
+    aeslib.encryptBlocks(byte_array_toencrypt.from_buffer(toencrypt),
+                         byte_array_const.from_buffer(const), len(toencrypt), 10)
     return toencrypt
 
 

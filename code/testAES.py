@@ -48,7 +48,7 @@ def test_encrypt_file():
     password = prep_password(password)
 
     tic = perf_counter()
-    file = encrypt_file(toencrypt, password, chunksize)
+    file = encrypt_file(toencrypt, password)
     tac = perf_counter() - tic
     print(tac)
 
@@ -58,7 +58,7 @@ def test_encrypt_aes():
     Compare with https://www.hanewin.net/encrypt/aes/aes-test.htm
     """
     b = bytearray(0)
-    num = 100 # number of blocks
+    num = 10 # number of blocks
     print("Blocks: ")
     for i in range(num):
         y = bytearray(urandom(16))
@@ -78,5 +78,6 @@ def test_encrypt_aes():
             nr += 1
 
         
-
+if __name__ == "__main__":
+    test_encrypt_file()
 #[FIPS 197]: FIPS 197, Advanced Encryption Standard
