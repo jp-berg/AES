@@ -28,13 +28,23 @@ The canidates would be furthermore analyzed and evaluated regarding:
 
 ## 4.2 AES selection process
 
-Nearly a year after requesting submissions, NIST published a list with fifteen canidates they deemed worthy of further investigation at the First AES Canidate Conference (AES1) in August 1998. The cryptographic community was invited to critique those choices, either via email or on the online discussion forum NIST hosted for this exact purpose. This input from the community was discussed at the Second AES Canidate Conference (AES2) in spring of 1999. Shortly after that NIST selected five finalists from the initial fifteen algorithms: MARS, RC6, Rijndael, Serpent, and Twofish.
+Nearly a year after requesting submissions, NIST published a list with fifteen canidates they deemed worthy of further investigation at the First AES Canidate Conference (AES1) in August 1998. The cryptographic community was invited to critique those choices, either via email or later on in the online discussion forum NIST hosted for this exact purpose. This input from the community collected in "Round 1" of the selection process was discussed at the Second AES Canidate Conference (AES2) in spring of 1999. Shortly after that NIST selected five finalists from the initial fifteen algorithms: MARS, RC6, Rijndael, Serpent, and Twofish.
 The other canidates were excluded, partially because "serious questions \[had\] been raised about \[their\] security", partially because they were slower/potentially less secure than other comparable canidates.
-The finalists moved on to recieve further scrutiny from both the NIST and the cryptographic community.
+The finalists moved on to recieve further scrutiny from both the NIST and the cryptographic community in the so called "Round 2".
+After this more in-depth analysis of the algorithms a third conference (AES2) in April 2000 provided an open, public forum to review and discuss the findings accumulated up to this point in Round 2. THe authors of the finalists were explicitly invited to partake in the process. A month later Round 2 came to an end and NIST moved on to select the algorithm they deemed to be best suited to be the Advanced Encryption Standard. 
+On October of the same year the institute announced their decision to propose Rijndael as the AES. Each finalist "appears  to  offer adequate security, and each offers a considerable number of advantages", however "Rijndael’s combination of security, performance, efficiency, implementability, and flexibility make it an appropriate selection for the AES".
+The proposal was formalized in a FIPS draft for AES and published on February 2001. After going throught the usual FIPS-approval-process the Advanced Encryption Standard was made public as FIPS 197 at the end of the year.
 
 # 5 AES in review
 ## 5.1 NIST
 ## 5.2 Other Voices
+### 5.2.1 Security Problems
+#### 5.2.1.1 Cache-Timing Attacks
+#### 5.2.1.2 Block mode operation
+# 6 Adoption
 
-
+---
+* AES Advanced Encryption Standard
+* NIST National Institute of Standards and Technology
+* FIPS Federal Information Processing Standard 
 
