@@ -14,6 +14,8 @@ The first openly available standart for electronic encryption was a symmetric ci
 
 # 4 The Advanced Encryption Standart selection
 
+(maybe with timeline graphic?)
+
 The formal call for submissions of AES canidates came in september of 1997. NIST explicitly requested input from outside of the institution by explicitly asking "the public, academic/research communities, manufacturers, voluntary standards organizations, and Federal, state, and local government organizations." The submissions would be made public for review and comment after the submission period came to an end.
 
 ## 4.1 AES: requirements
@@ -32,15 +34,35 @@ Nearly a year after requesting submissions, NIST published a list with fifteen c
 The other canidates were excluded, partially because "serious questions \[had\] been raised about \[their\] security", partially because they were slower/potentially less secure than other comparable canidates.
 The finalists moved on to recieve further scrutiny from both the NIST and the cryptographic community in the so called "Round 2".
 After this more in-depth analysis of the algorithms a third conference (AES2) in April 2000 provided an open, public forum to review and discuss the findings accumulated up to this point in Round 2. THe authors of the finalists were explicitly invited to partake in the process. A month later Round 2 came to an end and NIST moved on to select the algorithm they deemed to be best suited to be the Advanced Encryption Standard. 
-On October of the same year the institute announced their decision to propose Rijndael as the AES. Each finalist "appears  to  offer adequate security, and each offers a considerable number of advantages", however "Rijndael’s combination of security, performance, efficiency, implementability, and flexibility make it an appropriate selection for the AES".
+On October of the same year the institute announced their decision to propose Rijndael, proposed by the belgian authors Joan Daemen and Vincent Rijmen, as the AES. Each finalist "appears  to  offer adequate security, and each offers a considerable number of advantages", however "Rijndael’s combination of security, performance, efficiency, implementability, and flexibility make it an appropriate selection for the AES".
 The proposal was formalized in a FIPS draft for AES and published on February 2001. After going throught the usual FIPS-approval-process the Advanced Encryption Standard was made public as FIPS 197 at the end of the year.
 
 # 5 AES in review
+
+The slightly modified Rijndael that is known as AES today has been subject to a lot of analysis over the years, with many focussing on the security aspects of the algorithm.
+
 ## 5.1 NIST
+
+From their Round-2-Report one can gain some insight in how NIST thought about Rijndael in detail. 
+Although they acknowledged that some voiced critisism regarding its mathematical structure offering a potential attack vector on the algorithm, they believe that the simplicity of said structure facilitated a deeper understanding of the security properties Rijndael brings to the table. Overall they report to have no knowledge of a security attack against Rijndael.
+Performance-wise they emphasise the good performance of the algorithm under a variety of circumstances, be it 8- or 64-bit software implementations, the ease, with which the algorithm is able to run in an parallel setup, the fast key setup time, low memory and disk space footprints and the speed of the hardware implementation.
+NIST states that Rijndael is -thanks to its operations used- one of the easiest algorithms of the finalist to defend against power and timing sidechannel attacks. The institute did not notice a great hit in performance while testing a hardened version of Rijndael, atleast in comparison to the other finalists. Some power analysis attacks still seem to be effective though, even with the hardended Rijndael.
+Key setup time and key agility were two other strong areas for Rijndael in the eyes of NIST. Furthermore the authors hint at the possibility of flexible key and block sizes, which, while not really concidered at the time of the report, is another sign in favor of Rijndael.
+
 ## 5.2 Other Voices
 ### 5.2.1 Security Problems
-#### 5.2.1.1 Cache-Timing Attacks
-#### 5.2.1.2 Block mode operation
+
+This selection of security problems and attacks on AES makes no claim on completeness and is soley intended to give the reader an idea from which angles an encryption algorithm like AES might be compromised.
+
+#### 5.2.1.1 Side channel Attacks
+The famous cryptographer Bernstein described in his paper a successful key-extraction via network from the OpenSSL AES implementation running on a Pentium III (both very common software and hardware at the time). This sidechannel attack was in his eyes not a result of a faulty implementation, but an inherent flaw in the design of the algorithm that makes it " extremely difficult to write constant-time high-speed AES software for common general-purpose CPUs.". In many cases Bernstein can make out a correlation between the time it takes to load an array entry and the index of an entry in said array. Thus the time it takes to load an entry leaks information about the information currently processed within the algorithm ultimately revealing the key to an attacker, if said attacker can piece the leaked information together in the right way.
+According to Bernstein, this is not only a problem inherent to AES, but to all cryptographic algorithm implementations that rely heavily on lookup tables to speed up their computation.
+
+#### 5.2.1.2 Mathematical Attacks
+One of the most successful attacks on the algorithm was described in  where the authors used Biclique Cryptanalysis to mount a better-than-brute-force-attack on AES with all rounds used as described in the standard, effecively reducing the key strength of each AES variant by a few bits. But even with this novel approach it still remains infeasible to recover a AES-encrypted plaintext from a ciphertext without the key or usage of side channels.
+
+
+
 # 6 Adoption
 
 ---
