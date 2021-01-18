@@ -4,13 +4,10 @@ from os.path import isfile, join, splitext, expanduser
 import pytest
 import ctypes
 
-from ..src.key_expansion import expand_key
+from src.key_expansion import expand_key
 
-def setup():
-    if not isfile(join("..", "lib", "aeslib_encrypt.so")):
-        raise FileNotFoundError("Missing aeslib_encrypt.so! Run setup before testing")
 
-aeslib = ctypes.CDLL(join(getcwd(),"libaes.so"))
+aeslib = ctypes.CDLL(join(getcwd(),"lib","libaes_encrypt.so"))
 
 # Vectors from [FIPS 197] Appendix C, Rounds 1, 2, 3
 @pytest.mark.parametrize(

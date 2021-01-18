@@ -1,11 +1,11 @@
-from key_expansion import expand_key
+from src.key_expansion import expand_key
 import ctypes
 from os.path import join
 from os import getcwd
 import pytest
 
 
-aeslib = ctypes.CDLL(join(getcwd(),"libaesdecrypt.so"))
+aeslib = ctypes.CDLL(join(getcwd(),"lib", "libaes_decrypt.so"))
 
 
 @pytest.mark.parametrize(
