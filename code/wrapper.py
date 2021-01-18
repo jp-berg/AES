@@ -92,43 +92,61 @@ def remove_padding(decrypted):
         return decrypted[:-padding_amount]
 
 
-@cli.command("encrypt")
-@click.argument("ciphertext")
-@click.argument("key")
-def encrypt_aes(ciphertext, key):
-    """enrcypts the input text with the given key using AES-128 """
-    toencrypt = bytearray(ciphertext.encode("utf-8"))
-    if len(toencrypt)%16 != 0:
-        toencrypt = pad_input(toencrypt)
-    keys = expand_key(key)
+def encrypt(byte_array, keys):
     byte_array_keys = ctypes.c_ubyte * len(keys)
-    byte_array_file = ctypes.c_ubyte * len(toencrypt)
+    byte_array_file = ctypes.c_ubyte * len(byte_array)
     aeslib_encrypt.encryptBlocks(
-        byte_array_file.from_buffer(toencrypt),
+        byte_array_file.from_buffer(byte_array),
         byte_array_keys.from_buffer(keys),
-        len(toencrypt),
+        len(byte_array),
         10
     )
-    click.echo(toencrypt.hex())
+    return byte_array
 
+def decrypt(byte_array, keys):
+    byte_array_keys = ctypes.c_ubyte * len(keys)
+    byte_array_file = ctypes.c_ubyte * len(byte_array)
+    aeslib_decrypt.decryptBlocks(
+        byte_array_file.from_buffer(byte_array),
+        byte_array_keys.from_buffer(keys),
+        len(byte_array),
+        10
+    )
+    return byte_array
 
-@cli.command("decrypt")
+@cli.command("te")
 @click.argument("ciphertext")
 @click.argument("key")
-def decrypt_aes(ciphertext, key):
+def encrypt_text(ciphertext, key):
+    """enrcypts the input text with the given key using AES-128 """
+    cipherinput = bytearray(ciphertext.encode("utf-8"))
+    keys = expand_key(key)
+    cipheroutput = encrypt(cipherinput, keys)
+    click.echo(cipheroutput.hex())
+
+
+@cli.command("td")
+@click.argument("ciphertext")
+@click.argument("key")
+def decrypt_text(ciphertext, key):
     """decrypts the input text with the given key using AES-128 """
     cipherinput = bytearray.fromhex(ciphertext)
     keys = expand_key(key)
-    byte_array = ctypes.c_ubyte * len(cipherinput)
-    byte_array_keys = ctypes.c_ubyte * len(keys)
-    aeslib_decrypt.decryptBlocks(
-        byte_array.from_buffer(cipherinput),
-        byte_array_keys.from_buffer(keys),
-        len(cipherinput)
-    )
+    cipherinput = decrypt(cipherinput, keys)
     cipheroutput = remove_padding(cipherinput)
     click.echo(cipheroutput.decode("utf-8"))
 
+@cli.command("fe")
+@cli.argument("filepath")
+@cli.argument("key")
+def encrypt_file(filepath, key):
+    pass
+
+@cli.command("fd")
+@cli.argument("filepath")
+@cli.argument("key")
+def decrypt_file(filepath, key):
+    pass
 
 def validate_key(key):
     try:
