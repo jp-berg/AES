@@ -14,7 +14,7 @@ The first openly available standart for electronic encryption was a symmetric ci
 
 # 4 The Advanced Encryption Standart selection
 
-(maybe with timeline graphic?)
+![AES selection process timeline](aes-process-timeline.png)
 
 The formal call for submissions of AES canidates came in september of 1997. NIST explicitly requested input from outside of the institution by explicitly asking "the public, academic/research communities, manufacturers, voluntary standards organizations, and Federal, state, and local government organizations." The submissions would be made public for review and comment after the submission period came to an end.
 
@@ -49,19 +49,27 @@ Performance-wise they emphasise the good performance of the algorithm under a va
 NIST states that Rijndael is -thanks to its operations used- one of the easiest algorithms of the finalist to defend against power and timing sidechannel attacks. The institute did not notice a great hit in performance while testing a hardened version of Rijndael, atleast in comparison to the other finalists. Some power analysis attacks still seem to be effective though, even with the hardended Rijndael.
 Key setup time and key agility were two other strong areas for Rijndael in the eyes of NIST. Furthermore the authors hint at the possibility of flexible key and block sizes, which, while not really concidered at the time of the report, is another sign in favor of Rijndael.
 
-## 5.2 Other Voices
-### 5.2.1 Security Problems
+
+## 5.2 Security Problems
 
 This selection of security problems and attacks on AES makes no claim on completeness and is soley intended to give the reader an idea from which angles an encryption algorithm like AES might be compromised.
 
-#### 5.2.1.1 Side channel Attacks
-The famous cryptographer Bernstein described in his paper a successful key-extraction via network from the OpenSSL AES implementation running on a Pentium III (both very common software and hardware at the time). This sidechannel attack was in his eyes not a result of a faulty implementation, but an inherent flaw in the design of the algorithm that makes it " extremely difficult to write constant-time high-speed AES software for common general-purpose CPUs.". In many cases Bernstein can make out a correlation between the time it takes to load an array entry and the index of an entry in said array. Thus the time it takes to load an entry leaks information about the information currently processed within the algorithm ultimately revealing the key to an attacker, if said attacker can piece the leaked information together in the right way.
+### 5.2.1 Side channel Attacks
+The cryptographer Bernstein described in his paper a successful key-extraction via network from the OpenSSL AES implementation running on a Pentium III (both very common software and hardware at the time). This sidechannel attack was in his eyes not a result of a faulty implementation, but an inherent flaw in the design of the algorithm that makes it " extremely difficult to write constant-time high-speed AES software for common general-purpose CPUs.". In many cases Bernstein can make out a correlation between the time it takes to load an array entry and the index of an entry in said array. Thus the time it takes to load an entry leaks information about the information currently processed within the algorithm ultimately revealing the key to an attacker, if said attacker can piece the leaked information together in the right way.
 According to Bernstein, this is not only a problem inherent to AES, but to all cryptographic algorithm implementations that rely heavily on lookup tables to speed up their computation.
+XXX states, that while Bernsteins "approach is widely applicable" it critizizes this approach, becaues requires the collection of timing data from a lot of encrypted samples. Furthermore the fragility of the Bernsteins attack is one of the main drawbacks according to te authors. The attacker needs to replicate the targeted machine with a lot of care, since small differences between target and replication will produce unusable timing data, leading to failure of the attack. Their own cache-collision timing attacks -while being orders of magnitude faster under optimal circumstances than the previously discussed attack- are representing "a significant step towards developing realistic remote timing attacks against AES".
+The power draw of the encrypting CPU seems to represent another attack vector on the algorithm. In XXX the authors force the eviction of selected parts of AES lookuptables (like the SBOX) and measure the increased power draw from the CPU in case of a cache miss in the following encryption calculations. With that the authors claim to be able to extract the complete secret key. While the attack itself is descibed as "quite simple", the same statement is made for the proposed countermeasure.
+XXX find that the ease of AES-cache-behaviour exploitation is not neccessarily true anymore on more modern x86-processors. Features like multiple cores per processor with each having its own cache, the increased cache pressure emmited from more complex software, physically tagged caches, the partially undocumented and very complex prefetcher units and of course the AES-NI instruction set make it "substantially more difficult to mount data-cache side-channel attacks on AES than previously realized." AES-NI itself promises to prevent some software sidechannel attacks singlehandedly by sheer virtue of not having to use lookuptables for a fast implementation of the encryption algorithm.
+This does not neccessarily apply to the slew of novel attacks categorized as 'transient execution CPU vulnerabilities', but since they do not target AES directly they will not be discussed here.
 
-#### 5.2.1.2 Mathematical Attacks
-One of the most successful attacks on the algorithm was described in  where the authors used Biclique Cryptanalysis to mount a better-than-brute-force-attack on AES with all rounds used as described in the standard, effecively reducing the key strength of each AES variant by a few bits. But even with this novel approach it still remains infeasible to recover a AES-encrypted plaintext from a ciphertext without the key or usage of side channels.
+### 5.2.2 Mathematical Attacks
+During the AES developement the first papers with attacks on Rijndael were published. XXX demonstrated an attack that broke seven rounds of AES with any key length, but the attacks "complexity is very high
+even if the number of plaintexts to cipher is small.". The authors did not see a danger to the complete 10-round-version.
+Another attack puplished at the time managed to break one round more for each AES-192 and AES-256, but "\[m\]any of these attacks require virtually the entire codebook of texts and hence are not very practical."
+The key schedule of Rijndael was critisized in the same paper, the authors found it "worrisome". Later papers expressed similar concerns, labeling the schedule as not ideal or even weak, as it was enabling related-key attacks on the full rounds of AES-192 and AES-256 algorithm.  While those attacks "are still mainly of theoretical interest \[at the time\] and do not present a threat to practical applications using AES", they also "should not be present in a good cipher".
+One of the most successful attacks on the algorithm was described in XXX where the authors used Biclique Cryptanalysis to mount a better-than-brute-force-attack on AES with all rounds used as described in the standard, effecively reducing the key strength of each AES variant by a few bits. But even with this novel approach it still remains infeasible to recover a AES-encrypted plaintext from a ciphertext without the key or usage of side channels.
 
-
+### 5.2.3 Quantum computing and AES
 
 # 6 Adoption
 
