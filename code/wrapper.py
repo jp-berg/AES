@@ -92,6 +92,32 @@ def remove_padding(decrypted):
         # padding
         return decrypted[:-padding_amount]
 
+def validate_key(key):
+    try:
+        # check for valid hex
+        int(key, 16)
+        # key for Length
+        if len(bytearray.fromhex(key)) != 16:
+            raise ValueError
+        return key
+    except ValueError as ve:
+        raise click.BadParameter("Key needs to be 16 bytes of valid hexadecimals")
+
+def prep_password(key, iterations):
+    """
+    Generates bytearray containing the consecutive
+    round keys from an arbitrary string.
+    """
+    if iterations != 0:
+        #Use higher iteration values (>3000000) for more security:
+        key = hashlib.pbkdf2_hmac(hash_name = 'sha256',
+                                password = key.encode("utf-8"),
+                                salt = "1234".encode("utf-8"),
+                                iterations = iterations, dklen = 16)
+    else:
+        validate_key(key)
+    return expand_key(key.hex())
+
 
 def encrypt(byte_array, keys):
     byte_array = bytearray(byte_array)
@@ -120,11 +146,12 @@ def decrypt(byte_array, keys):
 @cli.command("te")
 @click.argument("ciphertext")
 @click.argument("key")
-def encrypt_text(ciphertext, key):
+@click.argument("iterations", default = 0)
+def encrypt_text(ciphertext, key, iterations):
     """enrcypts the input text with the given key using AES-128 """
     cipherinput = bytearray(ciphertext.encode("utf-8"))
     cipherinput = pad_input(cipherinput)
-    keys = expand_key(key)
+    keys = prep_password(key, iterations)
     cipheroutput = encrypt(cipherinput, keys)
     click.echo(cipheroutput.hex())
 
@@ -132,10 +159,11 @@ def encrypt_text(ciphertext, key):
 @cli.command("td")
 @click.argument("ciphertext")
 @click.argument("key")
-def decrypt_text(ciphertext, key):
+@click.argument("iterations", default = 0)
+def decrypt_text(ciphertext, key, iterations):
     """decrypts the input text with the given key using AES-128 """
     cipherinput = bytearray.fromhex(ciphertext)
-    keys = expand_key(key)
+    keys = prep_password(key, iterations)
     cipherinput = decrypt(cipherinput, keys)
     cipheroutput = remove_padding(cipherinput)
     click.echo(cipheroutput.decode("utf-8"))
@@ -143,7 +171,9 @@ def decrypt_text(ciphertext, key):
 @cli.command("fe")
 @click.argument("filepath_in")
 @click.argument("key")
-def encrypt_file(filepath_in, key):
+@click.argument("iterations", default = 0)
+
+def encrypt_file(filepath_in, key, iterations):
     """Encrypts a file with AES.
 
     The function processes the file from filepath_in in chunks to avoid
@@ -157,7 +187,7 @@ def encrypt_file(filepath_in, key):
     Returns:
         None
     """
-    keys = expand_key(key)
+    keys = prep_password(key, iterations)
     b = bytearray(chunksize)
     filepath_out = filepath_in + ".enc" # add new fileending
     with open(filepath_in, "rb") as file_in:
@@ -174,7 +204,8 @@ def encrypt_file(filepath_in, key):
 @cli.command("fd")
 @click.argument("filepath_in")
 @click.argument("key")
-def decrypt_file(filepath_in, key):
+@click.argument("iterations", default = 0)
+def decrypt_file(filepath_in, key, iterations):
     """Decrpyts a file with AES.
 
     The function processes the file from filepath_in in chunks to avoid
@@ -188,9 +219,12 @@ def decrypt_file(filepath_in, key):
     Returns:
         None
     """
-    keys = expand_key(key)
+    keys = prep_password(key, iterations)
     b = bytearray(chunksize)
-    filepath_out = splitext(filepath_in)[0] # remove ".enc" fileending
+    temp = splitext(filepath_in) # remove ".enc" fileending
+    if temp[1] != ".enc":
+        print("File has no '.enc'-ending and may not be an encrypted file")
+    filepath_out = temp[0]
     with open(filepath_in, "rb") as file_in:
         with open(filepath_out, "wb") as file_out:
             cont = True
@@ -204,16 +238,7 @@ def decrypt_file(filepath_in, key):
                     b = decrypt(b, keys)
                 file_out.write(b)
 
-def validate_key(key):
-    try:
-        # check for valid hex
-        int(key, 16)
-        # key for Length
-        if len(bytearray.fromhex(key)) != 16:
-            raise ValueError
-        return key
-    except ValueError as ve:
-        raise click.BadParameter("Key needs to be 16 bytes of valid hexadecimals")
+
 
 
 if __name__ == '__main__':
