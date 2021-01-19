@@ -7,6 +7,7 @@ import binascii
 import click
 from src.key_expansion import expand_key
 
+chunksize = 2**25 #closish to optimal size, needs to be a multiple of 16
 
 def setup():
     if not exists("lib"):
@@ -93,6 +94,7 @@ def remove_padding(decrypted):
 
 
 def encrypt(byte_array, keys):
+    byte_array = bytearray(byte_array)
     byte_array_keys = ctypes.c_ubyte * len(keys)
     byte_array_file = ctypes.c_ubyte * len(byte_array)
     aeslib_encrypt.encryptBlocks(
@@ -104,6 +106,7 @@ def encrypt(byte_array, keys):
     return byte_array
 
 def decrypt(byte_array, keys):
+    byte_array = bytearray(byte_array)
     byte_array_keys = ctypes.c_ubyte * len(keys)
     byte_array_file = ctypes.c_ubyte * len(byte_array)
     aeslib_decrypt.decryptBlocks(
@@ -120,6 +123,7 @@ def decrypt(byte_array, keys):
 def encrypt_text(ciphertext, key):
     """enrcypts the input text with the given key using AES-128 """
     cipherinput = bytearray(ciphertext.encode("utf-8"))
+    cipherinput = pad_input(cipherinput)
     keys = expand_key(key)
     cipheroutput = encrypt(cipherinput, keys)
     click.echo(cipheroutput.hex())
@@ -137,16 +141,68 @@ def decrypt_text(ciphertext, key):
     click.echo(cipheroutput.decode("utf-8"))
 
 @cli.command("fe")
-@cli.argument("filepath")
-@cli.argument("key")
-def encrypt_file(filepath, key):
-    pass
+@click.argument("filepath_in")
+@click.argument("key")
+def encrypt_file(filepath_in, key):
+    """Encrypts a file with AES.
+
+    The function processes the file from filepath_in in chunks to avoid
+    high memory usage (see variable chunksize).
+
+    Args:
+        filepath_in: String containing the filepath of the unencrypted file
+        key: Bytearray with roundkeys for encryption.
+            Must have a length of 11 (rounds) * 16 (bytes) = 176
+
+    Returns:
+        None
+    """
+    keys = expand_key(key)
+    b = bytearray(chunksize)
+    filepath_out = filepath_in + ".enc" # add new fileending
+    with open(filepath_in, "rb") as file_in:
+        with open(filepath_out, "wb") as file_out:
+            cont = True
+            while cont:
+                b = file_in.read(chunksize)
+                if len(b) < chunksize:
+                    b = pad_input(b) #pad last chunk
+                    cont = False
+                b = encrypt(b, keys)
+                file_out.write(b)
 
 @cli.command("fd")
-@cli.argument("filepath")
-@cli.argument("key")
-def decrypt_file(filepath, key):
-    pass
+@click.argument("filepath_in")
+@click.argument("key")
+def decrypt_file(filepath_in, key):
+    """Decrpyts a file with AES.
+
+    The function processes the file from filepath_in in chunks to avoid
+    high memory usage (see variable chunksize).
+
+    Args:
+        filepath_in: String containing the filepath of the encrypted file
+        key: Bytearray with roundkeys for encryption.
+            Must have a length of 11 (rounds) * 16 (bytes) = 176
+
+    Returns:
+        None
+    """
+    keys = expand_key(key)
+    b = bytearray(chunksize)
+    filepath_out = splitext(filepath_in)[0] # remove ".enc" fileending
+    with open(filepath_in, "rb") as file_in:
+        with open(filepath_out, "wb") as file_out:
+            cont = True
+            while cont:
+                b = file_in.read(chunksize)
+                if len(b) < chunksize:
+                    cont = False
+                    b = decrypt(b, keys)
+                    b = remove_padding(b) # remove padding from last chunk
+                else: 
+                    b = decrypt(b, keys)
+                file_out.write(b)
 
 def validate_key(key):
     try:
