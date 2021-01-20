@@ -3,8 +3,9 @@ from os import urandom, getcwd
 from os.path import isfile, join, splitext, expanduser
 import pytest
 import ctypes
+import pyaes
 
-from src.key_expansion import expand_key
+from key_expansion import expand_key
 
 
 aeslib = ctypes.CDLL(join(getcwd(),"lib","libaes_encrypt.so"))
@@ -69,6 +70,26 @@ def test_EncryptBlock(plaintext, key, expected):
                         byte_array_key.from_buffer(baKey), 10)
     assert ba == reference
 
+def test_EncryptBlockRandom():
+    """
+    Tests the C-implementation of the AES-Encryption of an arbitrary number of individual blocks.
+    Plaintext and Key are randomized each time.
+    """
+    ba = bytearray(16)
+    byte_array_block = ctypes.c_ubyte * len(ba)
+    key = bytearray(16)
+    baKey = bytearray(176)
+    byte_array_key = ctypes.c_ubyte * len(baKey)
+    for i in range(100): #arbitray number of rounds
+        key = urandom(16)
+        baKey = expand_key(key.hex())
+        b = urandom(16)
+        ba = bytearray(b)
+        aes_reference = pyaes.AESModeOfOperationECB(key)
+        reference = aes_reference.encrypt(b)
+        aeslib.encryptBlock(byte_array_block.from_buffer(ba),
+                        byte_array_key.from_buffer(baKey), 10)
+        assert ba == reference
 
 @pytest.mark.skip(reason="TODO")
 def test_encrypt_file():
