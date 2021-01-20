@@ -5,7 +5,7 @@ import pytest
 import ctypes
 import pyaes
 
-from key_expansion import expand_key
+from src.key_expansion import expand_key
 
 
 aeslib = ctypes.CDLL(join(getcwd(),"lib","libaes_encrypt.so"))
@@ -80,7 +80,7 @@ def test_EncryptBlockRandom():
     key = bytearray(16)
     baKey = bytearray(176)
     byte_array_key = ctypes.c_ubyte * len(baKey)
-    for i in range(100): #arbitray number of rounds
+    for i in range(100): #arbitrary number of rounds
         key = urandom(16)
         baKey = expand_key(key.hex())
         b = urandom(16)
@@ -103,31 +103,31 @@ def test_encrypt_file():
     tac = perf_counter() - tic
     print("Time: " + str(tac))
 
-
-@pytest.mark.skip(reason="TODO")
 def test_encrypt_aes():
-    """Tests the C-implementation of the AES-Encryption of multiple blocks.
-    Compare with https://www.hanewin.net/encrypt/aes/aes-test.htm
+    """Tests the C-implementation of the AES-Encryption on multiple, consecutive, random Blocks.
     """
-    b = bytearray(0)
-    num = 100 # number of blocks
-    print("Blocks: ")
-    for i in range(num):
-        y = bytearray(urandom(16))
-        print(str(i) + ": " + y.hex()) #prints a block before encryption
-        b += y
-    key = prep_password("aeskurs")
-    print("\nKey: " + key.hex()[0:32])
-    b = encrypt_aes(b, key)
-    index = 0
-    nr = 0
-    print("\nEncrypted Blocks: ")
-    s = b.hex()
-    #Prints one block per line:
-    while((index + 32) <= len(s)):
-            print(str(nr) + ": " + s[index:index + 32])
-            index += 32
-            nr += 1
+    no_bytes = 2**15 #arbitrary number of bytes (has to be divisible by 16)
+    ba = bytearray(no_bytes)
+    byte_array_block = ctypes.c_ubyte * len(ba)
+    key = bytearray(16)
+    baKey = bytearray(176)
+    byte_array_key = ctypes.c_ubyte * len(baKey)
+    for i in range(20): #arbitrary number of rounds
+        key = urandom(16)
+        baKey = expand_key(key.hex())
+        b = urandom(no_bytes)
+        ba = bytearray(b)
+        aes_reference = pyaes.AESModeOfOperationECB(key)
+        aeslib.encryptBlocks(byte_array_block.from_buffer(ba),
+                        byte_array_key.from_buffer(baKey), len(ba), 10)
+
+        i = 0
+        while (i < no_bytes):
+            current_reference = aes_reference.encrypt(b[i:i+16])
+            current_ba = ba[i:i+16]
+            assert current_ba == current_reference
+
+            i += 16
 
 if __name__ == '__main__':
     setup()
