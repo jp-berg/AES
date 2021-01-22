@@ -6,15 +6,16 @@ import hashlib
 import binascii
 import click
 from src.key_expansion import expand_key
+from src.AES_encrypt_generator import gen_mult_lookup, gen_sbox
 
-chunksize = 2**25 #closish to optimal size, needs to be a multiple of 16
+
 
 def setup():
     if not exists("lib"):
         mkdir("lib")
 
-    compile_gcc_encrypt = """gcc -O2 -w -shared -fpic -Wl,-soname,AES_encrypt -o lib/libaes_encrypt.so src/AES_encrypt.c -fopenmp""".split()
-    compile_clang_encrypt = """clang-O2 -w -shared -fpic -Wl,
+    compile_gcc_encrypt = """gcc -O2 -w -shared -fpic -fstrict-aliasing -Wl,-soname,AES_encrypt -o lib/libaes_encrypt.so src/AES_encrypt.c -fopenmp""".split()
+    compile_clang_encrypt = """clang-O2 -w -shared -fpic -fstrict-aliasing -Wl,
                     -soname,AES_encrypt -o ../lib/libaes_encrypt.so src/AES_encrypt.c -fopenmp""".split()
 
     src_dir = join(getcwd(), "src")
@@ -44,7 +45,8 @@ def setup():
     aeslib_encrypt = ctypes.CDLL(join(lib_dir,"libaes_encrypt.so"))
 
 
-    compile_gcc_decrypt = """gcc -O2 -w -shared -fpic -Wl,-soname,AES_decrypt -o lib/libaes_decrypt.so src/AES_decrypt.c -fopenmp""".split()
+    compile_gcc_decrypt = """gcc -O2 -w -shared -fpic -Wl,-soname,AES_decrypt -o lib/libaes_decrypt.so src/AES_decrypt.c""".split()
+    compile_clang_decrypt = """clang -O2 -w -shared -fpic -Wl,-soname,AES_decrypt -o lib/libaes_decrypt.so src/AES_decrypt.c""".split()
 
     if not isfile(join(lib_dir, "libaes_decrypt.so")):
         if not isfile(join(src_dir,"AES_decrypt.c")):
@@ -68,6 +70,11 @@ def setup():
                                         on your own.""")
     global aeslib_decrypt
     aeslib_decrypt = ctypes.CDLL(join(lib_dir, "libaes_decrypt.so"))
+
+    global cpucount = cpu_count()
+    global chunksize = 2**25 #needs to be a multiple of 16 (otherwise padding is needed)
+    global sbox = gen_sbox()
+    global mult_lookup = gen_mult_lookup()
 
 
 @click.group()
@@ -112,7 +119,7 @@ def prep_password(key, iterations):
         #Use higher iteration values (>3000000) for more security:
         key = hashlib.pbkdf2_hmac(hash_name = 'sha256',
                                 password = key.encode("utf-8"),
-                                salt = "1234".encode("utf-8"),
+                                salt = "aeskurs".encode("utf-8"), #TODO: change salt
                                 iterations = iterations, dklen = 16)
     else:
         validate_key(key)
@@ -120,12 +127,13 @@ def prep_password(key, iterations):
 
 
 def encrypt(byte_array, keys):
+    initvals = sbox + mult_lookup + keys 
     byte_array = bytearray(byte_array)
-    byte_array_keys = ctypes.c_ubyte * len(keys)
+    byte_array_initvals = ctypes.c_ubyte * len(initvals)
     byte_array_file = ctypes.c_ubyte * len(byte_array)
     aeslib_encrypt.encryptBlocks(
         byte_array_file.from_buffer(byte_array),
-        byte_array_keys.from_buffer(keys),
+        byte_array_keys.from_buffer(initvals),
         len(byte_array),
         10
     )
@@ -148,7 +156,7 @@ def decrypt(byte_array, keys):
 @click.argument("key")
 @click.argument("iterations", default = 0)
 def encrypt_text(ciphertext, key, iterations):
-    """enrcypts the input text with the given key using AES-128 """
+    """Enrcypts the input text with the given key using AES-128. """
     cipherinput = bytearray(ciphertext.encode("utf-8"))
     cipherinput = pad_input(cipherinput)
     keys = prep_password(key, iterations)
@@ -161,7 +169,7 @@ def encrypt_text(ciphertext, key, iterations):
 @click.argument("key")
 @click.argument("iterations", default = 0)
 def decrypt_text(ciphertext, key, iterations):
-    """decrypts the input text with the given key using AES-128 """
+    """Decrypts the input text with the given key using AES-128. """
     cipherinput = bytearray.fromhex(ciphertext)
     keys = prep_password(key, iterations)
     cipherinput = decrypt(cipherinput, keys)
@@ -181,8 +189,8 @@ def encrypt_file(filepath_in, key, iterations):
 
     Args:
         filepath_in: String containing the filepath of the unencrypted file
-        key: Bytearray with roundkeys for encryption.
-            Must have a length of 11 (rounds) * 16 (bytes) = 176
+        key: either 16-byte-hex-string (with 0 iterations) or any string ( > 0 iterations)
+        iterations: no of iterations on the pbkdf2_hmac-function for password hashing
 
     Returns:
         None
@@ -201,6 +209,7 @@ def encrypt_file(filepath_in, key, iterations):
                 b = encrypt(b, keys)
                 file_out.write(b)
 
+
 @cli.command("fd")
 @click.argument("filepath_in")
 @click.argument("key")
@@ -213,8 +222,9 @@ def decrypt_file(filepath_in, key, iterations):
 
     Args:
         filepath_in: String containing the filepath of the encrypted file
-        key: Bytearray with roundkeys for encryption.
-            Must have a length of 11 (rounds) * 16 (bytes) = 176
+        key: either 16-byte-hex-string (with 0 iterations) or any string ( > 0 iterations)
+        iterations: no of iterations on the pbkdf2_hmac-function for password hashing
+        
 
     Returns:
         None
