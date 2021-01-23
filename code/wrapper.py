@@ -8,7 +8,10 @@ import click
 from src.key_expansion import expand_key
 from src.AES_encrypt_generator import gen_mult_lookup, gen_sbox
 
-
+cpucount = cpu_count()
+chunksize = 2**25 #needs to be a multiple of 16 (otherwise padding is needed)
+sbox = gen_sbox()
+mult_lookup = gen_mult_lookup()
 
 def setup():
     if not exists("lib"):
@@ -71,11 +74,6 @@ def setup():
     global aeslib_decrypt
     aeslib_decrypt = ctypes.CDLL(join(lib_dir, "libaes_decrypt.so"))
 
-    global cpucount = cpu_count()
-    global chunksize = 2**25 #needs to be a multiple of 16 (otherwise padding is needed)
-    global sbox = gen_sbox()
-    global mult_lookup = gen_mult_lookup()
-
 
 @click.group()
 def cli():
@@ -133,7 +131,7 @@ def encrypt(byte_array, keys):
     byte_array_file = ctypes.c_ubyte * len(byte_array)
     aeslib_encrypt.encryptBlocks(
         byte_array_file.from_buffer(byte_array),
-        byte_array_keys.from_buffer(initvals),
+        byte_array_initvals.from_buffer(initvals),
         len(byte_array),
         10
     )

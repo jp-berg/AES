@@ -8,34 +8,13 @@
 
 
 
-static uint8_t sbox[256];
-static uint8_t gal_mult_lookup[3][256];
-
-uint8_t * initconstarr(uint8_t * restrict initval)
-{
-    for(size_t i = 0; i < 256; i++)
-    {
-        sbox[i] = *initval++;
-    }
-    for(size_t i = 0; i < 3; i++)
-    {
-        for(size_t j = 0; j < 256; j++)
-        {
-            gal_mult_lookup[i][j] = *initval++;
-        }
-    }
-    
-    return initval;
-}
-
-void pb(char *r,const uint8_t *block){
-    printf("\n\n Round %s:", r);
+void pb(const uint8_t *block){
     for(uint8_t i = 0; i < 16; i++)
         printf("%x ", block[i]);
     puts("\n");    
 }
 
-inline static void AddRoundKey(uint8_t * restrict bytes, const uint8_t * restrict keys)
+inline void AddRoundKey(uint8_t * restrict bytes, const uint8_t * restrict keys)
 {
     for(uint8_t i = 0; i < 16; i++)
     {
@@ -43,7 +22,7 @@ inline static void AddRoundKey(uint8_t * restrict bytes, const uint8_t * restric
     }
 }
 
-inline static void SubBytes(uint8_t * restrict bytes)
+inline void SubBytes(uint8_t * restrict bytes, const uint8_t * restrict sbox)
 {
     for(uint8_t i = 0; i < 16; i++)
     {
@@ -53,7 +32,7 @@ inline static void SubBytes(uint8_t * restrict bytes)
 }
 
 
-static void ShiftRows(uint8_t * restrict block, uint8_t * restrict tempblock)
+void ShiftRows(uint8_t * restrict block, uint8_t * restrict tempblock)
 {
     memcpy(tempblock, block, 16 * sizeof(uint8_t));
 
@@ -71,7 +50,7 @@ static void ShiftRows(uint8_t * restrict block, uint8_t * restrict tempblock)
     block[15] = tempblock[11];
 }
 
-static void MixColumns(uint8_t * restrict block, uint8_t * restrict tempblock)
+void MixColumns(uint8_t * restrict block, uint8_t * restrict tempblock, const uint8_t (*restrict gal_mult_lookup)[256])
 {
     memcpy(tempblock, block, 16 * sizeof(uint8_t));
 
@@ -101,36 +80,49 @@ static void MixColumns(uint8_t * restrict block, uint8_t * restrict tempblock)
 }
 
 
-static void encryptBlock(uint8_t * restrict block, uint8_t * restrict tempblock, const uint8_t * restrict keys, const uint8_t rounds)
-{
-
+void encryptBlock(uint8_t * restrict block, uint8_t * restrict tempblock, const uint8_t * restrict keys, const uint8_t rounds, const uint8_t * restrict sbox, const uint8_t (*restrict gal_mult_lookup)[256])
+{   
     uint8_t ikeys = 0;
     AddRoundKey(block, keys);
     ikeys += 16;
 
     for(uint8_t i = 0; i < rounds - 1; i++)
     {   
-        SubBytes(block);
+        SubBytes(block, sbox);
         ShiftRows(block, tempblock);
-        MixColumns(block, tempblock);
+        MixColumns(block, tempblock, gal_mult_lookup);
         AddRoundKey(block, &keys[ikeys]);
         ikeys += 16;
 
     }
     
-    SubBytes(block);
+    SubBytes(block, sbox);
     ShiftRows(block, tempblock);
     AddRoundKey(block, &keys[ikeys]);
 }
 
 void encryptBlocks(uint8_t * restrict bytes, uint8_t * restrict initval, const size_t bytecount, const uint8_t rounds)
 {   
-    const uint8_t * keys = initconstarr(initval);
+    uint8_t sbox[256];
+    uint8_t gal_mult_lookup[3][256];
+    for(size_t i = 0; i < 256; i++)
+    {
+        sbox[i] = *initval++;
+    }
+    for(size_t i = 0; i < 3; i++)
+    {
+        for(size_t j = 0; j < 256; j++)
+        {
+            gal_mult_lookup[i][j] = *initval++;
+        }
+    }
+    
+    const uint8_t * keys = initval;
     uint8_t tempblock[16];
     
     for(size_t i = 0; i < bytecount; i += 16)
     {
-        encryptBlock(&bytes[i], tempblock, keys, rounds);
+        encryptBlock(&bytes[i], tempblock, keys, rounds, sbox, gal_mult_lookup);
     }
 }
     

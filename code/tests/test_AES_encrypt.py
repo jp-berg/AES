@@ -6,9 +6,13 @@ import ctypes
 import pyaes
 
 from src.key_expansion import expand_key
+from src.AES_encrypt_generator import gen_mult_lookup, gen_sbox 
 
 
 aeslib = ctypes.CDLL(join(getcwd(),"lib","libaes_encrypt.so"))
+sbox = gen_sbox()
+gal_mult_lookup = gen_mult_lookup()
+
 
 # Vectors from [FIPS 197] Appendix C, Rounds 1, 2, 3
 @pytest.mark.parametrize(
@@ -24,7 +28,8 @@ def test_ShiftRows(input_block, expected):
     ba = bytearray.fromhex(input_block)
     reference = bytearray.fromhex(expected)
     byte_array = ctypes.c_ubyte * len(ba)
-    aeslib.ShiftRows(byte_array.from_buffer(ba), len(ba))
+    temp_array = ctypes.c_ubyte * len(ba)
+    aeslib.ShiftRows(byte_array.from_buffer(ba), temp_array.from_buffer_copy(ba))
     assert ba == reference
 
 
@@ -42,7 +47,10 @@ def test_MixColumns(input_block, expected):
     ba = bytearray.fromhex(input_block)
     reference = bytearray.fromhex(expected)
     byte_array = ctypes.c_ubyte * len(ba)
-    aeslib.MixColumns(byte_array.from_buffer(ba), len(ba))
+    temp_array = ctypes.c_ubyte * len(ba)
+    gal_mult_lookup_array = ctypes.c_ubyte * len(gal_mult_lookup)
+    aeslib.MixColumns(byte_array.from_buffer(ba), temp_array.from_buffer_copy(ba),
+                      gal_mult_lookup_array.from_buffer(gal_mult_lookup))
     assert ba == reference
 
 
@@ -66,8 +74,14 @@ def test_EncryptBlock(plaintext, key, expected):
     baKey = expand_key(key)
     byte_array_key = ctypes.c_ubyte * len(baKey)
 
-    aeslib.encryptBlock(byte_array_block.from_buffer(ba),
-                        byte_array_key.from_buffer(baKey), 10)
+    temp_array = ctypes.c_ubyte * len(ba)
+    sbox_array = ctypes.c_ubyte * len(sbox)
+    gal_mult_lookup_array = ctypes.c_ubyte * len(gal_mult_lookup)
+    
+
+    aeslib.encryptBlock(byte_array_block.from_buffer(ba), temp_array.from_buffer_copy(ba),
+                        byte_array_key.from_buffer(baKey), 10, sbox_array.from_buffer(sbox),
+                        gal_mult_lookup_array.from_buffer(gal_mult_lookup))
     assert ba == reference
 
 def test_EncryptBlockRandom():
@@ -80,6 +94,9 @@ def test_EncryptBlockRandom():
     key = bytearray(16)
     baKey = bytearray(176)
     byte_array_key = ctypes.c_ubyte * len(baKey)
+    temp_array = ctypes.c_ubyte * len(ba)
+    sbox_array = ctypes.c_ubyte * len(sbox)
+    gal_mult_lookup_array = ctypes.c_ubyte * len(gal_mult_lookup)
     for i in range(100): #arbitrary number of rounds
         key = urandom(16)
         baKey = expand_key(key.hex())
@@ -87,8 +104,9 @@ def test_EncryptBlockRandom():
         ba = bytearray(b)
         aes_reference = pyaes.AESModeOfOperationECB(key)
         reference = aes_reference.encrypt(b)
-        aeslib.encryptBlock(byte_array_block.from_buffer(ba),
-                        byte_array_key.from_buffer(baKey), 10)
+        aeslib.encryptBlock(byte_array_block.from_buffer(ba), temp_array.from_buffer_copy(ba),
+                        byte_array_key.from_buffer(baKey), 10, sbox_array.from_buffer(sbox),
+                        gal_mult_lookup_array.from_buffer(gal_mult_lookup))
         assert ba == reference
 
 @pytest.mark.skip(reason="TODO")
@@ -111,15 +129,17 @@ def test_encrypt_aes():
     byte_array_block = ctypes.c_ubyte * len(ba)
     key = bytearray(16)
     baKey = bytearray(176)
-    byte_array_key = ctypes.c_ubyte * len(baKey)
+    initvals = bytearray(len(sbox) + len(gal_mult_lookup) + len(baKey))
+    byte_array_initvals = ctypes.c_ubyte * len(initvals)
     for i in range(20): #arbitrary number of rounds
         key = urandom(16)
         baKey = expand_key(key.hex())
+        initvals = sbox + gal_mult_lookup + baKey
         b = urandom(no_bytes)
         ba = bytearray(b)
         aes_reference = pyaes.AESModeOfOperationECB(key)
         aeslib.encryptBlocks(byte_array_block.from_buffer(ba),
-                        byte_array_key.from_buffer(baKey), len(ba), 10)
+                        byte_array_initvals.from_buffer(initvals), len(ba), 10)
 
         i = 0
         while (i < no_bytes):
