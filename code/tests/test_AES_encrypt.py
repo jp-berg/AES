@@ -1,10 +1,13 @@
 from time import perf_counter
-from os import urandom, getcwd
-from os.path import isfile, join, splitext, expanduser
+from os import urandom, getcwd, chdir, mkdir
+from os.path import isfile, isdir, join, splitext, expanduser, dirname
 import pytest
 import ctypes
 import pyaes
+import shutil
 
+
+import wrapper
 from src.key_expansion import expand_key
 from src.AES_encrypt_generator import gen_mult_lookup, gen_sbox 
 
@@ -109,18 +112,35 @@ def test_EncryptBlockRandom():
                         gal_mult_lookup_array.from_buffer(gal_mult_lookup))
         assert ba == reference
 
-@pytest.mark.skip(reason="TODO")
+
 def test_encrypt_file():
     """Tests the C-implementation of the AES-Encryption of a file"""
-    toencrypt = "/home/pc/Documents/C.7z"
-    password = "aeskurs"
-    password = prep_password(password)
+    cwd = getcwd()
+    chdir(join(cwd, "tests/testfiles"))
+    hashlist = []
+    with open("hashes.txt", "r") as file:
+        hashlist = file.read().split("\n")
+    if isdir("temp"):
+        shutil.rmtree("temp")
+    mkdir("temp")
+    for i in range(len(hashlist)):
+        item = hashlist[i].split() #does not concider spaces in filenames.
+        if splitext(item[0])[0] == ".enc":
+            continue
 
-    tic = perf_counter()
-    file = encrypt_file(toencrypt, password)
-    tac = perf_counter() - tic
-    print("Time: " + str(tac))
+        tempitem = join("temp", item[0])
+        shutil.copyfile(item[0], tempitem)
+        wrapper.encrypt_file(join(getcwd(), tempitem), str("2b7e151628aed2a6abf7158809cf4f3c"))
+        h = hashlib.sha256()
+        with open(join(getcwd(), tempitem), "rb") as gg:
+            h.update(gg.read())
+        assert h.hexdigest() == hashlist[i+1].split[1]
+    shutil.rmtree("temp")
+    os.chdir(cwd)
 
+    
+        
+@pytest.mark.skip(reason="TODO")
 def test_encrypt_aes():
     """Tests the C-implementation of the AES-Encryption on multiple, consecutive, random Blocks.
     """
