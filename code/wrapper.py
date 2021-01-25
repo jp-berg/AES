@@ -129,7 +129,7 @@ def encrypt(byte_array, keys):
     byte_array = bytearray(byte_array)
     byte_array_initvals = ctypes.c_ubyte * len(initvals)
     byte_array_file = ctypes.c_ubyte * len(byte_array)
-    aeslib_encrypt.encryptBlocks(
+    aeslib_encrypt.encryptAES(
         byte_array_file.from_buffer(byte_array),
         byte_array_initvals.from_buffer(initvals),
         len(byte_array),

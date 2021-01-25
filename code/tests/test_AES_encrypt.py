@@ -138,7 +138,7 @@ def test_encrypt_aes():
         b = urandom(no_bytes)
         ba = bytearray(b)
         aes_reference = pyaes.AESModeOfOperationECB(key)
-        aeslib.encryptBlocks(byte_array_block.from_buffer(ba),
+        aeslib.encryptAES(byte_array_block.from_buffer(ba),
                         byte_array_initvals.from_buffer(initvals), len(ba), 10)
 
         i = 0
