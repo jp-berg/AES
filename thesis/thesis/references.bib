@@ -256,41 +256,41 @@
 }
 
 @inproceedings{10.biclique,
-	abstract = {We improve the best attack on Rijndael reduced to 6 rounds from complexity 272 to 244. We also present the first known attacks on 7- and 8-round Rijndael. The attacks on 8-round Rijndael work for 192- bit and 256-bit keys. Finally, we discuss the key schedule of Rijndael and describe a related-key attack that can break 9-round Rijndael with 256-bit keys.},
+	abstract = {Since Rijndael was chosen as the Advanced Encryption Standard (AES), improving upon 7-round attacks on the 128-bit key variant (out of 10 rounds) or upon 8-round attacks on the 192/256-bit key variants (out of 12/14 rounds) has been one of the most difficult challenges in the cryptanalysis of block ciphers for more than a decade. In this paper, we present the novel technique of block cipher cryptanalysis with bicliques, which leads to the following results:},
 	address = {Berlin, Heidelberg},
-	author = {Niels Ferguson and John Kelsey and Stefan Lucks and Bruce Schneier and Mike Stay and David Wagner and Doug Whiting},
-	booktitle = {Fast Software Encryption},
-	editor = {Gerhard Goos and Juris Hartmanis and Jan van Leeuwen and Bruce Schneier},
-	isbn = {978-3-540-44706-1},
-	pages = {213--230},
+	author = {Andrey Bogdanov and Dmitry Khovratovich and Christian Rechberger},
+	booktitle = {Advances in Cryptology -- ASIACRYPT 2011},
+	editor = {Dong Hoon Lee and Xiaoyun Wang},
+	isbn = {978-3-642-25385-0},
+	pages = {344--371},
 	publisher = {Springer Berlin Heidelberg},
-	title = {Improved Cryptanalysis of Rijndael},
-	year = {2001}
+	title = {Biclique Cryptanalysis of the Full AES},
+	year = {2011}
 }
 
 @inproceedings{rkeyattack,
-	abstract = {We improve the best attack on Rijndael reduced to 6 rounds from complexity 272 to 244. We also present the first known attacks on 7- and 8-round Rijndael. The attacks on 8-round Rijndael work for 192- bit and 256-bit keys. Finally, we discuss the key schedule of Rijndael and describe a related-key attack that can break 9-round Rijndael with 256-bit keys.},
+	abstract = {In this paper we present two related-key attacks on the full AES. For AES-256 we show the first key recovery attack that works for all the keys and has 299.5 time and data complexity, while the recent attack by Biryukov-Khovratovich-Nikoli{\'c} works for a weak key class and has much higher complexity. The second attack is the first cryptanalysis of the full AES-192. Both our attacks are boomerang attacks, which are based on the recent idea of finding local collisions in block ciphers and enhanced with the boomerang switching techniques to gain free rounds in the middle.},
 	address = {Berlin, Heidelberg},
-	author = {Niels Ferguson and John Kelsey and Stefan Lucks and Bruce Schneier and Mike Stay and David Wagner and Doug Whiting},
-	booktitle = {Fast Software Encryption},
-	editor = {Gerhard Goos and Juris Hartmanis and Jan van Leeuwen and Bruce Schneier},
-	isbn = {978-3-540-44706-1},
-	pages = {213--230},
+	author = {Alex Biryukov and Dmitry Khovratovich},
+	booktitle = {Advances in Cryptology -- ASIACRYPT 2009},
+	editor = {Mitsuru Matsui},
+	isbn = {978-3-642-10366-7},
+	pages = {1--18},
 	publisher = {Springer Berlin Heidelberg},
-	title = {Improved Cryptanalysis of Rijndael},
-	year = {2001}
+	title = {Related-Key Cryptanalysis of the Full AES-192 and AES-256},
+	year = {2009}
 }
 
 @inproceedings{rkeyattack2,
-	abstract = {We improve the best attack on Rijndael reduced to 6 rounds from complexity 272 to 244. We also present the first known attacks on 7- and 8-round Rijndael. The attacks on 8-round Rijndael work for 192- bit and 256-bit keys. Finally, we discuss the key schedule of Rijndael and describe a related-key attack that can break 9-round Rijndael with 256-bit keys.},
+	abstract = {In this paper we construct a chosen-key distinguisher and a related-key attack on the full 256-bit key AES. We define a notion of differential q-multicollision and show that for AES-256 q-multicollisions can be constructed in time q{\textperiodcentered}267 and with negligible memory, while we prove that the same task for an ideal cipher of the same block size would require at least {\$}O(q{\backslash}cdot 2^{\{}{\backslash}frac{\{}q-1{\}}{\{}q+1{\}}128{\}}){\$}time. Using similar approach and with the same complexity we can also construct q-pseudo collisions for AES-256 in Davies-Meyer mode, a scheme which is provably secure in the ideal-cipher model. We have also computed partial q-multicollisions in time q{\textperiodcentered}237 on a PC to verify our results. These results show that AES-256 can not model an ideal cipher in theoretical constructions. Finally we extend our results to find the first publicly known attack on the full 14-round AES-256: a related-key distinguisher which works for one out of every 235 keys with 2120 data and time complexity and negligible memory. This distinguisher is translated into a key-recovery attack with total complexity of 2131 time and 265 memory.},
 	address = {Berlin, Heidelberg},
-	author = {Niels Ferguson and John Kelsey and Stefan Lucks and Bruce Schneier and Mike Stay and David Wagner and Doug Whiting},
-	booktitle = {Fast Software Encryption},
-	editor = {Gerhard Goos and Juris Hartmanis and Jan van Leeuwen and Bruce Schneier},
-	isbn = {978-3-540-44706-1},
-	pages = {213--230},
+	author = {Alex Biryukov and Dmitry Khovratovich and Ivica Nikoli{\'c}},
+	booktitle = {Advances in Cryptology - CRYPTO 2009},
+	editor = {Shai Halevi},
+	isbn = {978-3-642-03356-8},
+	pages = {231--249},
 	publisher = {Springer Berlin Heidelberg},
-	title = {Improved Cryptanalysis of Rijndael},
-	year = {2001}
+	title = {Distinguisher and Related-Key Attack on the Full AES-256},
+	year = {2009}
 }
 
