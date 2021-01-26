@@ -30,6 +30,16 @@ C is concidered one of the fastest and most efficient languages, but is more err
 * *no memory management necessary*: Since the C-core operates on byte-arrays allocated by Python, nothing needs to be allocated on heap. Since the rest of the data needed is allocated on the stack all memory used is automatically freed after the encryption function returns, without the need for the programmer to intervene. This avoids memory leaks occuring when an allocation on the heap is not met with a call to free() after the allocated memory is not needed anymore. So called double free errors are also avoided, meaning there is no risk of freeing the same area of memory twice. This error could potentially corrupt the programs's memory management data structures, crash the program or alter the execution flow.
 * *straightforward implementation*: The algorithm described in XXX translates well to C code. No special imports are needed, no hard-to-understand operations are required to be executed and the described pseudocode functions map very cleanly to C functions. The AES-algorithm itself makes extensive use of Galois-Field-operations in \[2^8\]. Those can be easily expressed through the native uint8_t C-data-type, which represents an unsigned byte.
 * *fast compile times*: Since the C-core encompasses only a few hundred lines of code it compiles in subsecond time on our developement machines, even with optimisation enabled. This encourages trying new things and helps to get quick feedback even for small changes, either through the static analyzer of the compiler itself or through the included testing libraries.
+
+# AES - Properties
+
+The Advanced Encryption Standard has a series of defining properties.
+
+* *symmetric cipher*: The key that encrypts a message is the same key that decrypts it. This is in contrast to asymetric cryptography, where encryption and decryption key differ from each other.
+* *block cipher*: AES only operates on blocks with an exact size of 128 bits at a time. If there are bitsequences whose length is not cleanly divisible by 128, they have to be padded in order to be encrypted. With that the algorithm differs for example from the so called stream-ciphers, which encrypt a digit stream one plaintext digit at a time with one coresponding digit from a second stream, called key stream, which in turn is generated pseudorandomly from a key. The combination of plaintext digits with keysteam digits creates the cipherstream.
+* *key-iterated*: The Advanced Encryption Standard belongs to the class of key-iterated block ciphers, because encryption (and thus decryption) is achieved by applying a round transformation on the plaintext multiple times. (rijndael)
+* *byte-oriented*: The smallest unit the algorithm operates on is a byte, which represents eight bits at a time (fips197)
+* *key-length*: AES supports three different key lengths: 128 bits, 192 bits and 256 bits. The different key length are accompanied by differing numbers of rounds. AES-128 uses ten rounds, AES-192 twelve and AES-256 utilises fourteen rounds. (fips197)
 # Possible areas of future improvements
 
 Here are some areas, in which this project could be improved in the future.
