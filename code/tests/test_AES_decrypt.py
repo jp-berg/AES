@@ -3,6 +3,9 @@ import ctypes
 from os.path import join
 from os import getcwd
 import pytest
+import filecmp
+
+from wrapper import *
 from src.AES_generator import gen_inverse_sbox
 
 aeslib = ctypes.CDLL(join(getcwd(),"lib", "libaes_decrypt.so"))
@@ -139,3 +142,28 @@ def test_decryptBlock(input_block, key, expected):
         byte_array_inv_sbox.from_buffer(inv_sbox)
     )
     assert test_block == reference
+
+
+
+def test_decrypt_file():
+        filepath_in = join(getcwd(), "tests", "files", "encrypted.enc")
+        key = "f" * 32
+        keys = prep_password(key, 0)
+        chunksize = 2**25
+        b = bytearray(chunksize)
+        filepath_out = filepath_in.split(".")[0]
+        with open(filepath_in, "rb") as file_in:
+            with open(filepath_out, "wb") as file_out:
+                cont = True
+                while cont:
+                    b = file_in.read(chunksize)
+                    if len(b) < chunksize:
+                        cont = False
+                        b = decrypt(b, keys)
+                        b = remove_padding(b) # remove padding from last chunk
+                    else:
+                        b = decrypt(b, keys)
+                    file_out.write(b)
+
+        compare = join(getcwd(), "tests", "files", "plain")
+        assert filecmp.cmp(filepath_out, compare)

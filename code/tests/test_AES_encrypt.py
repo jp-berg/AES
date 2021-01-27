@@ -4,7 +4,9 @@ from os.path import isfile, join, splitext, expanduser
 import pytest
 import ctypes
 import pyaes
+import filecmp
 
+from wrapper import *
 from src.key_expansion import expand_key
 from src.AES_generator import gen_mult_lookup, gen_sbox
 
@@ -111,17 +113,28 @@ def test_EncryptBlockRandom():
         assert ba == reference
 
 
-@pytest.mark.skip(reason="TODO")
 def test_encrypt_file():
-    """Tests the C-implementation of the AES-Encryption of a file"""
-    toencrypt = "/home/pc/Documents/C.7z"
-    password = "aeskurs"
-    password = prep_password(password)
+    filepath_in = join(getcwd(), "tests", "files", "plain")
+    key = "f" * 32
+    keys = prep_password(key, 0)
+    chunksize = 2**25
+    b = bytearray(chunksize)
+    filepath_out = filepath_in + ".enc" # add new fileending
+    with open(filepath_in, "rb") as file_in:
+        with open(filepath_out, "wb") as file_out:
+            cont = True
+            while cont:
+                b = file_in.read(chunksize)
+                if len(b) < chunksize:
+                    b = pad_input(b) #pad last chunk
+                    cont = False
+                b = encrypt(b, keys)
+                file_out.write(b)
 
-    tic = perf_counter()
-    file = encrypt_file(toencrypt, password)
-    tac = perf_counter() - tic
-    print("Time: " + str(tac))
+    compare = join(getcwd(), "tests", "files", "encrypted.enc")
+    assert filecmp.cmp(filepath_out, compare)
+
+
 
 
 def test_encrypt_aes():
