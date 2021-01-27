@@ -129,7 +129,7 @@ def prep_password(key, iterations):
                                 iterations = iterations, dklen = 16).hex()
     else:
         validate_key(key)
-    return expand_key(key)
+    return expand_key(key, sbox)
 
 
 def encrypt(byte_array, keys):

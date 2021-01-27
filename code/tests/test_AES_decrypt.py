@@ -6,10 +6,11 @@ import pytest
 import filecmp
 
 from wrapper import *
-from src.AES_generator import gen_inverse_sbox
+from src.AES_generator import gen_inverse_sbox, gen_sbox
 
 aeslib = ctypes.CDLL(join(getcwd(),"lib", "libaes_decrypt.so"))
 inv_sbox = gen_inverse_sbox()
+sbox = gen_sbox()
 
 
 @pytest.mark.parametrize(
@@ -132,7 +133,7 @@ def test_inverseShiftRows(input_block, expected):
 def test_decryptBlock(input_block, key, expected):
     test_block = bytearray.fromhex(input_block)
     reference = bytearray.fromhex(expected)
-    keys = expand_key(key)
+    keys = expand_key(key, sbox)
     byte_array = ctypes.c_ubyte * len(test_block)
     byte_array_keys = ctypes.c_ubyte * len(keys)
     byte_array_inv_sbox = ctypes.c_ubyte * 256

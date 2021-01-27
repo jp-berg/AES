@@ -73,7 +73,7 @@ def test_EncryptBlock(plaintext, key, expected):
     byte_array_block = ctypes.c_ubyte * len(ba)
 
     reference = bytearray.fromhex(expected)
-    baKey = expand_key(key)
+    baKey = expand_key(key, sbox)
     byte_array_key = ctypes.c_ubyte * len(baKey)
 
     temp_array = ctypes.c_ubyte * len(ba)
@@ -102,7 +102,7 @@ def test_EncryptBlockRandom():
     gal_mult_lookup_array = ctypes.c_ubyte * len(gal_mult_lookup)
     for i in range(100): #arbitrary number of rounds
         key = urandom(16)
-        baKey = expand_key(key.hex())
+        baKey = expand_key(key.hex(), sbox)
         b = urandom(16)
         ba = bytearray(b)
         aes_reference = pyaes.AESModeOfOperationECB(key)
@@ -149,7 +149,7 @@ def test_encrypt_aes():
     byte_array_initvals = ctypes.c_ubyte * len(initvals)
     for i in range(20): #arbitrary number of rounds
         key = urandom(16)
-        baKey = expand_key(key.hex())
+        baKey = expand_key(key.hex(), sbox)
         initvals = sbox + gal_mult_lookup + baKey
         b = urandom(no_bytes)
         ba = bytearray(b)
