@@ -126,10 +126,10 @@ def prep_password(key, iterations):
         key = hashlib.pbkdf2_hmac(hash_name = 'sha256',
                                 password = key.encode("utf-8"),
                                 salt = "aeskurs".encode("utf-8"), #TODO: change salt
-                                iterations = iterations, dklen = 16)
+                                iterations = iterations, dklen = 16).hex()
     else:
         validate_key(key)
-    return expand_key(key.hex())
+    return expand_key(key)
 
 
 def encrypt(byte_array, keys):
