@@ -6,7 +6,7 @@ import ctypes
 import pyaes
 
 from src.key_expansion import expand_key
-from src.AES_encrypt_generator import gen_mult_lookup, gen_sbox 
+from src.AES_generator import gen_mult_lookup, gen_sbox
 
 
 aeslib = ctypes.CDLL(join(getcwd(),"lib","libaes_encrypt.so"))
@@ -77,12 +77,13 @@ def test_EncryptBlock(plaintext, key, expected):
     temp_array = ctypes.c_ubyte * len(ba)
     sbox_array = ctypes.c_ubyte * len(sbox)
     gal_mult_lookup_array = ctypes.c_ubyte * len(gal_mult_lookup)
-    
+
 
     aeslib.encryptBlock(byte_array_block.from_buffer(ba), temp_array.from_buffer_copy(ba),
                         byte_array_key.from_buffer(baKey), 10, sbox_array.from_buffer(sbox),
                         gal_mult_lookup_array.from_buffer(gal_mult_lookup))
     assert ba == reference
+
 
 def test_EncryptBlockRandom():
     """
@@ -109,6 +110,7 @@ def test_EncryptBlockRandom():
                         gal_mult_lookup_array.from_buffer(gal_mult_lookup))
         assert ba == reference
 
+
 @pytest.mark.skip(reason="TODO")
 def test_encrypt_file():
     """Tests the C-implementation of the AES-Encryption of a file"""
@@ -120,6 +122,7 @@ def test_encrypt_file():
     file = encrypt_file(toencrypt, password)
     tac = perf_counter() - tic
     print("Time: " + str(tac))
+
 
 def test_encrypt_aes():
     """Tests the C-implementation of the AES-Encryption on multiple, consecutive, random Blocks.
@@ -148,6 +151,7 @@ def test_encrypt_aes():
             assert current_ba == current_reference
 
             i += 16
+
 
 if __name__ == '__main__':
     setup()

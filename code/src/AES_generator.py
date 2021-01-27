@@ -1,5 +1,6 @@
 from time import perf_counter
 
+
 def mult_gal(a, b):
     """
     Multiplicates two numbers in the Galois Field specified by the AES-Standard.
@@ -9,7 +10,6 @@ def mult_gal(a, b):
     as a modiefied version of the "peasant's algorithm"
     Tested with https://www.ece.unb.ca/cgi-bin/tervo/calc2.pl
     """
-    
     p = 0
     for i in range(8):
         if (a == 0) or (b == 0):
@@ -19,6 +19,7 @@ def mult_gal(a, b):
         b >>= 1
         a = ((a << 1)%256) ^ (-(a >> 7) & 0x1b)
     return p
+
 
 def gen_mult_lookup():
     """
@@ -37,7 +38,6 @@ def gen_mult_lookup():
     return mult1 + mult2 + mult3
 
 
-
 def mult_inv_gal():
     """
     Generates a table of the multiplicative inverse of the Elements
@@ -54,19 +54,22 @@ def mult_inv_gal():
                 list_start.remove(j)
     return bytearray(list_res)
 
-#https://en.wikipedia.org/wiki/Itoh%E2%80%93Tsujii_inversion_algorithm 
-def inv_gal_IT(a):
-    r = ((2**8)-1)
-    ArMin1 = 1
-    for i in range(r-1):
-        ArMin1 = mult_gal(prod, a)
-    Ar = mult_gal(ArMin1, a)
+
+# #https://en.wikipedia.org/wiki/Itoh%E2%80%93Tsujii_inversion_algorithm
+# def inv_gal_IT(a):
+#     r = ((2**8)-1)
+#     ArMin1 = 1
+#     for i in range(r-1):
+#         ArMin1 = mult_gal(prod, a)
+#     Ar = mult_gal(ArMin1, a)
+
 
 def shift_left(byte, rot):
     """Implements a left bitwise circular shift for bytes."""
     temp = (byte << rot)%256
     byte = temp | ((byte >> (8-rot)))
     return byte
+
 
 def gen_sbox():
     """Genereates the AES S-box"""
@@ -78,21 +81,13 @@ def gen_sbox():
         sbox[j] = i ^ shift_left(i, 1) ^ shift_left(i, 2) ^ shift_left(i, 3) ^ shift_left(i, 4) ^ 0x63
         j += 1
     return sbox
-        
-if __name__ == "__main__":
-    x = gen_sbox()
-    y = gen_mult_lookup()
-    k = 0
-    print("Sbox:")
-    for i in range(16):
-        satz = ""
-        for j in range(16):
-            satz += hex(x[k]) + " "
-            k += 1
-        print(satz)
-    print("\n\nGalois Field Multiplication Lookup Table:")
-    for i in range(256):
-        print(str(y[i]) + "     " + str(y[i+256]) + "     " + str(y[i+512]))
-    
-    
 
+
+def gen_inverse_sbox():
+    """Generates the inverse AES S-Box"""
+    mult_inv_table = mult_inv_gal()
+    inv_sbox = bytearray(256)
+    for i in range(256):
+        tmp = shift_left(i, 1) ^ shift_left(i, 3) ^ shift_left(i, 6) ^ 0x05
+        inv_sbox[i] = mult_inv_table[tmp]
+    return inv_sbox

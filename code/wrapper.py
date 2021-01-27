@@ -6,12 +6,15 @@ import hashlib
 import binascii
 import click
 from src.key_expansion import expand_key
-from src.AES_encrypt_generator import gen_mult_lookup, gen_sbox
+from src.AES_generator import gen_mult_lookup, gen_sbox, gen_inverse_sbox
+
 
 cpucount = cpu_count()
 chunksize = 2**25 #needs to be a multiple of 16 (otherwise padding is needed)
 sbox = gen_sbox()
+inv_sbox = gen_inverse_sbox()
 mult_lookup = gen_mult_lookup()
+
 
 def setup():
     if not exists("lib"):
@@ -75,8 +78,10 @@ def setup():
     aeslib_decrypt = ctypes.CDLL(join(lib_dir, "libaes_decrypt.so"))
 
 
+
 @click.group()
 def cli():
+    """Function to capture all cli components into a group"""
     pass
 
 
@@ -85,6 +90,7 @@ def pad_input(ba):
     topad = 16 - len(ba) % 16
     padding = bytearray([topad] * topad) # PKCS 5, 7
     return ba + padding
+
 
 def remove_padding(decrypted):
     # PKCS 5, 7
@@ -97,6 +103,7 @@ def remove_padding(decrypted):
         # padding
         return decrypted[:-padding_amount]
 
+
 def validate_key(key):
     try:
         # check for valid hex
@@ -107,6 +114,7 @@ def validate_key(key):
         return key
     except ValueError as ve:
         raise click.BadParameter("Key needs to be 16 bytes of valid hexadecimals")
+
 
 def prep_password(key, iterations):
     """
@@ -125,7 +133,7 @@ def prep_password(key, iterations):
 
 
 def encrypt(byte_array, keys):
-    initvals = sbox + mult_lookup + keys 
+    initvals = sbox + mult_lookup + keys
     byte_array = bytearray(byte_array)
     byte_array_initvals = ctypes.c_ubyte * len(initvals)
     byte_array_file = ctypes.c_ubyte * len(byte_array)
@@ -137,17 +145,20 @@ def encrypt(byte_array, keys):
     )
     return byte_array
 
+
 def decrypt(byte_array, keys):
     byte_array = bytearray(byte_array)
     byte_array_keys = ctypes.c_ubyte * len(keys)
     byte_array_file = ctypes.c_ubyte * len(byte_array)
+    byte_array_inv_sbox = ctypes.c_ubyte * 256
     aeslib_decrypt.decryptBlocks(
         byte_array_file.from_buffer(byte_array),
         byte_array_keys.from_buffer(keys),
         len(byte_array),
-        10
+        byte_array_inv_sbox.from_buffer(inv_sbox)
     )
     return byte_array
+
 
 @cli.command("te")
 @click.argument("ciphertext")
@@ -174,11 +185,11 @@ def decrypt_text(ciphertext, key, iterations):
     cipheroutput = remove_padding(cipherinput)
     click.echo(cipheroutput.decode("utf-8"))
 
+
 @cli.command("fe")
 @click.argument("filepath_in")
 @click.argument("key")
 @click.argument("iterations", default = 0)
-
 def encrypt_file(filepath_in, key, iterations):
     """Encrypts a file with AES.
 
@@ -222,7 +233,6 @@ def decrypt_file(filepath_in, key, iterations):
         filepath_in: String containing the filepath of the encrypted file
         key: either 16-byte-hex-string (with 0 iterations) or any string ( > 0 iterations)
         iterations: no of iterations on the pbkdf2_hmac-function for password hashing
-        
 
     Returns:
         None
@@ -242,10 +252,9 @@ def decrypt_file(filepath_in, key, iterations):
                     cont = False
                     b = decrypt(b, keys)
                     b = remove_padding(b) # remove padding from last chunk
-                else: 
+                else:
                     b = decrypt(b, keys)
                 file_out.write(b)
-
 
 
 

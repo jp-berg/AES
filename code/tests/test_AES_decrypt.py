@@ -3,9 +3,10 @@ import ctypes
 from os.path import join
 from os import getcwd
 import pytest
-
+from src.AES_generator import gen_inverse_sbox
 
 aeslib = ctypes.CDLL(join(getcwd(),"lib", "libaes_decrypt.so"))
+inv_sbox = gen_inverse_sbox()
 
 
 @pytest.mark.parametrize(
@@ -73,6 +74,7 @@ def test_addRoundKey(input_block, round_key, expected):
     )
     assert test_block == reference
 
+
 # Test vectors from rounds 2, 3, 4 of the equivalent inverse cipher
 # FIPS 197 Appendix C
 @pytest.mark.parametrize(
@@ -87,7 +89,11 @@ def test_inverseSubBytes(input_block, expected):
     test_block = bytearray.fromhex(input_block)
     reference = bytearray.fromhex(expected)
     byte_array = ctypes.c_ubyte * len(test_block)
-    aeslib.inverseSubBytes(byte_array.from_buffer(test_block))
+    byte_array_inv_sbox = ctypes.c_ubyte * 256
+    aeslib.inverseSubBytes(
+        byte_array.from_buffer(test_block),
+        byte_array_inv_sbox.from_buffer(inv_sbox)
+    )
     assert test_block == reference
 
 
@@ -126,8 +132,10 @@ def test_decryptBlock(input_block, key, expected):
     keys = expand_key(key)
     byte_array = ctypes.c_ubyte * len(test_block)
     byte_array_keys = ctypes.c_ubyte * len(keys)
+    byte_array_inv_sbox = ctypes.c_ubyte * 256
     aeslib.decryptBlock(
         byte_array.from_buffer(test_block),
-        byte_array_keys.from_buffer(keys)
+        byte_array_keys.from_buffer(keys),
+        byte_array_inv_sbox.from_buffer(inv_sbox)
     )
     assert test_block == reference
