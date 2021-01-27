@@ -50,6 +50,12 @@ Here are some areas, in which this project could be improved in the future.
 Currently the implementation only supports AES with key sizes of 128 bits, but it would be possible to also support other lengths of the standard, namely key lengths of 192 and 256 bits. Changes to the AES code itself would be minimal since the only difference would be the number of rounds, which is already a flexible parameter in the encryption implementation. The prep_password-function has to be tweaked, but the used hashing function makes adjusting the key length easy. 
 The test would have to be modified too, although this modification seems more like a hassle than a challenge since the logic that is already in place for AES-128 only needs to be adjusted for the additional key sizes.
 
+## Parallelism
+
+Since AES encrypts blocks independently from each other the algorithm can be categorized as an so called embarrasingly parallel problem (parallelprog)(ch.2.4.2). Consequently an easy avenue for gaining more speed seems to be restructuring the program in such a way, that every available CPU-core gets put to work on a seperate series of blocks to encrypt/decrypt. On short encryption operations in the kilobyte range this may not deliver a conciderable performance increase, but since the present implementation is able to operate on files of unbounded file size the time saving possibilites become apparent quite fast.
+
+A simple way to archive such parallelism could for example lead through the OpenMP-library. This library was designed to provide a shared-memory API that allows the program to execute in parallel and is added into the program fairly easily (paralelprog ch.5). Since the encryption of multiple blocks can be expressed as a for-loop, OpenMPs 'parallel for'-directive may be an easy way to execute the program on multiple cores (compare (parallelprog) ch 5.5).
+
 ## T-tables
 
 ## No constant value calculations
