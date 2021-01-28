@@ -10,23 +10,124 @@ The following chapter is based on (fips197) and the authors own knowledge/opinio
 
 # Functions - constant generators
 
+The following functions are from 'AES_encrypt_generator.py' No function in the following chapter does error checking, since they are only intended for use inside a static, unchanging setting.
+
 ## Galois field multiplication lookup table generator 
 
 ### Description
 
+As (rijndael) recommends in chapter 4.1.1 Galois field multiplications used in MixColumns were implemented as lookup tables in GFMLT. Since the number of possible multiplication results is highly restricted in GF(2⁸) the table storing all results uses neglibe memory. This avoids computing the multiplications over and over. Furthermore in chapter 10.8.1 the authors suggest, that implementing the multiplications as table lookups makes the algorithm more resistant to timing attacks, since the finite field multiplication performed in MixColumns is the only operation in Rijdael that is not computed in constant time. 
+In their 8-bit implementation in chapter 4.1.1 they suggest only generating a table where table[a] = 02 * a, since multiplication with one is the factor itself and multiplication with three can be efficiently archived by XORing the result of the multiplication with two with the original number: 
+03 * a = (02 * a) ^ a
+To avoid leaking more timing data than absolutely neccessary the present implementation uses a lookup table for all values, since this ensures that for each multiplication the CPU (theoretically) does always the exact same amount of work, thus ensuring it always takes the exact same amount of time. This size increase by 2 * 256b = 512 bytes (compared to the suggested implementation with only one row) is negligible for our target of x86-CPU-system, which today typically feature memory sizes in the gigabyte range.
+(rijndael) did not make a mistake in their implementation suggestion though, since the small lookup table variant was only suggested for memory constrained 8-bit enviroments. For 32-bit-architectures or wider they make even more extensive use of lookup tables than the present implementation does (compare ch. 4.2). This variant has not been used, since it reduces the steps of the algorithm for each column in each round into four table lookups accessing large tables crafted for this purpose, and four XOR operations concatenating the lookup-results. This obscures the original layout of the algorithm heavily and we wished for it to be recognizable in our implementation.
+
+In the end the suggestions (rijndael) makes regarding this topic have to be taken with a grain of salt, since the extensive use of lookup tables seems to enable new side channel attack vectors as previously discussed.
+
+The lookup table used by the present implementation extends over two dimensions: three rows for the multiplicators one, two and three and 256 columns to store the results of the multiplications with the numbers denoting the column indices. Since the first dimension denotes the multiplicator m, m - 1 accesses the right array for multiplication with m, while the second dimension accesses the result for the value wanted.
+
+> The program needs to compute the multiplication of two times 114. This means it has to access gal_mult_lookup[2-1]. For the result it simply needs to use the second factor as the array index for the second dimension. Thus the final array access to calculate 2 * 114 in GF(2⁸) is gal_mult_lookup\[1\]\[114\]. For 3 * 86 it would be gal_mult_lookup\[2\]\[86\] etc.
+
 ### Implementation
 
+```python
+def mult_gal(a, b):
+    """
+    Multiplicates two numbers in the Galois Field specified by the AES-Standard.
+
+    Algorithm specified under
+    https://en.wikipedia.org/wiki/Finite_field_arithmetic#multiplication
+    as a modiefied version of the "peasant's algorithm"
+    Tested with https://www.ece.unb.ca/cgi-bin/tervo/calc2.pl
+    """
+    
+    p = 0
+    for i in range(8):
+        if (a == 0) or (b == 0):
+            break
+        if b & 1:
+            p ^= a
+        b >>= 1
+        a = ((a << 1)%256) ^ (-(a >> 7) & 0x1b)
+    return p
+```
+
+This implementation of multiplication in GF(2⁸) modulo m(x) = x⁸ + x⁴ + x³ + x + 1 is an adapted version from the 'peasant's algorithm' as descibed in (https://en.wikipedia.org/wiki/Finite_field_arithmetic#multiplication). It takes two integers with values in range of 0-255 'a' and 'b'. First the variable 'p' gets initialized with 0. 
+
 ### Testing
+
+The results (App.XXX) were spot-checked against https://www.ece.unb.ca/cgi-bin/tervo/calc2.pl with P(x) = 100011011.
 
 ## Sbox generator
 
 ### Description
 
+The Sbox generator is used to generate the S-box needed in the SubBytes-function. (rijndael) gives two design criteria: Non-linearity and Algebraic complexity.
+
+The values of the AES S-box are computed by taking the value of the byte that needs to be substituted, finding its inverse in GF(2⁸) with the irreducible polynomial m(x) = x⁸ + x⁴ + x³ + x + 1 and applying an affine transformation to that inverse.
+
+![The affine transformation used in the AES S-box (paar)](affinetrans.png)
+
+The S-box contains a substitution for every value an unsigned byte is able to contain. Fig. XXX shows the S-box filled with values (in hexadecimal) the present implementation generates. To use it in this table format one has to split the byte to substitute into its digits. The most siginficant digit is used to look up the row, the least significant shows the column in that row. The intersection shows the substitution value.
+
+> The byte to substitute contains the hexadecimal value of b8. The most significant digit is b, meaning the substitution value is located in the b-row. The least significant digit is 8, meaning the substitution value is located in the 8-column of the table. Therefore the substitution value is 6c, because it is located, where the b-row and the 8-column intersect each other.
+
+
 ### Implementation
+
+```python
+def mult_inv_gal():
+    """
+    Generates a table of the multiplicative inverse of the Elements
+    contained within the AES-Galois-Field.
+
+    It uses an unelegant brute-force-method.
+    """
+    list_start = [*range(1, 256)]
+    list_res = [0]
+    for i in range(256):
+        for j in list_start:
+            if mult_gal(i, j) == 1:
+                list_res.append(j)
+                list_start.remove(j)
+    return bytearray(list_res)
+```
+This function generates the inverses for all values in GF(2⁸). First it generates a list with the values from 1 to 255. After that it creates another list containing the element 0 (since 0 has no inverse). Now it iterates through all 256 possible values p. For each p it goes through 'list_start' and multiplies them in GF(2⁸) modulo m(x) using the previously mentioned 'mult_gal' function. Since multiplying a number x with its inverse always results in the multiplicative identity 1, the present implementation simply tries to multiply all elements in GF(2⁸) with each other (basically a brute-force approach) to see if the product equals 1. In that case the value r from 'list_start' is appended to 'list_res' at the index of the current value of p. After that r is removed from list_start, since every p has only one inverse in GF(2⁸) modulo m(x) (proven experimentally by multipyling all elements in GF(2⁸) with each other and noting the occurences of products equal 1).
+In the end the function returns 'list_res' converted to a bytearray, containing numbers that are the inverses of the values of their indices (eg. element in listindex 37 is the inverse to the number 37).
+
+```python
+def shift_left(byte, rot):
+    """Implements a left bitwise circular shift for bytes."""
+    temp = (byte << rot)%256
+    byte = temp | ((byte >> (8-rot)))
+    return byte
+```
+
+This function implements a left bitwise circular shift of a byte. It takes two arguments, 'byte' and 'rot'. 'byte' is an integer in the range of 0-255 and rot is an integer, denoting the number of places 'byte' should be shifted by. It starts by applying a bitwise left shift to 'byte', shifting it 'rot' times. The result is reduced by modulo 256, since the result cannot leave the range denoted by an unsigned byte, e.g. 0-255. The reduced result is placed into the variable 'temp'. Now the bits of 'byte' that got shifted to the left and 'cut off' by the modulo operation have to be brought back to the right. For that we shift 'byte' 8 - 'rot' bits to the right. Now the two 'halves' get combined by applying a bitwise OR to 'temp' and the result of the rightshift. This result is saved in 'byte'. Finally the function returns 'byte'.
+
+```python
+def gen_sbox():
+    """Genereates the AES S-box"""
+    mult_inv_table = mult_inv_gal()
+    sbox = bytearray(256)
+    j = 0
+    for i in mult_inv_table:
+        #affine transformation
+        sbox[j] = i ^ shift_left(i, 1) ^ shift_left(i, 2) ^ shift_left(i, 3) ^ shift_left(i, 4) ^ 0x63
+        j += 1
+    return sbox
+```
+
+This function generates the S-box array. First it uses the 'mult_inv_gal' function to generate a list containing all multiplicative inverse of the elements in GF(2⁸). After that it allocates a bytearray with length 256 called 'sbox' and initializes the variable 'j' with zero. Then it iterates through the array of inverses, applying the affine transformation and storing the result in sbox. The affine transformation is computed by XORing the listelement with versions of itself that have been shifted left via circular byteshift one, two, three and four times. Finally the result gets XORed with 99 to optain the result of the transformation. (https://en.wikipedia.org/wiki/Rijndael_S-box#forward_s-box)
+The function finishes by returning the sbox-bytearray.
+
 
 ### Testing
 
+Since this is a static function generating always the same array, the resulting array was compared once with the table in (fips197) (ch. 5.1.1)
 # Functions - encryption
+
+The following functions are from 'AES_encrypt.c' ('Implementation'-chapters) and 'test_AES_encrypt.py' ('Testing'-chapters).
 
 ## Key Addition
 
@@ -188,13 +289,6 @@ The function MixColumns takes multiple arguments. First it takes a restricted po
 MixColumns starts by copying the current state from 'block' into 'tempblock'. After that it iterates through every row by processing 4 consecutive bytes at a time, before it moves to the following for consecutive bytes of 'block'. Each Byte in 'block' becomes the result of four Galois field multiplications combined through the bitwise XOR-operation, which represents the Galois field addition. The multiplications are implemented as lookups in the GFMLT and combine the coefficients of the fixed polynomial c(x) with the bytes of the current row.
 After processing all four rows and returning, MixColumns has written the results of this transformation in place of the current block being processed.
 
-As (rijndael) recommends in chapter 4.1.1 Galois field multiplications were implemented as lookup tables in GFMLT. Since the number of possible multiplication results is highly restricted in GF(2⁸) the table storing all results uses neglibe memory. This avoids computing the multiplications over and over. Furthermore in chapter 10.8.1 the authors suggest, that implementing the multiplications as table lookups makes the algorithm more resistant to timing attacks, since the finite field multiplication performed in MixColumns is the only operation in Rijdael that is not computed in constant time. 
-In their 8-bit implementation in chapter 4.1.1 they suggest only generating a table where table[a] = 02 * a, since multiplication with one is the factor itself and multiplication with three can be efficiently archived by XORing the result of the multiplication with two with the original number: 
-03 * a = (02 * a) ^ a
-To avoid leaking more timing data than absolutely neccessary the present implementation uses a lookup table for all values, since this ensures that for each multiplication the CPU (theoretically) does always the exact same amount of work, thus ensuring it always takes the exact same amount of time. This size increase by 2 * 256b = 512 bytes (compared to the suggested implementation with only one row) is negligible for our target of x86-CPU-system, which today typically feature memory sizes in the gigabyte range.
-(rijndael) did not make a mistake in their implementation suggestion though, since the small lookup table variant was only suggested for memory constrained 8-bit enviroments. For 32-bit-architectures or wider they make even more extensive use of lookup tables than the present implementation does (compare ch. 4.2). This variant has not been used, since it reduces the steps of the algorithm for each column in each round into four table lookups accessing large tables crafted for this purpose, and four XOR operations concatenating the lookup-results. This obscures the original layout of the algorithm heavily and we wished for it to be recognizable in our implementation.
-
-In the end the suggestions (rijndael) makes regarding this topic have to be taken with a grain of salt, since the extensive use of lookup tables seems to enable new side channel attack vectors as previously discussed.
 
 ### Testing
 
@@ -373,9 +467,24 @@ This test is used in addition to the normal test, because it ensures the impleme
 ### Description
 
 Although not explicitly required in context of this work, the present implementation contains the possibility to encrypt multiple consecutive blocks. With that it enables encryption of for example messages larger than sixteen bytes or even files. 
-This is an implementation of the simplest Block Cipher Modes of Operation, called 'Electronic Codebook Mode'.
+(paar) (ch. 5.1.1) describes encryption schemes like found in the present implementation the simplest block cipher modes of operation, called 'Electronic Codebook Mode'. Every cipher block is generated by simply encrypting the plaintext with the round keys and appending the encrypted blocks. The first advantage of this method is that no synchronization between the en- and decrypting party is necessary, since each block can be processed independently of each other. Bit errors do not propagate through the whole ciphertext but are confined to the block they occured in. The implementation has also the potential to become very fast, thanks to the posibility of processing different blocks on different cores, thus enabling parallelisation of en- and decryption. 
+The weaknesses of this mode should not be underestimated though. Due to the fact that every block is encrypted with the same key, the same plaintexts will generate the same outputs. If the ciphertext is examined at a block level this is not of greater significance, since AES guarantees that each encrypted block is indistinguishable from randomly generated bytes. But if the plaintext as a whole gets analyzed patterns may emerge. Those patterns leak information about what parts of the plaintext contain the same 128-bit sequence, because those parts also share a (different) bit seqence in the corresponding ciphertext. Furthermore, a third party watching an exchange encrypted in 'Electronic Codebook Mode' can tell, when the same message is send twice, or if the header of different messages is the same, for examle if each message was using the same salutation. 
+(paar) demonstrates two attack avenues, that are a direct result of ECB. The first one exploits the ECB-encrypted communication channel between two banks. Here the attacker A just needs to open one account on both banks and review the communication channel for patterns from test transactions he is sending between the two accounts. If the banks do not rotate keys A will soon know which encrypted blocks belong to his account number and which block denote the recieving account. After learning that they can exchange all blocks they know as reserved for the number of the recieving account with the blocks for their own account number and divert all transactions between the two banks to A's account.
+The other attack avenue is the emergence of patterns visible to the naked eye. For this example we created an image in the bitmap format(Fig. XXX). This image was encrypted with a modified variant of the present implementations file encryption mode. The modification (inserted just before the while-loop) ensures that the header of the .bmp-file is preserved and not corrupted by the encryption. It reads the first 55 bytes (since the header is 54 bytes long (https://www.daubnet.com/en/file-format-bmp)) and writes them to the encrypted file without encrypting them. After that, the rest of Fig. XXX is read, encrypted and appended. The result Fig. XXX, albeit encrypted with an algorithm concidered secure, shows a clear and readable pattern.
+For comparison we used the 'pyaes'-library to encrypt the image in the same way with the same key and preservation method of the header, but applied the Counter Mode of Operation. The result, displayed in Fig. XXX, demonstrates, that any visible pattern resulting from ECB-encryption disappears with the right Block Cipher Mode of Operation.
+(paar)(ch.5.1.5) describes how the Counter Mode is an example of block cipher modes of operation that avoids such patterns. First an initialization vector IV gets choosen. This ensures that every encryption pass is as unique as the IV. Due to this fact it is recommended to never reuse the IV. This IV is then concatenated counter. This combination with the length of 128 bits is then encrypted with AES and the password. The result is XORed with 128 bits of plaintext to create the ciphertext. The counter is increased for each concecutive block that needs to be encrypted. This way each block of plaintext is XORed with an uniqe combiation of IV, nonce and key. This makes it highly unlikely for two identical blocks of plaintext to be encrypted into two identical blocks of ciphertext, thus avoiding leakage of information.
 
-The bye array containing the plaintext has to be padded though, as only byte arrays with length l can be processed where l modulo 16 equals 0. Padding can be implemented in multiple ways, this implementation does it as follows:
+The present implementation is required to use ECB, since it has to be able to reproduce the testvectors from (fips197). Due to timeconstrains it was decided not to implement two different block cipher modes of operation.
+
+![ECB: Every block of plaintext is simply encrypted with a key.](ECB_encryption.svg)
+![CTR: Every block of plaintext is XORed with a combination of initialization vector (here: Nonce) and counter, encrypted by the key to form the ciphertext.](CTR_encryption_2.svg)
+
+key = passwort, iterations = 20, salt = aeskurs
+https://en.wikipedia.org/wiki/File:ECB_encryption.svg
+https://en.wikipedia.org/wiki/File:CTR_encryption_2.svg
+            
+
+In order for Electronic Codebook Mode to work correctly the bye array containing the plaintext has to be padded though, as only byte arrays with length l can be processed where l modulo 16 equals 0. Padding can be implemented in multiple ways, this implementation does it as follows:
 
 ```python
 def pad_input(ba):
@@ -423,9 +532,7 @@ void encryptAES(uint8_t * restrict bytes, uint8_t * restrict initval,
 }
 ```
 The function takes four arguments. The first one is a restricted pointer to an array containing the bytes that need to be encrypted. The second argument is a restricted pointer to an array containing the initialization values: first the elements of the S-box, followed by the bytes of the GFMLT, while the rest are the bytes of the round keys. The third is a constant unsigned variable which width equals the wordwidth of the CPU architecture the source code gets compiled on. The last argument is a constant byte containing the number of rounds.
-The function starts by allocation an array of 256 unsigned bytes called 'sbox'. After that another array named 'gal_mult_lookup' is allocated, but this time it is two-dimensional, using three times 256 unsigned bytes. The name is derived from '**Gal**ois field **mult**iplication **lookup**table'. Both are initalized with the three following for-loops. The first loop reads the first 256 bytes from 'initvar' and assigns them to 'sbox'. The following two nested for-loops iterate through the two dimensions of 'gal_mult_lookup' and assign the results of the Galois field multiplications in GF(2⁸) to the respective dimensions of the array. The first dimension denotes the multiplicator m. m - 1 accesses the right array, while the second dimension accesses the result for the value wanted.
-
-> The program needs to compute the multiplication of two times 114. This means it has to access gal_mult_lookup[2-1]. For the result it simply needs to use the second factor as the array index for the second dimension. Thus the final array access to calculate 2 * 114 in GF(2⁸) is gal_mult_lookup\[2\]\[114\]. For 3 * 86 it would be gal_mult_lookup\[2\]\[86\] etc.
+The function starts by allocation an array of 256 unsigned bytes called 'sbox'. After that another array named 'gal_mult_lookup' is allocated, but this time it is two-dimensional, using three times 256 unsigned bytes. The name is derived from '**Gal**ois field **mult**iplication **lookup**table'. Both are initalized with the three following for-loops. The first loop reads the first 256 bytes from 'initvar' and assigns them to 'sbox'. The following two nested for-loops iterate through the two dimensions of 'gal_mult_lookup' and assign the results of the Galois field multiplications in GF(2⁸) to the respective dimensions of the array.
 
 After populating the arrays the pointer has moved far enough through 'initvals' that it now points to the first byte of the first round key. To make this more clear and to enable possible compiler optimisations we create a new pointer named 'keys' poining to a constant array, which is in this case 'initvals'. All future accesses to this array will be throught 'keys' or descendants of this pointer. The last step before starting the encryption routine is the creation of an array of sixteen unsigned bytes called 'tempblock'.
 The next for loop starts the encryption. Every iteration processes one block and increments the loop index variable by sixteen, so that it can point to the next block to be processed. In every iteration of this loop the function 'enrcryptBlock' is called with the address of the current block to encrypt, a pointer to the temporary block, a pointer to the array containing the round keys, a variable containing the number of rounds, a pointer to the sbox and a pointer to the GFMLT.
@@ -465,10 +572,14 @@ def test_encrypt_aes():
 
 This testfunction is similar to the previously discussed 'test_EncryptBlockRandom'. The major difference is that this function is not resticted to testing sixteen bytes at a time. by adjusting 'no_bytes' one can test as many consecutive blocks as memory and patience permit. The for-loop again allows for automatic repetition of this test to ensure the tested function can handle all byte permutation within the specified range.
 Since the 'pyaes'-library does not allow for encryption of multiple consecutive blocks, a while-loop had to be added in the end, that allows this external library to encrypt one block at a time and compare it afterwards to the results of the present implementation, which encrypts all blocks in one go.
+The test only passes, if every block encrypted by the present implementation matches the ciphertext produced by the 'pyaes'-library.
+It ensures that longer texts or files get encrypted correctly, as long as the passed parameters are within the specified range.
+
 ---
 * CPU central processing unit
 * GFMLT Galois-Field multiplication lookup table
 * GF(2⁸) Galois field...
+* ECB Electronic Codebook Mode
 
 
 ´
