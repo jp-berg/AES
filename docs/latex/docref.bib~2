@@ -47,3 +47,15 @@
 	year = {2002}
 }
 
+@book{parallelprog,
+	address = {30 Corporate Drive, Suite 400 Burlington, MA 01803, USA},
+	author = {Pacheco, Peter S.},
+	editor = {Green, Todd and McFadden, Nate},
+	howpublished = {hardback},
+	isbn = {978-0-12-374260-5},
+	pages = {391},
+	publisher = {Morgan Kaufmann Publishers},
+	title = {An Introduction to Parallel Programming},
+	year = {2011}
+}
+

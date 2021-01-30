@@ -3,9 +3,33 @@
 The following chapter is based on (fips197) and the authors own knowledge/opinions, if not mentioned otherwise.
 
 # On the usage of optional C keywords
+
+The following chapter explain some keywords from the C language, that are not needed for the computation to succeed, but provide additional information to readers of the code and/or the compiler. The chapter is based on (modernc), if not mentioned otherwise.
+
 ## inline
-## const
+
+The keyword 'inline' (ch. 15.1) allows for code to be modularized by functions, but without the overhead of an additional function call. 'inlining' a function f means that the compiler can take it and replace every call to that function with the function body itself. This avoids allocating new stack space and copying relevant variables for f everytime f is called. Furthermore the instuctions of f might be seen in a new context, allowing for further optimizations like eliminating dead branches or avoiding repeated computation of already known values.
+The keyword is only a hint for the compiler to inline the function. The compiler might decide againt inlining it, because the internal optimization-algorithms classified the function as unsuitable for inlining, for example if f was too big to be inlined.
+(kernel-style guide)(ch.16) recommends using the keyword only for functions that have three lines of code or less, which was followed in the present implementation.
+
 ## restrict
+
+The 'restrict'-qualifier (ch. 15.2) can only be applied to pointers and tells the compiler that the pointer attributed with restrict is the only one accessing the object pointed towards. If the compiler knows the object in question is not aliased (e.g. accessed through multiple pointers) it can perform further optimizations.
+The usage of this keyword in the present implementation is not soley intended for the compiler, but also for readers of the code, since it gives information about how the pointer is intended to be used and what restrictions it is confined by, that may be implicit without the keyword but now are made explicit.
+Verifying the correctness of the usage of 'restrict' is upon the programmer not the compiler. It is a 'promise' of the programmer to the compiler, that the object is not aliased, as the compiler will perform no checks to validate the claim made by restrict.
+
+## const
+
+The following subchapter is based on (cpointers).
+
+'const' is used in the present implementation to declare that the pointer attributed with this keyword is pointing to a constant. This means that the pointer can be used to read the values it points to, but cannot modify them. This is mainly to clarify the intentions of the programmer, for example if a function declaration contains a pointer to a constant the function guarantees, that any data passed to this function via the pointer to a constant will not be modified. This guarantee is enforced at a compiler level.
+This is not to be confused with a constant pointer or a constant pointer to a constant.
+
+1. *Pointer to a constant*: 'const int *pointername;' Used in the present implementation. Pointer can be modified, values accessed through the pointer cannot.
+2. *Constant pointer to a nonconstant*: 'int *const pointername;' Pointer cannot be modified, values accessed through the pointer can be.
+3. *Constant pointer to a constant*: 'const int *const pointername;' Pointer and values accessed through it cannot be changed.
+
+
 ## static
 
 # Functions - constant generators
@@ -19,7 +43,7 @@ The following functions are from 'AES_encrypt_generator.py' No function in the f
 As (rijndael) recommends in chapter 4.1.1 Galois field multiplications used in MixColumns were implemented as lookup tables in GFMLT. Since the number of possible multiplication results is highly restricted in GF(2⁸) the table storing all results uses neglibe memory. This avoids computing the multiplications over and over. Furthermore in chapter 10.8.1 the authors suggest, that implementing the multiplications as table lookups makes the algorithm more resistant to timing attacks, since the finite field multiplication performed in MixColumns is the only operation in Rijdael that is not computed in constant time. 
 In their 8-bit implementation in chapter 4.1.1 they suggest only generating a table where table[a] = 02 * a, since multiplication with one is the factor itself and multiplication with three can be efficiently archived by XORing the result of the multiplication with two with the original number: 
 03 * a = (02 * a) ^ a
-To avoid leaking more timing data than absolutely neccessary the present implementation uses a lookup table for all values, since this ensures that for each multiplication the CPU (theoretically) does always the exact same amount of work, thus ensuring it always takes the exact same amount of time. This size increase by 2 * 256b = 512 bytes (compared to the suggested implementation with only one row) is negligible for our target of x86-CPU-system, which today typically feature memory sizes in the gigabyte range.
+To avoid leaking more timing data than absolutely neccessary the present implementation uses a lookup table for all values, since this ensures that for each multiplication the CPU (theoretically) does always the exact same amount of work, thus ensuring it always takes the exact same amount of time. This size increase by 2 * 256b = 512 bytes (compared to the suggested implementation with only one row) is negligible for our target of x86-CPU-systems, which today typically feature memory sizes in the gigabyte range.
 (rijndael) did not make a mistake in their implementation suggestion though, since the small lookup table variant was only suggested for memory constrained 8-bit enviroments. For 32-bit-architectures or wider they make even more extensive use of lookup tables than the present implementation does (compare ch. 4.2). This variant has not been used, since it reduces the steps of the algorithm for each column in each round into four table lookups accessing large tables crafted for this purpose, and four XOR operations concatenating the lookup-results. This obscures the original layout of the algorithm heavily and we wished for it to be recognizable in our implementation.
 
 In the end the suggestions (rijndael) makes regarding this topic have to be taken with a grain of salt, since the extensive use of lookup tables seems to enable new side channel attack vectors as previously discussed.
@@ -52,7 +76,30 @@ def mult_gal(a, b):
     return p
 ```
 
-This implementation of multiplication in GF(2⁸) modulo m(x) = x⁸ + x⁴ + x³ + x + 1 is an adapted version from the 'peasant's algorithm' as descibed in (https://en.wikipedia.org/wiki/Finite_field_arithmetic#multiplication). It takes two integers with values in range of 0-255 'a' and 'b'. First the variable 'p' gets initialized with 0. 
+This implementation of multiplication in GF(2⁸) modulo m(x) = x⁸ + x⁴ + x³ + x + 1 is an adapted version from the 'peasant's algorithm' as descibed in (https://en.wikipedia.org/wiki/Finite_field_arithmetic#multiplication). It takes two integers with values in range of 0-255 'a' and 'b'. First the variable 'p' gets initialized with 0. The following loop gets repeated at most eight times:
+If one of the two factors is 0 the algorithm terminates. After that, 'mult_gal' evaluates, wether 'b' is odd by performing a bitwise AND-operation with 'b' and 1. If the least significant bit of 'b' was toggled 'p' gets XORed with 'a' and the result is stored in p. After that 'b' gets bitshifted one to the right, which equals division by two while ignoring the remainder. 
+The last step has two components. In the first component 'a' gets shiftet by one to the left, which equals multiplication by two. To ensure 'a' remains within the value-bounds of a byte (e.g. 0-255) the result is taken modulo 256. The second component of the last step first shifts 'a' to the right by seven. This means that the most significant bit of 'a' is now its least significant bit, while the other bits are 0. By taking the negative of this resulting value there are two possible outcomes: either 'a' before the shift had a 0 as its most significant digit, which after its shift becomes its least siginficant one. Since all other digits are also 0, the negative does not change anything: 'a' contains (in base 2) 00000000. On the other hand if the most significant digit was a 1 before the shift, the binary value of 'a' after the shift would be 00000001 or 1. With the minus-sign this becomes -1 or (thanks to the two's complement) 11111111. This is combined using the bitwise AND with 27. The rationale behind this last component is simple: if 'a' has the most siginficant bit set to 1 prior to its shift to the right in the first component, the bit goes out of scope for the byte value range, since it is now the ninth bit, but a byte has only eight. In other words any number with a ninth bit toggled in binary notation cannot belong to GF(2⁸). To stay within the range of 0-255 we have to perform modulo the irreducible polynomial of the AES-Galois field, which is m(x) x⁸ + x⁴ + x³ + x + 1 in polynomial representation (rijndael) (ch. 3.4.1), 100011011 in binary and 283 in base 10. Since this value is bigger than a byte can hold it becomes 00011011 with the most significant digit cut off, which is 1b in hexadecimal representation. If the most significant bit of 'a' was set prior to all of this, it has to be reduced modulo 1b (which is represented by the bitwise XOR between the two coponents here). The second components computes, wether the shifted 'a' gets XORed with 00000000 & 1b (which is just 0) or 11111111 & 1b (which is just 1b) depending on the value of 'a's most significant digit.
+The function finishes by returning the value contained in p at the end of the loop.
+
+```python
+def gen_mult_lookup():
+    """
+    Generates a lookup table for the Galois-field-multiplication
+    necessary in AES.
+    """
+    mult1 = bytearray(256)
+    mult2 = bytearray(256)
+    mult3 = bytearray(256)
+
+    for i in range(256):
+        mult1[i] = i
+        mult2[i] = mult_gal(i, 2)
+        mult3[i] = mult_gal(i, 3)
+
+    return mult1 + mult2 + mult3
+```
+
+'gen_mult_lookup' generates the GFMLT for multiplications with 1, 2, and 3 in GF(2⁸) modulo m(x). It creates three bytearrays. The following loop, iterating through the numbers 1 to 255, places the current iteration value in the first array, the iteration value times two in the second and the iteration value times three in the third bytearray. The function then returns the concatenation of all three arrays.
 
 ### Testing
 
@@ -67,6 +114,7 @@ The Sbox generator is used to generate the S-box needed in the SubBytes-function
 The values of the AES S-box are computed by taking the value of the byte that needs to be substituted, finding its inverse in GF(2⁸) with the irreducible polynomial m(x) = x⁸ + x⁴ + x³ + x + 1 and applying an affine transformation to that inverse.
 
 ![The affine transformation used in the AES S-box (paar)](affinetrans.png)
+![The hexadecimal values of the S-box](S-box.png)
 
 The S-box contains a substitution for every value an unsigned byte is able to contain. Fig. XXX shows the S-box filled with values (in hexadecimal) the present implementation generates. To use it in this table format one has to split the byte to substitute into its digits. The most siginficant digit is used to look up the row, the least significant shows the column in that row. The intersection shows the substitution value.
 
@@ -125,6 +173,7 @@ The function finishes by returning the sbox-bytearray.
 ### Testing
 
 Since this is a static function generating always the same array, the resulting array was compared once with the table in (fips197) (ch. 5.1.1)
+
 # Functions - encryption
 
 The following functions are from 'AES_encrypt.c' ('Implementation'-chapters) and 'test_AES_encrypt.py' ('Testing'-chapters).
@@ -534,7 +583,7 @@ void encryptAES(uint8_t * restrict bytes, uint8_t * restrict initval,
 The function takes four arguments. The first one is a restricted pointer to an array containing the bytes that need to be encrypted. The second argument is a restricted pointer to an array containing the initialization values: first the elements of the S-box, followed by the bytes of the GFMLT, while the rest are the bytes of the round keys. The third is a constant unsigned variable which width equals the wordwidth of the CPU architecture the source code gets compiled on. The last argument is a constant byte containing the number of rounds.
 The function starts by allocation an array of 256 unsigned bytes called 'sbox'. After that another array named 'gal_mult_lookup' is allocated, but this time it is two-dimensional, using three times 256 unsigned bytes. The name is derived from '**Gal**ois field **mult**iplication **lookup**table'. Both are initalized with the three following for-loops. The first loop reads the first 256 bytes from 'initvar' and assigns them to 'sbox'. The following two nested for-loops iterate through the two dimensions of 'gal_mult_lookup' and assign the results of the Galois field multiplications in GF(2⁸) to the respective dimensions of the array.
 
-After populating the arrays the pointer has moved far enough through 'initvals' that it now points to the first byte of the first round key. To make this more clear and to enable possible compiler optimisations we create a new pointer named 'keys' poining to a constant array, which is in this case 'initvals'. All future accesses to this array will be throught 'keys' or descendants of this pointer. The last step before starting the encryption routine is the creation of an array of sixteen unsigned bytes called 'tempblock'.
+After populating the arrays the pointer has moved far enough through 'initvals' that it now points to the first byte of the first round key. To make this more clear and to enable possible compiler optimizations we create a new pointer named 'keys' poining to a constant array, which is in this case 'initvals'. All future accesses to this array will be throught 'keys' or descendants of this pointer. The last step before starting the encryption routine is the creation of an array of sixteen unsigned bytes called 'tempblock'.
 The next for loop starts the encryption. Every iteration processes one block and increments the loop index variable by sixteen, so that it can point to the next block to be processed. In every iteration of this loop the function 'enrcryptBlock' is called with the address of the current block to encrypt, a pointer to the temporary block, a pointer to the array containing the round keys, a variable containing the number of rounds, a pointer to the sbox and a pointer to the GFMLT.
 
 Since parallelisation of the de- and encryption routine seems to be a worthwhile endeavour for the future, this function was already designed with that in mind. An allocation of the temporary block as a local variable instead of a global one avoids the need for thread synchronization, since every thread would use their own temporary block, if every thread spawned would use this function as a starting point.

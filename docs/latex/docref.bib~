@@ -59,3 +59,12 @@
 	year = {2011}
 }
 
+@article{paar,
+	author = {Paar, Christof and Pelzl, Jan},
+	isbn = {978-3-662-49296-3},
+	issn = {1614-5216},
+	publisher = {Springer-Verlag Berlin Heidelberg},
+	title = {Kryptografie verst{\"a}ndlich},
+	year = {2016}
+}
+
