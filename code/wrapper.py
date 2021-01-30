@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
 import ctypes
 from os.path import isfile, join, splitext, expanduser, exists
 from os import cpu_count, getcwd, urandom, mkdir
