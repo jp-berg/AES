@@ -51,6 +51,31 @@ The Advanced Encryption Standard has a series of defining properties.
 * *key-length*: AES supports three different key lengths: 128 bits, 192 bits and 256 bits. The different key length are accompanied by differing numbers of rounds. AES-128 uses ten rounds, AES-192 twelve and AES-256 utilises fourteen rounds. (fips197)
 * *state*: The two-dimensional 4x4 array of bytes on which AES performs its operations on is called state. 
 
+# The wrapper
+
+This chapter describes the Python-wrapper 'wrapper.py' in more detail. Since it is not the focus of the documentation this chapter is kept shorter than the documentation about the C-core implementing AES.
+
+In general the wrapper is supposed to prepare data and to provide an interface for the C-core. It is the entry point to the program. The basic functionality from a user perspective can be broken down into 3 components.
+
+## Compiling the C-core
+
+To guarantee optimal performance and portability the present implementation compiles the C-source code into linkable binaries on first startup. The program does get delivered with an empty lib-folder. On startup, the program tries to link the libraries containing the AES C-code compiled to binaries from the lib-folder. If it cannot detect them, it tries to compile them via Clang or GCC. A successful compilation guarantees that the C-core is able to run on the platform it was compiled to. Furthermore the compiler may be able to leverage platform specific optimizations if they are available. Since compilation time is short and done only once it is a reasonable way to ensure portability and performance.
+Finally it made testing changes to the C-code easier, since one only had to delete the old library files and run the code again to trigger a recompile.
+
+## en- and decryption
+
+The C-code, once it is compiled to a .so-file, can be dynamically linked with the Python standard-library ctypes. This allows calling C functions directly from Python and passing pointers to Python bytearrays. Those bytearrays can be modified directly by the called C-code. The wrapper calls the en- and decrypt functions of the C implementations via the two python functions "encrypt" and "decrypt", that both take the byte array that is supposed to be processed and the expanded keys. The two functions then prepare the arrays for the ctypes interface and pass them on to the C-function for en- and decryption, along with the initvals, which consists of the values for the S-box and the values of the GFMLT (both generated at program startup) concatenated with the expanded keys. Since the C-core modifies the byte arrays in place they just get returned, after the C-function returns.
+
+## Interface
+
+There are four functions through which the user interacts with the program: two for text operations and two for file operations. All four get exposed to the user via the 'click'-library, which a following chapter will explain in more depth. This library passes on the arguments from the command line to the function it decorates. ITERATION
+
+The text functions, called 'te' for '**t**ext **e**ncrypt" and 'td' for '**t**ext **d**ecrypt' via the command line, simply encode the recieved text into a bytearray (and add padding or remove it), expand the key, call the matching en- or decryption function with both of those arrays and return either the encrypted text in hex or the decrypted text in utf-8 encoding. 
+
+The file functions, called 'fe' for '**f**ile **e**ncrypt" and 'fd' for '**f**ext **d**ecrypt' via the command line, work in a similar way. They also expand the key, but additionally prepare an outputfile, by either adding or removing the ".enc"-fileending. They open both the input and output file simultaneously. This helps with very large files, since they can process them chunk by chunk. This allows for (theoretically) processing files of unbounded filesizes, since the program is not limited by the systems RAM. For every chunk the program reads, it checks if the read length is shorter than the defined length of a chunk. If thats the case the program knows that this is the last chunk of the file. It either pads the last chunk (in case of encryption) or removes the padding (in case of decryption), terminates the read-loop and writes them to disk with the other chunks. During the process the chunks themselves get passed on to the respective en- or decryption function, along with the expanded keys.
+
+
+
 # Possible areas of future improvements
 
 This chapter is a collection of ideas, which could bring potential improvements to the project in the future.
@@ -72,7 +97,7 @@ The present implementation already makes use of lookup tables. (rijndael 59) pro
 
 ## No constant value calculations
 
-To fullfill the Task of this seminar it was explicitly required to (re-) calculate values, that could as well be hardcoded. The additional space used by this is calculated as follows: 
+To fullfill the task of this seminar it was explicitly required to (re-) calculate values, that could as well be hardcoded. The additional space used by this is calculated as follows: 
 The GFMLT for multiplication with two and three can be stored in 2 * 256 bytes (multiplication with one does not need to be stored, since it just results in the unmodified value itself). The Sbox and Inverse Sbox are 256 additional bytes each, which brings us to a total of 1024 additonal bytes of memory. This is concidered to be a negligible size increase, but saves on recalculating the values on program startup.
 
 ## Block cipher mode of operation
@@ -83,7 +108,7 @@ Due to time constraints, it was not possible to implement a different block ciph
 
 At the moment the passwords are hashed with PBKDF2. This algorithm can unfortunately easily be cracked with the right hardware, like (appcrypt 697, 701) explains and suggests using the password hashing competition winner argon2, which is designed to withstand bruteforcing attemts by being able to use more memory and parallelism, thus making it more expensive for an attacker to guess the password.
 The argon2-parameters would either have to be hardcoded or attached to the encrypted text in a header for example.
-If such a header would be added, it seems like a logical step to also add a public salt to the hash parameters specified within. A salt is a random string, regenerated for each new password, that is hashed along with the password to prevent any kind of preprocessing attack on the password hash. The salt itself is stored in the clear. (appcrypt 693)
+If such a header would be added, it seems like a logical step to also add a public salt to the hash parameters specified within. A salt is a random string, regenerated for each new password, that is hashed along with the password to prevent any kind of preprocessing attack on the password hash. The salt itself is stored in the clear. (appcrypt 693) At the moment the hash is hardcoded to "aeskurs", but in the future would consist of a randomly generatet string from "os.urandom()".
 The header could also hold the hash for the hash based message authentication code or short HMAC (paar)(ch.12.2.3). This would ensure integrity of the message, i.e. that the encrypted data was not changed, for example during transit by a malicious third party. This is archieved by hashing the message before transmission in combination with a secret shared only by the communicating parties and appending the resulting hash to the message. The recieving party is then able to verify the integrity of the message by repeating the steps and comparing the generated and the appended hash.
 (moxie) recommends to authenticate first before performing any cryptographic operation, so a future implementation would probably first encrypt the message, then hash it and append the hash to the header. Since we want to ensure that the correct password-hashing parameters were recieved, those would be also fed into the HMAC if a future implementation makes use of said parameters. The HMAC algorithm would probably a SHA3-variant, as specified in (fips202), providing the HMAC with adequate cryptographic strength.
 
@@ -94,3 +119,4 @@ The header could also hold the hash for the hash based message authentication co
 
 ---
 * GFMLT Galois Field multiplication lookup table
+* I/O: input/output
