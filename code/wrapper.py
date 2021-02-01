@@ -10,7 +10,6 @@ from src.AES_generator import gen_mult_lookup, gen_sbox, gen_inverse_sbox
 
 
 cpucount = cpu_count()
-chunksize = 2**25 #needs to be a multiple of 16 (otherwise padding is needed)
 sbox = gen_sbox()
 inv_sbox = gen_inverse_sbox()
 mult_lookup = gen_mult_lookup()
@@ -114,6 +113,17 @@ def validate_key(key):
         return key
     except ValueError as ve:
         raise click.BadParameter("Key needs to be 16 bytes of valid hexadecimals")
+
+
+def validate_chunksize(ctx, param, chunksize):
+    try:
+        if chunksize % 16 != 0:
+            raise ValueError
+        return chunksize
+    except ValueError as e:
+        raise click.BadParameter("chunksize needs to be a multiple of 16")
+
+
 
 
 def prep_password(key, iterations):
@@ -251,7 +261,7 @@ def decrypt_text(password, ciphertext, key, hex):
     is_flag=True,
     help="use 16-byte hexadecimal key instead of password of arbitrary length"
 )
-@click.argument("chunksize", default = 2**25)
+@click.argument("chunksize", callback=validate_chunksize, default = 2**25)
 def encrypt_file(password, filepath_in, key, chunksize):
     """Encrypts a file with AES.
 
@@ -292,7 +302,7 @@ def encrypt_file(password, filepath_in, key, chunksize):
     help="force decryption of files without a .enc file extension. " \
     "Will add a .decrypted extension on the output."
 )
-@click.argument("chunksize", default = 2**25)
+@click.argument("chunksize", callback=validate_chunksize, default = 2**25)
 def decrypt_file(password, filepath_in, key, force, chunksize):
     """Decrpyts a file with AES.
 
