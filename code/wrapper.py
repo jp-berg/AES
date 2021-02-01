@@ -290,7 +290,7 @@ def encrypt_file(password, filepath_in, key, chunksize):
     default=False,
     is_flag=True,
     help="force decryption of files without a .enc file extension. " \
-    "Will add a .decrypted extension instead."
+    "Will add a .decrypted extension on the output."
 )
 @click.argument("chunksize", default = 2**25)
 def decrypt_file(password, filepath_in, key, force, chunksize):
