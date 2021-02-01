@@ -77,7 +77,6 @@ def setup():
     aeslib_decrypt = ctypes.CDLL(join(lib_dir, "libaes_decrypt.so"))
 
 
-
 @click.group()
 def cli():
     """Function to capture all cli components into a group"""
@@ -122,8 +121,6 @@ def validate_chunksize(ctx, param, chunksize):
         return chunksize
     except ValueError as e:
         raise click.BadParameter("chunksize needs to be a multiple of 16")
-
-
 
 
 def prep_password(key, iterations):
@@ -207,8 +204,6 @@ def encrypt_text(password, ciphertext, key, hex):
     click.echo(cipheroutput.hex())
 
 
-
-
 @cli.command("td")
 @click.argument("password")
 @click.argument("ciphertext")
@@ -247,7 +242,7 @@ def decrypt_text(password, ciphertext, key, hex):
         except UnicodeDecodeError as e:
             raise click.BadParameter(
                 "Decryption output was not decodable with utf-8. " \
-                "Try with decrypting with the --hex option."
+                "Try decrypting with the --hex option."
             )
 
 
@@ -333,7 +328,6 @@ def decrypt_file(password, filepath_in, key, force, chunksize):
                 else:
                     b = decrypt(b, keys)
                 file_out.write(b)
-
 
 
 def main():
