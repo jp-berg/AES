@@ -1,0 +1,58 @@
+\section{Testing}
+The search for a suitable test framework led to pytest, a library specifically well suited for small scale projects like this one. It made it fast and easy to write tests with multiple cases. All function inside C and python files can be tested with pytest, as the C-Code is compiled into libraries and simply called from python anyways. \cite{pytest}
+
+\subsection{File Structure}
+The test files are located in the \lstinline|tests| directory below the wrapper file, on the same level as the source directory. Tests for different parts of the program are separated out into their own files.
+\begin{lstlisting}
+wrapper.py
+src/
+test/
+  __init__.py
+  test_AES_decrypt.py
+  test_AES_encrypt.py
+  test_key_expansion.py
+\end{lstlisting}
+The \lstinline|__init__.py| file is empty and simply needed because of the python module types pytest can handle. During test execution pytest will look through all subdirectories and find all the import locations for the modules required for the tests.
+
+\subsection{Structure of a Test Function}
+Test functions are marked by starting with the keyword \lstinline|test| (e.g \lstinline|test_inverseShiftRows|). The pytest decorator \lstinline|mark.parametrize| can be used to define tuples of test cases. Pytest will run all cases given in the decorator against the function during execution. The function itself contains all the setup code needed to call execute the functionality to be tested. At the end of a test function is an \lstinline|assert| statement. Pytest checks for this assertion to judge the outcome of the test. The test function for the \lstinline|inverseShiftRows| as an example:
+\begin{lstlisting}
+@pytest.mark.parametrize(
+    ('input_block', 'expected'),
+    (
+        ("fde596f1054737d235febad7f1e3d04e", "fde3bad205e5d0d73547964ef1fe37f1"),
+        ("d1c4941f7955f40fb46f6c0ad68730ad", "d1876c0f79c4300ab45594add66ff41f"),
+        ("c65e395df779cf09ccf9e1c3842fed5d", "c62fe109f75eedc3cc79395d84f9cf5d")
+    )
+)
+def test_inverseShiftRows(input_block, expected):
+    """test vector from FIPS 197 Appendix C, Round 5.is_row, istart"""
+    test_block = bytearray.fromhex(input_block)
+    reference = bytearray.fromhex(expected)
+    byte_array = ctypes.c_ubyte * len(test_block)
+    aeslib.inverseShiftRows(byte_array.from_buffer(test_block))
+    assert test_block == reference
+\end{lstlisting}
+
+
+\subsection{Running the Test Suite}
+Before execution pytest must be installed on the system. The installation process is analogous to all python packages hosted on the python package index (pypi).
+
+To execute the test suite the \lstinline|pytest| script needs to be run from the program root (the directory \lstinline|wrapper.py| is located in). It can simply be typed into a terminal on that path. It will collect all the functions starting with the keyword \lstinline|test| and run them.
+
+Output of a test suite execution:
+\begin{lstlisting}
+> pytest
+================================ test session starts =================================
+platform linux -- Python 3.6.9, pytest-6.2.1, py-1.10.0, pluggy-0.13.1
+rootdir: /mnt/g/Software Projekte/AES/code
+collected 38 items
+
+tests/test_AES_decrypt.py ................                                     [ 42%]
+tests/test_AES_encrypt.py ........s.                                           [ 68%]
+tests/test_key_expansion.py ............                                       [100%]
+
+=========================== 37 passed, 1 skipped in 1.72s ============================
+\end{lstlisting}
+
+Each dot after the test file represents successful test case, \enquote{s} denotes a skipped test case, and \enquote{f} a failed test case.
