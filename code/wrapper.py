@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-# -*- coding: utf-8 -*-
 import ctypes
 from os.path import isfile, join, splitext, expanduser, exists
 from os import cpu_count, getcwd, urandom, mkdir
@@ -188,6 +186,9 @@ def encrypt_text(password, ciphertext, key, hex):
             cipherinput = bytearray.fromhex(ciphertext)
         except ValueError as ve:
             raise click.BadParameter("Input needs to complete bytes in valid hexadecimal")
+        # explicit padding here, so single blocks work as intented
+        if len(cipherinput) > 16:
+            cipherinput = pad_input(cipherinput)
         cipheroutput = encrypt(cipherinput, keys)
     else:
         cipherinput = bytearray(ciphertext.encode("utf-8"))
@@ -213,7 +214,7 @@ def encrypt_text(password, ciphertext, key, hex):
     "--hex",
     default=False,
     is_flag=True,
-    help="interpret the input as pure unencoded hexadecimal bytes"
+    help="output raw hexadecimal without encoding"
 )
 def decrypt_text(password, ciphertext, key, hex):
     """Decrypts the input text with the given key using AES-128. """
@@ -325,6 +326,6 @@ def decrypt_file(password, filepath_in, key, force, chunksize):
 
 
 
-if __name__ == '__main__':
+def main():
     setup()
     cli()
