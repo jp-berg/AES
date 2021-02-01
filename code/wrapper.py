@@ -163,50 +163,102 @@ def decrypt(byte_array, keys):
 
 
 @cli.command("te")
+@click.argument("password")
 @click.argument("ciphertext")
-@click.argument("key")
-@click.argument("iterations", default = 0)
-def encrypt_text(ciphertext, key, iterations):
+@click.option(
+    "-k",
+    "--key",
+    default=False,
+    is_flag=True,
+    help="use 16-byte hexadecimal key instead of password of arbitrary length"
+)
+@click.option(
+    "-h",
+    "--hex",
+    default=False,
+    is_flag=True,
+    help="interpret the input as pure unencoded hexadecimal bytes"
+)
+def encrypt_text(password, ciphertext, key, hex):
     """Enrcypts the input text with the given key using AES-128. """
-    cipherinput = bytearray(ciphertext.encode("utf-8"))
-    cipherinput = pad_input(cipherinput)
-    keys = prep_password(key, iterations)
-    cipheroutput = encrypt(cipherinput, keys)
+    iterations = 0 if key else 200000
+    keys = prep_password(password, iterations)
+    if hex:
+        try:
+            cipherinput = bytearray.fromhex(ciphertext)
+        except ValueError as ve:
+            raise click.BadParameter("Input needs to complete bytes in valid hexadecimal")
+        cipheroutput = encrypt(cipherinput, keys)
+    else:
+        cipherinput = bytearray(ciphertext.encode("utf-8"))
+        padded = pad_input(cipherinput)
+        cipheroutput = encrypt(padded, keys)
     click.echo(cipheroutput.hex())
 
 
+
+
 @cli.command("td")
+@click.argument("password")
 @click.argument("ciphertext")
-@click.argument("key")
-@click.argument("iterations", default = 0)
-def decrypt_text(ciphertext, key, iterations):
+@click.option(
+    "-k",
+    "--key",
+    default=False,
+    is_flag=True,
+    help="use 16-byte hexadecimal key instead of password of arbitrary length"
+)
+@click.option(
+    "-h",
+    "--hex",
+    default=False,
+    is_flag=True,
+    help="interpret the input as pure unencoded hexadecimal bytes"
+)
+def decrypt_text(password, ciphertext, key, hex):
     """Decrypts the input text with the given key using AES-128. """
-    cipherinput = bytearray.fromhex(ciphertext)
-    keys = prep_password(key, iterations)
+    try:
+        cipherinput = bytearray.fromhex(ciphertext)
+    except ValueError as ve:
+        raise click.BadParameter("Input needs to complete bytes in valid hexadecimal")
+
+    iterations = 0 if key else 200000
+    keys = prep_password(password, iterations)
+
     cipherinput = decrypt(cipherinput, keys)
     cipheroutput = remove_padding(cipherinput)
-    click.echo(cipheroutput.decode("utf-8"))
+
+    if hex:
+        click.echo(cipheroutput.hex())
+    else:
+        try:
+            click.echo(cipheroutput.decode("utf-8"))
+        except UnicodeDecodeError as e:
+            raise click.BadParameter(
+                "Decryption output was not decodable with utf-8. " \
+                "Try with decrypting with the --hex option."
+            )
 
 
 @cli.command("fe")
+@click.argument("password")
 @click.argument("filepath_in")
-@click.argument("key")
-@click.argument("iterations", default = 0)
-def encrypt_file(filepath_in, key, iterations):
+@click.option(
+    "-k",
+    "--key",
+    default=False,
+    is_flag=True,
+    help="use 16-byte hexadecimal key instead of password of arbitrary length"
+)
+@click.argument("chunksize", default = 2**25)
+def encrypt_file(password, filepath_in, key, chunksize):
     """Encrypts a file with AES.
 
     The function processes the file from filepath_in in chunks to avoid
     high memory usage (see variable chunksize).
-
-    Args:
-        filepath_in: String containing the filepath of the unencrypted file
-        key: either 16-byte-hex-string (with 0 iterations) or any string ( > 0 iterations)
-        iterations: no of iterations on the pbkdf2_hmac-function for password hashing
-
-    Returns:
-        None
     """
-    keys = prep_password(key, iterations)
+    iterations = 0 if key else 200000
+    keys = prep_password(password, iterations)
     b = bytearray(chunksize)
     filepath_out = filepath_in + ".enc" # add new fileending
     with open(filepath_in, "rb") as file_in:
@@ -222,29 +274,42 @@ def encrypt_file(filepath_in, key, iterations):
 
 
 @cli.command("fd")
+@click.argument("password")
 @click.argument("filepath_in")
-@click.argument("key")
-@click.argument("iterations", default = 0)
-def decrypt_file(filepath_in, key, iterations):
+@click.option(
+    "-k",
+    "--key",
+    default=False,
+    is_flag=True,
+    help="use 16-byte hexadecimal key instead of password of arbitrary length"
+)
+@click.option(
+    "-f",
+    "--force",
+    default=False,
+    is_flag=True,
+    help="force decryption of files without a .enc file extension. " \
+    "Will add a .decrypted extension instead."
+)
+@click.argument("chunksize", default = 2**25)
+def decrypt_file(password, filepath_in, key, force, chunksize):
     """Decrpyts a file with AES.
 
     The function processes the file from filepath_in in chunks to avoid
     high memory usage (see variable chunksize).
-
-    Args:
-        filepath_in: String containing the filepath of the encrypted file
-        key: either 16-byte-hex-string (with 0 iterations) or any string ( > 0 iterations)
-        iterations: no of iterations on the pbkdf2_hmac-function for password hashing
-
-    Returns:
-        None
     """
-    keys = prep_password(key, iterations)
+    iterations = 0 if key else 200000
+    keys = prep_password(password, iterations)
     b = bytearray(chunksize)
-    temp = splitext(filepath_in) # remove ".enc" fileending
-    if temp[1] != ".enc":
-        print("File has no '.enc'-ending and may not be an encrypted file")
-    filepath_out = temp[0]
+    if not filepath_in.endswith(".enc") and not force:
+        raise click.FileError(filepath_in,
+            "File has no '.enc'-ending and may not be an encrypted file. " \
+            "Run with the -f option if you want to decrypt this file."
+        )
+    elif force:
+        filepath_out = filepath_in + ".decrypted"
+    else:
+        filepath_out = filepath_in[:-4] # remove .enc file extension
     with open(filepath_in, "rb") as file_in:
         with open(filepath_out, "wb") as file_out:
             cont = True
