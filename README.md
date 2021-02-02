@@ -14,7 +14,7 @@ If the above requirements are met, copy the program to the desired location. Opt
 In order to install the python dependencies run: `pip3 install -r requirements.txt`.
 On the first execution of the program, the .c files contained within the `src/` directory will be compiled into system specific shared object libraries. On later executions the libraries will be reused and not recompiled.  
 
-Optionally you can add the program directory to your `PATH` and simply run it from anywhere with `aes`. You probably should not do that though, as this program is immature and not meant for production. 
+Optionally you can add the program directory to your `PATH` and simply run it from anywhere with `aes`. You probably should not do that though, as this program is immature and not meant for production.
 
 ## Usage
 For a quick start simply run `./aes --help`.
@@ -99,7 +99,7 @@ The output is the file `foo.enc`.
 
 ### File Decrypt
 The command `fd` makes the program decrypt a given file with AES-128. The command is structured as follows:
-```s
+```
 aes fd [OPTIONS] PASSWORD FILEPATH_IN [CHUNKSIZE]
 
 Options:
