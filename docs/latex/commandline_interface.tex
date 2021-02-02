@@ -1,0 +1,69 @@
+\section{Commandline Interface}
+The only way to interact with the program is via the commandline. In order to provide a usable interface for the user, the python module "click" is used. The module provides ways to pass command line arguments to function without a lot of code. This is achieved via the python concept knows as decorators.
+
+\subsection{Python Decorators}
+Python decorators are a way to alter the functionality of a function without rewriting it. It is referred to as metaprogramming because a part of the program tries to modify another part of the program at compile time. Libraries commonly provide decorators. Decorators located before the function definition and start with the \enquote{\@} symbol.
+
+\subsection{The Click Module}
+Click or \enquote{Command Line Interface Creation Kit} is a python package for creating command line interfaces \cite{click}. The simplicity of the packages comes from how the cli is constructed. By adding a \lstinline{@click.command()} decorator to a function, the function becomes directly callable from the command line. Further decorators add options, defaults, callbacks, and arguments. To combine multiple commands for a program a concept known as \enquote{groups} is used.
+
+\subsection{Implementation}
+On the execution of the \lstinline{wrapper.py} file, the \lstinline{cli} function is run.
+
+\begin{lstlisting}
+@click.group()
+def cli():
+    pass
+\end{lstlisting}
+
+This function serves as a vessel for all the other commandline interface components. It defines the group \enquote{cli} all other components are a part of. This function could serve to execute some general code needed for all cli commands. This was not necessary in this specific program.
+
+The en- and decryption functions for files and text each are decorated with several click components. As an example here the \lstinline{encrypt_text} function:
+
+\begin{lstlisting}
+@cli.command("te")
+@click.argument("ciphertext")
+@click.argument("key")
+@click.argument("iterations", default = 0)
+def encrypt_text(ciphertext, key, iterations):
+    """Enrcypts the input text with the given key using AES-128. """
+    cipherinput = bytearray(ciphertext.encode("utf-8"))
+    cipherinput = pad_input(cipherinput)
+    keys = prep_password(key, iterations)
+    cipheroutput = encrypt(cipherinput, keys)
+    click.echo(cipheroutput.hex())
+\end{lstlisting}
+
+
+The first decorator \lstinline{@click.command("te")} denotes that the function is part of the \enquote{cli} group and is called via the \enquote{te} command. The other decorators all define arguments the user has to enter via the cli. The specific decorator is the \lstinline{@click.argument(...)} decorator which defines an argument to a command defined in the decorators above. In this example the corresponding command is \enquote{te} with arguments \enquote{ciphertext}, \enquote{key}, and \enquote{iterations}. When a default for an argument is defined, the user input is optional.
+
+\subsection{Help Messages}
+Click automatically generates help messages for the user. The basis for these messages are the docstrings found in the code, as well as the arguments of the functions. Cli output for running the program without a command:
+\begin{lstlisting}
+Commands:
+  fd  Decrpyts a file with AES.
+  fe  Encrypts a file with AES.
+  td  Decrypts the input text with the given key using AES-128.
+  te  Enrcypts the input text with the given key using AES-128.
+\end{lstlisting}
+
+Running help on a single command:
+\begin{lstlisting}
+> python3 wrapper.py fd --help
+Usage: wrapper.py fd [OPTIONS] FILEPATH_IN KEY [ITERATIONS]
+
+  Decrpyts a file with AES.
+
+  The function processes the file from filepath_in in chunks to avoid high
+  memory usage (see variable chunksize).
+
+  Args:     filepath_in: String containing the filepath of the encrypted
+  file     key: either 16-byte-hex-string (with 0 iterations) or any string
+  ( > 0 iterations)     iterations: no of iterations on the pbkdf2_hmac-
+  function for password hashing
+
+  Returns:     None
+
+Options:
+  --help  Show this message and exit.
+\end{lstlisting}
