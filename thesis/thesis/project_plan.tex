@@ -102,7 +102,7 @@ In order to develop a schedule the activities must be defined. We will use a wor
 \subsubsection{Work Breakdown Structure}
 \label{ch:wbs}
 
-The work breakdown structure is shown in figure~\ref{fig:wbs}. It is a hierarchical decomposition of the work that is needed to be done in order to complete the project. The top level of this hierarchy are the five project phases detailed in section~\ref{ch:projectplanoutline}. All components of the \ac{WBS} are numbered. The lowest level component of each branch is a \ac{WP} that can be scheduled and assigned. The \ac{WBS} does not represent scheduling information. The deliverables of the project can be found in the "Execution" branch.
+The work breakdown structure is shown in figure~\ref{fig:wbs}. It is a hierarchical decomposition of the work that is needed to be done in order to complete the project. The top level of this hierarchy are the five project phases detailed in section~\ref{ch:projectplanoutline}. All components of the \ac{WBS} are numbered. The lowest level component of each branch is a \ac{WP} that can be scheduled and assigned. The \ac{WBS} does not represent scheduling information. The deliverables of the project can be found in the "Execution" branch. Unlike with most conventional projects, the planning of the project itself is included in the \ac{WBS}. This was done as the planning constitutes a relevant part of the work in time, as well as complexity.
 
 \begin{figure}
   \makebox[\textwidth]{
@@ -128,15 +128,13 @@ This is a software project and as such we will measure the quality of the work b
 \label{ch:codequality}
 For Python code we will refer to the PEP-8 style guide \cite{pep8}. Code files will be organized by logical program parts. For C Code we will refer to the linux kernel style guide \cite{linuxkernel}. We will include C source files as well as header files in the code directories. Functions should have docstrings. Where inline comments are necessary to explain actions, their use is encouraged. In general, the use of inline comments should be minimal.
 
-\subsection{Program performance}
+\subsection{Program Performance}
 \label{ch:programperformance}
 Program performance highly depends on the time complexity of the algorithms, the inputs to the program, as well as the software stack that is used. As the algorithm and the inputs are given for this project, the software stack is the major contributing factor to program performance. In general, the lower level a language is, the faster you can make a program. Writing the software in assembly or even a hardware description language to program a \ac{FPGA} would yield the best results. However, we deem these options to be out of scope for this project. Which software stack was chosen and why is detailed in section~\ref{ch:softwarestack}.
 
 To measure the performance of our implementation, reference implementations in various higher level languages are given the same inputs. We then compare the results with our solution. For the different subparts of the program, different implementations of single functions are to be tested against each other to find the best compromise between performance and code quality. An example of this would be converting string inputs into bytes through string operations versus through bit-shifts.
 
 The quality goal for performance is an implementation that is faster than implementations in pure Python.
-
-DIFFERENT TIMINGS HERE
 
 \subsection{Software Stack}
 \label{ch:softwarestack}
@@ -156,7 +154,7 @@ After testing different interface solutions we settled on the ctypes module for 
 \end{figure}
 
 
-\subsection{Communications Management}
+\section{Communications Management}
 \label{ch:communicationsmanagement}
 Communication is a key part of every project. Even though the team for this project only has two members communication channels need to be well defined. In software project such as this one the source code management is also a concern. Another key component of the communications management is the engagement with the projects stakeholders. The communication channels for all these purposes are detailed below.
 
