@@ -1,27 +1,18 @@
 /*
  * AES_encrypt.c: A library for encrypting bytearrays with the AES-algorithm.
- * 
+ *
  * Author: Jan Philipp Berg
  * Year: 2021
- * 
+ *
  */
 
 #include "AES_encrypt.h"
-
-/*
- * Debugging function for printing a block.
- */
-void pb(const uint8_t *block)
-{
-        for(uint8_t i = 0; i < 16; i++)
-                printf("%x ", block[i]);
-        puts("\n");    
-}       
+#include "string.h"
 
 /*
  * Adds the roundkey to a block.
  */
-inline void AddRoundKey(uint8_t * restrict bytes, 
+inline void AddRoundKey(uint8_t * restrict bytes,
                         const uint8_t * restrict keys)
 {
         for(uint8_t i = 0; i < 16; i++) {
@@ -37,7 +28,7 @@ inline void SubBytes(uint8_t * restrict bytes, const uint8_t * restrict sbox)
         for(uint8_t i = 0; i < 16; i++) {
                 bytes[i] = sbox[bytes[i]];
         }
-    
+
 }
 
 /*
@@ -65,7 +56,7 @@ void ShiftRows(uint8_t * restrict block, uint8_t * restrict tempblock)
  * Achieves the AES-MixColumns by representing each result byte as a series of
  * table-lookups XORed with each other.
  */
-void MixColumns(uint8_t * restrict block, uint8_t * restrict tempblock, 
+void MixColumns(uint8_t * restrict block, uint8_t * restrict tempblock,
                 const uint8_t (* restrict gal_mult_lookup)[256])
 {
         memcpy(tempblock, block, 16 * sizeof(uint8_t));
@@ -97,23 +88,23 @@ void MixColumns(uint8_t * restrict block, uint8_t * restrict tempblock,
 /*
  * Performs the AES-encryption on a single block.
  */
-void encryptBlock(uint8_t * restrict block, uint8_t * restrict tempblock, 
-                  const uint8_t * restrict keys, const uint8_t rounds, 
-                  const uint8_t * restrict sbox, 
+void encryptBlock(uint8_t * restrict block, uint8_t * restrict tempblock,
+                  const uint8_t * restrict keys, const uint8_t rounds,
+                  const uint8_t * restrict sbox,
                   const uint8_t (* restrict gal_mult_lookup)[256])
-{   
+{
         uint8_t ikeys = 0;
         AddRoundKey(block, keys);
         ikeys += 16;
 
-        for(uint8_t i = 0; i < rounds - 1; i++) {   
+        for(uint8_t i = 0; i < rounds - 1; i++) {
                 SubBytes(block, sbox);
                 ShiftRows(block, tempblock);
                 MixColumns(block, tempblock, gal_mult_lookup);
                 AddRoundKey(block, &keys[ikeys]);
                 ikeys += 16;
         }
-        
+
         SubBytes(block, sbox);
         ShiftRows(block, tempblock);
         AddRoundKey(block, &keys[ikeys]);
@@ -123,9 +114,9 @@ void encryptBlock(uint8_t * restrict block, uint8_t * restrict tempblock,
  * Initializes the constant tables sbox, galois-field-multiplication-lookup and keys.
  * Performs AES-encryption on multiple, consecutive blocks.
  */
-void encryptAES(uint8_t * restrict bytes, uint8_t * restrict initval, 
+void encryptAES(uint8_t * restrict bytes, uint8_t * restrict initval,
                    const size_t bytecount, const uint8_t rounds)
-{   
+{
         uint8_t sbox[256];
         uint8_t gal_mult_lookup[3][256];
         for(size_t i = 0; i < 256; i++) {
@@ -136,12 +127,12 @@ void encryptAES(uint8_t * restrict bytes, uint8_t * restrict initval,
                 gal_mult_lookup[i][j] = *initval++;
                 }
         }
-        
+
         const uint8_t *keys = initval;
         uint8_t tempblock[16];
-        
+
         for(size_t i = 0; i < bytecount; i += 16) {
-                encryptBlock(&bytes[i], tempblock, keys, 
+                encryptBlock(&bytes[i], tempblock, keys,
                              rounds, sbox, gal_mult_lookup);
         }
 }

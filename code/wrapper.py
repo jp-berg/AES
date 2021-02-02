@@ -19,7 +19,7 @@ def setup():
     if not exists("lib"):
         mkdir("lib")
 
-    compile_gcc_encrypt = """gcc -O2 -w -shared -fpic -fstrict-aliasing -Wl,-soname,AES_encrypt -o lib/libaes_encrypt.so src/AES_encrypt.c -fopenmp""".split()
+    compile_gcc_encrypt = """gcc -O2 -w -shared -fpic -fstrict-aliasing -Wl,-soname,AES_encrypt -o lib/libaes_encrypt.so src/AES_encrypt.c -fopenmp -march=native""".split()
     compile_clang_encrypt = """clang-O2 -w -shared -fpic -fstrict-aliasing -Wl,
                     -soname,AES_encrypt -o ../lib/libaes_encrypt.so src/AES_encrypt.c -fopenmp""".split()
 
@@ -50,7 +50,7 @@ def setup():
     aeslib_encrypt = ctypes.CDLL(join(lib_dir,"libaes_encrypt.so"))
 
 
-    compile_gcc_decrypt = """gcc -O2 -w -shared -fpic -Wl,-soname,AES_decrypt -o lib/libaes_decrypt.so src/AES_decrypt.c""".split()
+    compile_gcc_decrypt = """gcc -O2 -w -shared -fpic -Wl,-soname,AES_decrypt -o lib/libaes_decrypt.so src/AES_decrypt.c -march=native""".split()
     compile_clang_decrypt = """clang -O2 -w -shared -fpic -Wl,-soname,AES_decrypt -o lib/libaes_decrypt.so src/AES_decrypt.c""".split()
 
     if not isfile(join(lib_dir, "libaes_decrypt.so")):
