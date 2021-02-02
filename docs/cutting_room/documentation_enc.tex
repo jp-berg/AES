@@ -1,64 +1,3 @@
-\hypertarget{overview}{%
-\section{Overview}\label{overview}}
-
-\hypertarget{on-the-usage-of-optional-c-keywords}{%
-\section{On the usage of optional C
-keywords}\label{on-the-usage-of-optional-c-keywords}}
-
-The following chapter explain some keywords from the C language, that
-are not needed for the computation to succeed, but provide additional
-information to readers of the code and/or the compiler. The chapter is
-based on \cite{modernc}, if not mentioned otherwise.
-
-\hypertarget{inline}{%
-\subsection{inline}\label{inline}}
-
-The keyword `inline' (ch. 15.1) allows for code to be modularized by
-functions, but without the overhead of an additional function call.
-`inlining' a function f means that the compiler can take it and replace
-every call to that function with the function body itself. This avoids
-allocating new stack space and copying relevant variables for f
-every time f is called. Furthermore the instructions of f might be seen in
-a new context, allowing for further optimizations like eliminating dead
-branches or avoiding repeated computation of already known values. The
-keyword is only a hint for the compiler to inline the function. The
-compiler might decide against inlining it, because the internal
-optimization-algorithms classified the function as unsuitable for
-inlining, for example if f was too big to be inlined. \cite[ch. 16]{styleguide} recommends using the keyword only for functions that have
-three lines of code or less, which was followed in the present
-implementation.
-
-\hypertarget{restrict}{%
-\subsection{restrict}\label{restrict}}
-
-The `restrict'-qualifier (ch. 15.2) can only be applied to pointers and
-tells the compiler that the pointer attributed with restrict is the only
-one accessing the object pointed towards. If the compiler knows the
-object in question is not aliased (e.g. accessed through multiple
-pointers) it can perform further optimizations. The usage of this
-keyword in the present implementation is not solely intended for the
-compiler, but also for readers of the code, since it gives information
-about how the pointer is intended to be used and what restrictions it is
-confined by, that may be implicit without the keyword but now are made
-explicit. Verifying the correctness of the usage of `restrict' is upon
-the programmer not the compiler. It is a `promise' of the programmer to
-the compiler, that the object is not aliased, as the compiler will
-perform no checks to validate the claim made by restrict.
-
-\hypertarget{const}{%
-\subsection{const}\label{const}}
-
-The following sub-chapter is based on \cite[ch. 1.4.2: Constants and Pointers]{cpointers}.
-
-`const' is used in the present implementation to declare that the
-pointer attributed with this keyword is pointing to a constant. This
-means that the pointer can be used to read the values it points to, but
-cannot modify them. It is mainly to clarify the intentions of the
-programmer, for example if a function declaration contains a pointer to
-a constant the function guarantees, that any data passed to this
-function via the pointer to a constant will not be modified. This
-guarantee is enforced at a compiler level. This is not to be confused
-with a constant pointer or a constant pointer to a constant.
 
 \hypertarget{functions---constant-generators}{%
 \section{Functions - constant
@@ -168,65 +107,17 @@ odd by performing a bitwise AND-operation with `b' and 1. If the least
 significant bit of `b' was toggled `p' gets XORed with `a' and the
 result is stored in p. After that `b' gets bitshifted one to the right,
 which equals division by two while ignoring the remainder. The last step
-has two components. In the first component `a' gets shiftet by one to
-the left, which equals multiplication by two. To ensure `a' remains
-within the value-bounds of a byte (e.g. 0-255) the result is taken
-modulo 256. The second component of the last step first shifts `a' to
-the right by seven. This means that the most significant bit of `a' is
-now its least significant bit, while all other bits are 0. By taking the
-negative of this resulting value there are two possible outcomes: either
-`a' before the shift had a 0 as its most significant digit, which after
-its shift becomes its least significant one. Since all other digits are
-also 0, the negative does not change anything: `a' contains (in base 2)
-00000000. On the other hand if the most significant digit was a 1 before
-the shift, the binary value of `a' after the shift would be 00000001 or
-1. With the minus-sign this becomes -1 or (thanks to the two's
-complement) 11111111. This is combined using the bitwise AND with 27.
-The rationale behind this last component is simple: if `a' has the most
-significant bit set to 1 prior to its shift to the right in the first
-component, the bit goes out of scope for the byte value range, since it
-is now the ninth bit, but a byte has only eight. In other words any
-number with a ninth bit toggled in binary notation cannot belong to
-$GF(2^{8})$. To stay within the range of 0-255 we have to perform modulo the
-irreducible polynomial of the AES-Galois field, which is $m(x) = x^8 + x^4 +
-x^3 + x + 1$ in polynomial representation (\cite[ch. 3.4.1]{rijndael},
-100011011 in binary and 283 in base 10. Since this value is bigger than
-a byte can hold it becomes 00011011 with the most significant digit cut
-off, which is 1b in hexadecimal representation. If the most significant
-bit of `a' was set prior to all of this, it has to be reduced modulo 1b
-(which is represented by the bitwise XOR between the two components
-here). The second component computes, whether the shifted `a' gets XORed
-with 00000000 \& 1b (which is just 0) or 11111111 \& 1b (which is just
-1b) depending on the value of 'a's most significant digit. The function
-finishes by returning the value contained in p at the end of the loop.
+has two components.
+The first component shifts 'a' to the right by one and cuts off any byte overflow
+by using the modulo function. If such overflow occured, the modulo operation has to be
+applied to the shifted 'a' in order to keep in in $GF(2^{8})$. This is done by XORing it 
+with m(x) which is 100011011 in binary and 1b in hexadecimal, when fit into a byte (because
+this removes the most significant digit of m(x)). To detect overflow 'a' is shifted to the right by 7
+and then negated. If the most significant bit of 'a' was set (which means overflow), 1b gets ANDed
+with -1 or 11111111 in binary (due to the two's complement), thus resulting in the modulo being applied to the doubled 'a'. In the other case 1b gets ANDed with 0, which results in the second term getting cancelled out, resulting in a simple doubling of 'a'.
 
-\begin{lstlisting}
-def gen_mult_lookup():
-    """
-    Generates a lookup table for the Galois-field-multiplication
-    necessary in AES.
-    """
-    mult1 = bytearray(256)
-    mult2 = bytearray(256)
-    mult3 = bytearray(256)
-
-    for i in range(256):
-        mult1[i] = i
-        mult2[i] = mult_gal(i, 2)
-        mult3[i] = mult_gal(i, 3)
-
-    return mult1 + mult2 + mult3
-\end{lstlisting}
-
-`gen\_mult\_lookup' generates the GFMLT for multiplications with 1, 2,
-and 3 in $GF(2^{8})$ modulo m(x). It creates three byte arrays. The following
-loop, iterating through the numbers 1 to 255, places the current
-iteration value in the first array, the iteration value times two in the
-second and the iteration value times three in the third byte array. The
-function then returns the concatenation of all three arrays.
-
-\hypertarget{testing}{%
-\subsubsection{Testing}\label{testing}}
+'gen\_mult\_lookup()' then uses the function to generate the values for
+multiplication of all numbers in $GF(2^{8})$ with two and three.
 
 The results (App.XXX) were spot-checked against
 https://www.ece.unb.ca/cgi-bin/tervo/calc2.pl with P(x) = 100011011.
@@ -238,26 +129,17 @@ https://www.ece.unb.ca/cgi-bin/tervo/calc2.pl with P(x) = 100011011.
 \subsubsection{Description}\label{description-1}}
 
 The S-box generator is used to generate the S-box needed in the
-SubBytes-function. \cite[ch 3.4.1]{rijndael} gives two design criteria: Non-linearity
-and Algebraic complexity.
-
+SubBytes-function.
 The values of the AES S-box are computed by taking the value of the byte
 that needs to be substituted, finding its inverse in $GF(2^{8})$ with the
 irreducible polynomial $m(x) = x^8 + x^4 + x^3 + x + 1$ and applying an
-affine transformation to that inverse.
+affine transformation to that inverse. (\cite[ch 3.4.1]{rijndael})
 
 \begin{figure}
 \centering
-\includegraphics[scale = 0.4]{data/figures/affinetrans.png} 
+\includegraphics[scale = 0.3]{data/figures/affinetrans.png} 
 \caption{The affine transformation used in the AES S-box depicted as a matrix multiplication.}
 \end{figure}
-
-\begin{figure}
-\centering
-\includegraphics[scale = 0.4]{data/figures/S-box.png} 
-\caption{The AES S-box. All values are in hexadecimal.}
-\end{figure}
-
 
 The S-box contains a substitution for every value an unsigned byte is
 able to contain. Fig. XXX shows the S-box filled with values (in
@@ -362,19 +244,14 @@ obtain the result of the transformation.
 (https://en.wikipedia.org/wiki/Rijndael\_S-box\#forward\_s-box) The
 function finishes by returning the S-box-byte-array.
 
-\hypertarget{testing-1}{%
-\subsubsection{Testing}\label{testing-1}}
-
 Since this is a static function generating always the same array, the
 resulting array was compared once with the table in \cite[Fig. 7](fips197)
-
 
 \hypertarget{functions---encryption}{%
 \section{Functions - encryption}\label{functions---encryption}}
 
 The following functions are from `AES\_encrypt.c'
-(`Implementation'-chapters) and `test\_AES\_encrypt.py'
-(`Testing'-chapters). The following chapter is based on \cite{fips197} and the authors own
+(`Implementation'-chapters). The following chapter is based on \cite{fips197} and the authors own
 knowledge/opinions, if not mentioned otherwise.
 
 \hypertarget{key-addition}{%
@@ -385,7 +262,7 @@ knowledge/opinions, if not mentioned otherwise.
 
 \begin{figure}
 \centering
-\includegraphics[scale = 0.4]{data/figures/addroundkey.png} 
+\includegraphics[scale = 0.3]{data/figures/addroundkey.png} 
 \caption{Addition of the round key to to the state via bitwise XOR. a0,0 xor k0,0 = b0,0 etc.}
 \end{figure}
 
@@ -428,12 +305,6 @@ Since the function is relativly short the `inline'-keyword is used to
 save the overhead of an additional function call in tradeoff with a
 bigger binary.
 
-\hypertarget{testing-2}{%
-\subsubsection{Testing}\label{testing-2}}
-
-Since the function is fairly simple, it is not covered by the testing
-suite.
-
 \hypertarget{shift-rows}{%
 \subsection{Shift rows}\label{shift-rows}}
 
@@ -442,7 +313,7 @@ suite.
 
 \begin{figure}
 \centering
-\includegraphics[scale = 0.4]{data/figures/shiftrows.png} 
+\includegraphics[scale = 0.3]{data/figures/shiftrows.png} 
 \caption{The ShiftRows-transformation "rotates" the rows of the state (left) by different offsets, resulting in the state on the right}
 \end{figure}
 
@@ -455,7 +326,7 @@ the fourth row three.
 According to (rijndael) this transformation step is needed to ensure
 optimal diffusion of the state. The diffusion is supposed to protect
 against differential and linear cryptanalysis. The authors further
-elaborate the need for that in order to archive optimal diffusion all
+elaborate, that in order to archive optimal diffusion all
 offsets of the cyclical shifts have to be different.
 
 Since there are multiple possibilities for different offsets and not all
@@ -495,63 +366,7 @@ cipher is currently operating on and a restricted pointer to a temporary
 block. First the content of the block is copied into the array the
 tempblock-pointer is marking. After that the row shifts are represented
 by assigning the bytes into their positions in the block after the
-shifts from the tempblock, for example:
-
-\begin{quote}
-Since the eleventh byte of the original array (tempblock{[}10{]}) will
-(after the rotations) always be in the third spot in the resulting array
-(block{[}2{]}) we can simply assign the former to the latter. The first
-byte (tempblock{[}0{]}) is mapped to itself and therefore is not
-explicitly ``mentioned'' in the code, since an assignment to itself
-would be redundant.
-\end{quote}
-
-The result, which is the ShiftRows-transformed state, can now be found
-in the array marked with the block-pointer and used for further
-transformations.
-
-`temparray' is passed to the function as a pointer, because allocating
-the array every time the function is called creates a conciderable
-overhead.
-
-\hypertarget{testing-3}{%
-\subsubsection{Testing}\label{testing-3}}
-
-\begin{lstlisting}
-@pytest.mark.parametrize(
-    ("input_block", "expected"),
-    (
-        ("63cab7040953d051cd60e0e7ba70e18c", "6353e08c0960e104cd70b751bacad0e7"),
-        ("a761ca9b97be8b45d8ad1a611fc97369", "a7be1a6997ad739bd8c9ca451f618b61"),
-        ("3b59cb73fcd90ee05774222dc067fb68", "3bd92268fc74fb735767cbe0c0590e2d")
-    )
-)
-def test_ShiftRows(input_block, expected):
-    """Tests the C-implementation of the ShiftRows-function"""
-    ba = bytearray.fromhex(input_block)
-    reference = bytearray.fromhex(expected)
-    byte_array = ctypes.c_ubyte * len(ba)
-    temp_array = ctypes.c_ubyte * len(ba)
-    aeslib.ShiftRows(byte_array.from_buffer(ba), temp_array.from_buffer_copy(ba))
-    assert ba == reference
-\end{lstlisting}
-
-The testfunction for ShiftRows possesses a decorator, which tells pytest
-what parameters this function is supposed to be tested on. The function
-itself accepts two variables, one for the input of the
-ShiftRows-function labeled `input\_block' and a corresponding correct
-output labeled `expected', which will be computed from the input, if the
-ShiftRows-function behaves correctly. Values for both input variables
-are expected to be strings of 16-byte hex numbers. Those numbers are
-transformed into two seperate byte arrays, `ba' and `reference'. The
-C-ShiftRows function accepts a pointer to an array of 16 unsigned bytes,
-which contain the current state and a pointer to an array of 16 unsigned
-bytes, which can be used as a temporary array. After the ShiftRows
-function returns, the result of the transformation is contained in the
-bytearray `ba'. `ba' is then compared to `reference'. pytest will mark
-this test as passed, when all three comparisons of the transformed `ba'
-and 'reference evaluated to true. The test vectors passed via the
-decorator are from (fips197) and represent the expected transformations.
+shifts from the tempblock,
 
 \hypertarget{mix-columns}{%
 \subsection{Mix columns}\label{mix-columns}}
@@ -560,7 +375,7 @@ decorator are from (fips197) and represent the expected transformations.
 \subsubsection{Description}\label{description-4}}
 
 The MixColumns-transformation is called a bricklayer permutation by
-(rijndael), which operates on the state-matrix columnwise. The authors
+(rijndael). The authors
 mention multiple design criteria, they deemed important for this
 particular transformation:
 
@@ -591,7 +406,7 @@ particular transformation:
 
 \begin{figure}
 \centering
-\includegraphics[scale = 0.3]{data/figures/mixcolumn.png} 
+\includegraphics[scale = 0.2]{data/figures/mixcolumn.png} 
 \caption{The MixColumns-transformation, represented as matrix multiplication.}
 \end{figure}
 
@@ -667,44 +482,6 @@ row. After processing all four rows and returning, MixColumns has
 written the results of this transformation in place of the current block
 being processed.
 
-\hypertarget{testing-4}{%
-\subsubsection{Testing}\label{testing-4}}
-
-\begin{lstlisting}
-<# Vectors from [FIPS 197] Appendix C, Rounds 1, 2, 3
-@pytest.mark.parametrize(
-    ("input_block", "expected"),
-    (
-        ("6353e08c0960e104cd70b751bacad0e7", "5f72641557f5bc92f7be3b291db9f91a"),
-        ("a7be1a6997ad739bd8c9ca451f618b61", "ff87968431d86a51645151fa773ad009"),
-        ("3bd92268fc74fb735767cbe0c0590e2d", "4c9c1e66f771f0762c3f868e534df256")
-    )
-)
-def test_MixColumns(input_block, expected):
-    """Tests the C-implementation of the MixColumns-function"""
-    ba = bytearray.fromhex(input_block)
-    reference = bytearray.fromhex(expected)
-    byte_array = ctypes.c_ubyte * len(ba)
-    temp_array = ctypes.c_ubyte * len(ba)
-    gal_mult_lookup_array = ctypes.c_ubyte * len(gal_mult_lookup)
-    aeslib.MixColumns(byte_array.from_buffer(ba), temp_array.from_buffer_copy(ba),
-                      gal_mult_lookup_array.from_buffer(gal_mult_lookup))
-    assert ba == reference
-\end{lstlisting}
-
-Like other testing functions the test vectors for pytest to review are
-provided via decorator. They are copied from (fips197) to ensure
-correctness. The function takes one argument which represents the state
-before a MixColumns transformation and one argument, which represents
-the state after said transformation. Both are expected to be strings
-containing the bytes encoded in hexadecimal notation. `input\_block'
-gets converted to the bytearray `ba' and is then passed along with
-another temporary sixteen-byte-array on towards the C-implementation of
-the MixColumns-function. After the latter function returns, ba contains
-the result of the desired transformation. pytest now compares each
-output state to the corresponding test vector value to determine if the
-MixColumns-implementation works correctly.
-
 \hypertarget{substitute-bytes}{%
 \subsection{Substitute bytes}\label{substitute-bytes}}
 
@@ -713,7 +490,7 @@ MixColumns-implementation works correctly.
 
 \begin{figure}
 \centering
-\includegraphics[scale = 0.4]{data/figures/subbytes.png}
+\includegraphics[scale = 0.3]{data/figures/subbytes.png}
 \caption{SubBytes applies the S-box substitution to every byte of the
 state}
 \end{figure}
@@ -721,7 +498,7 @@ state}
 Being the only non linear transformation, SubBytes is labeled a
 bricklayer permutation by (rijndael) that applies byte substitution to
 each byte of the state. This substitution is facilitated throught the
-AES Sbox, which was already discussed in more detail earlier. AES uses
+AES Sbox. AES uses
 only this one Sbox, although the authors mention, that Rijndael ``could
 as easily be defined with different S-boxes for every byte.'' (p.35).
 They descided against it, because one key criteria during the
@@ -739,14 +516,14 @@ designing the algorithm following the principle of what they call
 ``symmetry''. Their tenet of symmetry within the round transformation
 (ch.~5.3.2) " implies that it treats all bits of the state in a similar
 way." (p.66). They explain that this imposes some restrictions, amongst
-others the requirement to use only one sbox for the whole state in their
+others the requirement to use only one S-box for the whole state in their
 non-linear step. Symmetry across all rounds (ch.~5.31.) dictates that
 all rounds have to be identical. This keeps the specification and
 implementation short, since only one round has to be described/expressed
 in code. This tersness in definition is also of benefit for hardware
 implementations, since there has to be only one circuit designed to
-implement all rounds, instead of one circuit per round. This tersness
-also has the consequence, that only one Sbox can be used for all rounds
+implement all rounds, instead of one circuit per round. The other consequence is,
+that only one S,box can be used for all rounds
 (contrary to DES (XXX)).
 
 \hypertarget{implementation-4}{%
@@ -773,12 +550,6 @@ which contains the sbox to be used. The function now iterates through
 accessing the element of the `sbox'-array, which corresponds to the
 value in the current `bytes' element.
 
-\hypertarget{testing-5}{%
-\subsubsection{Testing}\label{testing-5}}
-
-Since the function is fairly simple, it is not covered by the testing
-suite.
-
 \hypertarget{full-block-encryption}{%
 \subsection{Full block encryption}\label{full-block-encryption}}
 
@@ -787,22 +558,7 @@ suite.
 
 To encrypt one block of AES the whole cipher with all rounds has to be
 executed. One round consists of four steps, which represent the four
-transformation employed in the encryption algorithm. The order of those
-transformations for each round r is:
-
-\begin{enumerate}
-\def\labelenumi{\arabic{enumi}.}
-
-\item
-  SubBytes
-\item
-  ShiftRows
-\item
-  MixColumns
-\item
-  AddRoundKey
-\end{enumerate}
-
+transformation employed in the encryption algorithm. Those transformations are (in that order) SubBytes, ShiftRows, MixColumns and AddRoundKey.
 If N is the number of rounds specified by the encryption standard then
 the algorithm will execute N-1 * r, while the Nth round omits the
 MixColumns step, but is otherwise identical. Before the first round one
@@ -848,7 +604,7 @@ the key length. The fifth argument is a restricted pointer to a constant
 array containing the S-box values. The last argument is a restricted
 pointer to a constant, multidimensional array containing the GLFMLT.
 
-The function begins by allocation an unsigned byte on the stack and
+The function begins by allocating an unsigned byte on the stack and
 assigning it the value of zero. This variable keeps track of the first
 byte of the next key that is to be used in the function AddRoundKey,
 thus has to be incremented by 16 after every call to the
@@ -870,101 +626,6 @@ round is the increase of the `ikeys'-counter. After exiting the loop the
 function executes one more round without the call to MixColumns and the
 increase of the `ikeys'-counter variable and then it returns.
 
-\hypertarget{testing-6}{%
-\subsubsection{Testing}\label{testing-6}}
-
-\begin{lstlisting}
-@pytest.mark.parametrize(
-    ("plaintext", "key", "expected"),
-    (
-        (
-            "3243f6a8885a308d313198a2e0370734",
-            "2b7e151628aed2a6abf7158809cf4f3c",
-            "3925841d02dc09fbdc118597196a0b32"
-        ),
-    )
-)
-def test_EncryptBlock(plaintext, key, expected):
-    """Tests the C-implementation of the AES-Encryption of a single block"""
-    ba = bytearray.fromhex(plaintext)
-    byte_array_block = ctypes.c_ubyte * len(ba)
-
-    reference = bytearray.fromhex(expected)
-    baKey = expand_key(key)
-    byte_array_key = ctypes.c_ubyte * len(baKey)
-
-    temp_array = ctypes.c_ubyte * len(ba)
-    sbox_array = ctypes.c_ubyte * len(sbox)
-    gal_mult_lookup_array = ctypes.c_ubyte * len(gal_mult_lookup)
-    
-
-    aeslib.encryptBlock(byte_array_block.from_buffer(ba), temp_array.from_buffer_copy(ba),
-                        byte_array_key.from_buffer(baKey), 10, sbox_array.from_buffer(sbox),
-                        gal_mult_lookup_array.from_buffer(gal_mult_lookup))
-    assert ba == reference
-\end{lstlisting}
-
-Our first function to test the correctness of our cipher is marked with
-a pytest-decorator, that contains a testvector from (fips197). The
-function itself takes three arguments, one called `plaintext', one
-called `key' and one called `expected'. All three are supposed to
-contain a hexadecimal representation of bytesequences in a string
-format. The function starts by converting `plaintext' and `expected into
-bytearrays. It then generates the round keys from 'key' by calling the
-function expand\_key. The `encryptBlock' function now recieves all
-neccessary arguments via the ctypes-interface, namely the
-plaintext-bytearray, a temporary array, the bytearray containing the
-expanded keys, the number of rounds, the S-box array generated with one
-of the generator functions and the GLFMLT array, which has been
-generated before like the S-box. pytest marks this test as passed, when
-the encrypted bytearray matches the bytearray generated from the
-`expected'-value of the testvector.
-
-\begin{lstlisting}
-def test_EncryptBlockRandom():
-    """
-    Tests the C-implementation of the AES-Encryption of an arbitrary number of individual blocks.
-    Plaintext and Key are randomized each time.
-    """
-    ba = bytearray(16)
-    byte_array_block = ctypes.c_ubyte * len(ba)
-    key = bytearray(16)
-    baKey = bytearray(176)
-    byte_array_key = ctypes.c_ubyte * len(baKey)
-    temp_array = ctypes.c_ubyte * len(ba)
-    sbox_array = ctypes.c_ubyte * len(sbox)
-    gal_mult_lookup_array = ctypes.c_ubyte * len(gal_mult_lookup)
-    for i in range(100): #arbitrary number of rounds
-        key = urandom(16)
-        baKey = expand_key(key.hex())
-        b = urandom(16)
-        ba = bytearray(b)
-        aes_reference = pyaes.AESModeOfOperationECB(key)
-        reference = aes_reference.encrypt(b)
-        aeslib.encryptBlock(byte_array_block.from_buffer(ba), temp_array.from_buffer_copy(ba),
-                        byte_array_key.from_buffer(baKey), 10, sbox_array.from_buffer(sbox),
-                        gal_mult_lookup_array.from_buffer(gal_mult_lookup))
-        assert ba == reference
-\end{lstlisting}
-
-The second test generates an arbitrary amount of random plaintexts and
-keys (in the present version of the implementation 100 of each) and
-compares them against a reference implementation of AES, in our case the
-`pyaes'-library (XXX). The first part is nearly identical to the
-previous test function. After setting up all the byte arrays the
-function enters a loop though. For every iteration Python fills the
-key-bytearray and the plaintext-bytearray with 16 random bytes each. It
-uses the urandom-function from the os library (XXX) to generate those
-random bytes. The byte-sequences are now processed independently by the
-pyaes implementation (in electronic codebook mode) and the present
-implementation. This function is marked as passed, when the encryptions
-initialized with random plaintexts and key pass for every iteration. To
-create a more throrough version of the test one can increase the number
-of iterations at expense of decreased performance. This test is used in
-addition to the normal test, because it ensures the implementation and
-all of its components (for example SubBytes) can not only handle the
-testvector, but all possible values that fulfill the requirements.
-
 \hypertarget{encryption-of-multiple-consecutive-blocks}{%
 \subsection{Encryption of multiple consecutive
 blocks}\label{encryption-of-multiple-consecutive-blocks}}
@@ -979,7 +640,7 @@ than sixteen bytes or even files.
 
 (paar) (ch.~5.1.1) describes
 encryption schemes like found in the present implementation the simplest
-block cipher modes of operation, called `Electronic Codebook Mode'.
+block cipher modes of operation, called `Electronic Codebook Mode'  (ECB).
 Every cipher block is generated by simply encrypting the plaintext with
 the round keys and appending the encrypted blocks. The first advantage
 of this method is that no synchronization between the en- and decrypting
@@ -1000,7 +661,7 @@ a whole gets analyzed patterns may emerge. Those patterns leak
 information about what parts of the plaintext contain the same 128-bit
 sequence, because those parts also share a (different) bit seqence in
 the corresponding ciphertext. Furthermore, a third party watching an
-exchange encrypted in `Electronic Codebook Mode' can tell, when the same
+exchange encrypted in ECB can tell, when the same
 message is send twice, or if the header of different messages is the
 same, for examle if each message was using the same salutation. (paar)
 demonstrates two attack avenues, that are a direct result of ECB. The
@@ -1012,31 +673,11 @@ A will soon know which encrypted blocks belong to his account number and
 which block denote the recieving account. After learning that they can
 exchange all blocks they know as reserved for the number of the
 recieving account with the blocks for their own account number and
-divert all transactions between the two banks to A's account.
-
-\begin{figure}
-\centering
-\includegraphics[scale = 0.4]{data/figures/aes.png} 
-\caption{The unencrypted bitmap-file converted to a .png-file.}
-\end{figure}
-
-\begin{figure}
-\centering
-\includegraphics[scale = 0.4]{data/figures/aesECB.png} 
-\caption{The bitmap-file encrypted with AES in ECB mode and converted to a .png-file. The writing "Advanced Encryption Standard" is clearly readable, despite the encryption.}
-\end{figure}
-
-\begin{figure}
-\centering
-\includegraphics[scale = 0.4]{data/figures/aesCTR.png} 
-\caption{The bitmap-file, encrypted with AES in CTR mode and converted to a .png-file. To the naked eye the content of the picture is indistinguishable from noise.}
-\end{figure}
-
-The other
+divert all transactions between the two banks to A's account. The other
 attack avenue is the emergence of patterns visible to the naked eye. For
 this example we created an image in the bitmap format(Fig. XXX). This
 image was encrypted with a modified variant of the present
-implementations file encryption mode. The modification (inserted just
+implementations file encryption mode \footnote{Encrypted with the following settings for key generation: key = "passwort", iterations = 20, salt = "aeskurs"}. The modification (inserted just
 before the while-loop) ensures that the header of the .bmp-file is
 preserved and not corrupted by the encryption. It reads the first 55
 bytes (since the header is 54 bytes long
@@ -1045,7 +686,7 @@ encrypted file without encrypting them. After that, the rest of Fig. XXX
 is read, encrypted and appended. The result Fig. XXX, albeit encrypted
 with an algorithm concidered secure, shows a clear and readable pattern.
 For comparison we used the `pyaes'-library to encrypt the image in the
-same way with the same key and preservation method of the header, but
+same way with the same key\footnote{Encrypted with the following settings for key generation: key = "passwort", iterations = 20, salt = "aeskurs"} and preservation method of the header, but
 applied the Counter Mode of Operation. The result, displayed in Fig.
 XXX, demonstrates, that any visible pattern resulting from
 ECB-encryption disappears with the right Block Cipher Mode of Operation.
@@ -1064,26 +705,21 @@ into two identical blocks of ciphertext, thus avoiding leakage of
 information.
 
 The present implementation is required to use ECB, since it has to be
-able to reproduce the testvectors from (fips197). Due to timeconstrains
+able to reproduce the testvectors from (fips197). Due to time constraints
 it was decided not to implement two different block cipher modes of
 operation.
 
 \begin{figure}
 \centering
-\includegraphics[scale = 0.3]{data/figures/ECB_encryption.png}
+\includegraphics[scale = 0.25]{data/figures/ECB_encryption.png}
 \caption{ECB: Every block of plaintext is simply encrypted with a key.}
 \end{figure}
 
 \begin{figure}
 \centering
-\includegraphics[scale = 0.3]{data/figures/CTR_encryption.png}
+\includegraphics[scale = 0.25]{data/figures/CTR_encryption.png}
 \caption{CTR: Every block of plaintext is XORed with a combination of initialization vector (here: Nonce) and counter, encrypted by the key to form the ciphertext.}
 \end{figure}
-
-
-key = passwort, iterations = 20, salt = aeskurs
-https://en.wikipedia.org/wiki/File:ECB\_encryption.svg
-https://en.wikipedia.org/wiki/File:CTR\_encryption\_2.svg
 
 In order for Electronic Codebook Mode to work correctly the bye array
 containing the plaintext has to be padded though, as only byte arrays
@@ -1192,67 +828,5 @@ variable instead of a global one avoids the need for thread
 synchronization, since every thread would use their own temporary block,
 if every thread spawned would use this function as a starting point.
 
-\hypertarget{testing-6}{%
-\subsubsection{Testing}\label{testing-6}}
-
-\begin{lstlisting}
-def test_encrypt_aes():
-    """Tests the C-implementation of the AES-Encryption on multiple, consecutive, random Blocks.
-    """
-    no_bytes = 2**15 #arbitrary number of bytes (has to be divisible by 16)
-    ba = bytearray(no_bytes)
-    byte_array_block = ctypes.c_ubyte * len(ba)
-    key = bytearray(16)
-    baKey = bytearray(176)
-    initvals = bytearray(len(sbox) + len(gal_mult_lookup) + len(baKey))
-    byte_array_initvals = ctypes.c_ubyte * len(initvals)
-    for i in range(20): #arbitrary number of rounds
-        key = urandom(16)
-        baKey = expand_key(key.hex())
-        initvals = sbox + gal_mult_lookup + baKey
-        b = urandom(no_bytes)
-        ba = bytearray(b)
-        aes_reference = pyaes.AESModeOfOperationECB(key)
-        aeslib.encryptAES(byte_array_block.from_buffer(ba),
-                        byte_array_initvals.from_buffer(initvals), len(ba), 10)
-
-        i = 0
-        while (i < no_bytes):
-            current_reference = aes_reference.encrypt(b[i:i+16])
-            current_ba = ba[i:i+16]
-            assert current_ba == current_reference
-
-            i += 16
-\end{lstlisting}
-
-This testfunction is similar to the previously discussed
-`test\_EncryptBlockRandom'. The major difference is that this function
-is not resticted to testing sixteen bytes at a time. by adjusting
-`no\_bytes' one can test as many consecutive blocks as memory and
-patience permit. The for-loop again allows for automatic repetition of
-this test to ensure the tested function can handle all byte permutation
-within the specified range. Since the `pyaes'-library does not allow for
-encryption of multiple consecutive blocks, a while-loop had to be added
-in the end, that allows this external library to encrypt one block at a
-time and compare it afterwards to the results of the present
-implementation, which encrypts all blocks in one go. The test only
-passes, if every block encrypted by the present implementation matches
-the ciphertext produced by the `pyaes'-library. It ensures that longer
-texts or files get encrypted correctly, as long as the passed parameters
-are within the specified range.
-
-\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
-
-\begin{itemize}
-
-\item
-  CPU central processing unit
-\item
-  GFMLT Galois-Field multiplication lookup table
-\item
-  $GF(2^{8})$ Galois field\ldots{}
-\item
-  ECB Electronic Codebook Mode
-\end{itemize}
 
 ´

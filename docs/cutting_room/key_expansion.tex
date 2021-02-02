@@ -17,22 +17,6 @@ The main function  \lstinline{expand_key} takes a 16 byte key and expands it int
   \item Bytearray of all round-keys in the correct order
 \end{itemize}
 
-\begin{figure}
-\centering
-  \begin{minipage}{.65\textwidth}
-    \centering
-    \includegraphics[width=\linewidth]{data/assets/key_expansion.pdf}
-  \end{minipage}%
-  \begin{minipage}{.35\textwidth}
-    \includegraphics[width=\linewidth]{data/assets/g_function.pdf}
-  \end{minipage}
-  \caption{The key expansion algorith \cite{paar2016kryptografie}}
-\end{figure}
-
-
-
-
-
 \subsubsection{Order of Operations}
 The input key is interpreted as hexadecimal and transformed into a bytearray. The bytearray is then split into 4-byte blocks, as most operations in the key expansion operate on 32-bit words. The round constants are computed via the  \lstinline{rcon_compute} function and stored in the  \lstinline{rcon} variable. The main part of the algorithm happens in a for-loop that counts from 4 to 43. The indices zero to three represent the initial key. For AES-128 there are ten round-keys plus the initial key. Represented in 32-bit words that makes 44 32-bit words. In the loop the first word of every key gets processed differently.
 

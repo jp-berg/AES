@@ -23,12 +23,8 @@ requirements.txt
 README.md
 \end{lstlisting}
 
-
-\subsection{The \enquote{src/} directory}
 The source directory contains all of the AES algorithm functionality: en- and decryption of blocks, key expansion, and S-Box generation. It is structured into the source code and header files for the en- and decryption code, one python file for the key expansion, and one for the generation of lookup tables (generator). For python the directory constitutes a module that can be imported in the wrapper and testing files. All functions of the en- and decryption as well as key expansion files are explained in the appropriate sections of the documentation.
 
-\subsection{The \enquote{lib/} directory}
 The lib directory contains the c-libraries for en- and decryption once they are compiled. The program ships without this directory as it is created during the compile process. The existence of this directory is also way to check whether the source files have been compile yet.
 
-\subsection{The \enquote{testing/} directory}
 The testing suite is contained within the testing directory. For explanations on usage and structure can be found in the testing section of the documentation.

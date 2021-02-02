@@ -204,45 +204,6 @@ while avoiding the shortcomings of the language:
   operating systems C cannot run on.
 \end{itemize}
 
-\hypertarget{aes---preliminaries}{%
-\section{AES - preliminaries}\label{aes---preliminaries}}
-
-The Advanced Encryption Standard has a series of defining properties.
-
-\begin{itemize}
-
-\item
-  \emph{symmetric cipher}: The key that encrypts a message is the same
-  key that decrypts it. This is in contrast to asymetric cryptography,
-  where encryption and decryption key differ from each other.
-\item
-  \emph{block cipher}: AES only operates on blocks with an exact size of
-  128 bits at a time. If there are bitsequences whose length is not
-  cleanly divisible by 128, they have to be padded in order to be
-  encrypted. With that the algorithm differs for example from the so
-  called stream-ciphers, which encrypt a digit stream one plaintext
-  digit at a time with one corresponding digit from a second stream,
-  called key stream, which in turn is generated pseudorandomly from a
-  key. The combination of plaintext digits with keysteam digits creates
-  the cipherstream. (\cite[p. 33-34]{paar 33-34})
-\item
-  \emph{key-iterated}: The Advanced Encryption Standard belongs to the
-  class of key-iterated block ciphers, because encryption (and thus
-  decryption) is achieved by applying a round transformation on the
-  plaintext multiple times. (\cite[p. 33]{rijndael})
-\item
-  \emph{byte-oriented}: The smallest unit the algorithm operates on is a
-  byte, which represents eight bits at a time (\cite[p. 14]{fips197}). All bytes
-  are treated as elements in the finite field. (\cite[p. 10]{fips197}
-\item
-  \emph{key-length}: AES supports three different key lengths: 128 bits,
-  192 bits and 256 bits. The different key length are accompanied by
-  differing numbers of rounds. AES-128 uses ten rounds, AES-192 twelve
-  and AES-256 utilises fourteen rounds. (\cite[p. 14]{fips197})
-\item
-  \emph{state}: The two-dimensional 4x4 array of bytes on which AES
-  performs its operations on is called state. (\cite[p. 9]{fips197})
-\end{itemize}
 
 \hypertarget{the-wrapper}{%
 \section{The wrapper}\label{the-wrapper}}

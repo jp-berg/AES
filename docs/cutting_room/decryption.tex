@@ -21,7 +21,7 @@ The \lstinline|decryptBlocks| function is used when an input of more than 16 byt
 \end{itemize}
 
 \subsubsection{Order of Operations}
-The function simply loops over the data in 16 byte steps and calls the \lstinline{decryptBlock} function on each of the blocks. This mode of operation of encrypting and decrypting multiple blocks each by itself is called \enquote{Electronic Code Book Mode} (ECB). It was chosen for the simplicity and has some security deficits. For example two equal blocks result in an equal encryption. This could be remedied by using a different mode of operation like Cipher Block Chainig (CBC).
+The function simply loops over the data in 16 byte steps and calls the \lstinline{decryptBlock} function on each of the blocks. This mode of operation of encrypting and decrypting multiple blocks each by itself is (as previously mentioned) called \enquote{Electronic Code Book Mode} (ECB). 
 
 \subsection{Decrypt Block}
 \label{ch:dec_block}
