@@ -1,0 +1,34 @@
+%!TEX root = thesis.tex
+\section{File Structure}
+The main file of the program is \lstinline|wrapper.py|. It contains the command line interface, all the setup logic, as well as the input and output handling. All non-standard python dependencies are listed within the requirements file. This way they can all be installed with one pip command. The README contains an overview over the program, as well as usage and installation instructions.
+
+\begin{lstlisting}
+wrapper.py
+src/
+  AES_encrypt.h
+  AES_encrypt.c
+  AES_decrypt.h
+  AES_decrypt.c
+  key_expansion.py
+  AES_generator.py
+lib/
+  libaes_encrypt.so
+  libaes_decrypt.so
+test/
+  __init__.py
+  test_AES_decrypt.py
+  test_AES_encrypt.py
+  test_key_expansion.py
+requirements.txt
+README.md
+\end{lstlisting}
+
+
+\subsection{The \enquote{src/} directory}
+The source directory contains all of the AES algorithm functionality: en- and decryption of blocks, key expansion, and S-Box generation. It is structured into the source code and header files for the en- and decryption code, one python file for the key expansion, and one for the generation of lookup tables (generator). For python the directory constitutes a module that can be imported in the wrapper and testing files. All functions of the en- and decryption as well as key expansion files are explained in the appropriate sections of the documentation.
+
+\subsection{The \enquote{lib/} directory}
+The lib directory contains the c-libraries for en- and decryption once they are compiled. The program ships without this directory as it is created during the compile process. The existence of this directory is also way to check whether the source files have been compile yet.
+
+\subsection{The \enquote{testing/} directory}
+The testing suite is contained within the testing directory. For explanations on usage and structure can be found in the testing section of the documentation.

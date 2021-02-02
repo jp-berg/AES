@@ -1,0 +1,221 @@
+%!TEX root = thesis.tex
+% General stuff
+\usepackage{fixltx2e}
+\usepackage[utf8]{inputenc} % CHANGE HERE IF NECESSARY
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel} % last language given is used (here: english) #ngerman,
+%\usepackage{microtype}
+\usepackage{ifpdf}
+\usepackage{verbatim}
+\usepackage{float}
+
+\author{\authorname}
+\title{\thesistitle}
+\date{\today}
+
+% Figures
+\usepackage{graphicx}
+\usepackage{subfig}
+\usepackage{placeins}
+
+% Tables
+\usepackage{booktabs}
+\usepackage{marvosym}
+\usepackage{multirow}
+
+% Math stuff and units
+\usepackage{latexsym,amsmath, amssymb, amsfonts, upgreek}
+\usepackage{siunitx}
+\newcommand{\mathup}{\mathrm}
+
+% Acronyms
+\usepackage[printonlyused]{acronym}
+
+% Enable quotes by \enquote{}
+\usepackage[babel,english=american]{csquotes}
+
+% Necessary for frontpage, allows to create automata and fancy graphics
+\usepackage{tikz}
+
+% Protocols and bytefields
+\usepackage{protocol}
+\usepackage{bytefield}
+
+% Source code listings
+\definecolor{colKeys}{rgb}{0,0,1}
+\definecolor{colIdentifier}{rgb}{0,0,0}
+\definecolor{colComments}{rgb}{1,0,0}
+\definecolor{colString}{rgb}{0,0.5,0}
+
+\usepackage{listings}
+
+\makeatletter
+\lstdefinestyle{mystyle}{
+  basicstyle=%
+    \ttfamily
+    \lst@ifdisplaystyle\scriptsize\fi
+}
+\makeatother
+
+
+\lstset{%
+	float=hbp,%
+	basicstyle=\ttfamily\scriptsize, %
+	identifierstyle=\color{colIdentifier}, %
+	keywordstyle=\color{colKeys}, %
+	stringstyle=\color{colString}, %
+	commentstyle=\color{colComments}, %
+	columns=flexible, %
+	tabsize=2, %
+	frame=single, %
+	extendedchars=true, %
+	showspaces=false, %
+	showstringspaces=false, %
+	numberstyle=\tiny, %
+	breaklines=true, %
+	backgroundcolor=, %
+	breakautoindent=true, %
+	captionpos=b,%
+	style=mystyle
+}
+
+% Algorithms
+\usepackage[ruled, vlined, linesnumbered, algosection, algo2e]{algorithm2e}
+
+% Format page foot and header
+\usepackage{scrlayer-scrpage}
+\clearscrheadings
+\clearscrheadfoot
+\automark[section]{chapter}
+\ohead{\pagemark}
+\ihead{\headmark}
+\pagestyle{scrheadings}
+
+%% use some standards for mathematical expressions:
+\newcommand{\red}{{\rm red}}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+% \newtheorem{definition}[theorem]{Definition}
+\newtheorem{algorithm}[theorem]{Algorithm}
+\newenvironment{example}{\begin{quote}{\bf Example:}}{\end{quote}}
+
+% Bibliography
+\bibliographystyle{alpha}
+
+% gray definition boxes, that whay you'll find them in the text
+\usepackage{shadethm}
+\newshadetheorem{sthm}{Definition}[chapter]
+\newenvironment{definition}[1][]{
+	\definecolor{shadethmcolor}{rgb}{.9,.9,.9}
+	\begin{sthm}[#1]
+	}{\end{sthm}}
+
+% experimental
+%\usepackage{scrhack}
+\usepackage{paralist}
+% Hyperlinks and menu for your document
+\usepackage[breaklinks,hyperindex,colorlinks,anchorcolor=black,citecolor=black,filecolor=black,linkcolor=black,menucolor=black,urlcolor=black,pdftex]{hyperref}
+
+% pagebackref: Add page number to the references where they can be found
+% DO NOT LOAD ANY OF YOUR PACKAGES BEYOND THIS PACKAGE
+
+\makeatletter
+\AtBeginDocument{
+	\hypersetup{
+		pdftitle = {\@title},
+		pdfauthor = {\@author},
+		pdfsubject={\@title},
+		pdfkeywords={Template, LaTeX, SysSec, Sensor fingerprinting, Accelerometer, Smartphone, Mobile Device}, % CHANGE HERE
+		%    unicode={true},
+	}
+}
+\makeatother
+
+% \ifpdf
+% 	\hypersetup{linktocpage=false} 	% false=links are section names, true=links are page numbers, IMPORTANT: in dvi2ps mode, 'true' is required!
+% \else
+% 	\hypersetup{linktocpage=true} 		% false=links are section names, true=links are page numbers, IMPORTANT: in dvi2ps mode, 'true' is required!
+%  \usepackage[hyphenbreaks]{breakurl}
+% \fi
+
+\newcommand{\declarationofauthorship}[2]{%
+	\ifthenelse{\equal{#1}{German}}
+	{\chapter*{Eidesstattliche Erklärung}
+	Ich versichere hiermit, dass ich diese \thtype-Arbeit mit dem Titel \glqq{#2}\grqq
+	selb\-st\"{a}n\-dig und ohne fremde Hilfe angefertigt habe, und dass ich alle von anderen Autoren w\"{o}rtlich \"{u}\-ber\-nom\-men\-en Stellen wie auch die sich an die Ge\-dan\-ken\-g\"{a}n\-ge anderer Autoren eng anlehnenden Aus\-f\"{u}h\-run\-gen meiner Arbeit besonders
+	gekennzeichnet und die Quellen zitiert habe.
+
+	\vspace{2cm}
+	\rule{4cm}{0.1pt} \hfill \rule{7cm}{0.1pt} \\
+	\hspace*{1.75cm} \textsc{Datum} \hspace*{6.8cm} \textsc{Unterschrift}
+	}
+	{\chapter*{Declaration}
+		I hereby declare that, to the best of my knowledge and belief, this \thtype thesis titled ``{#2}'' is my own work. I confirm that each significant contribution to and quotation in this thesis that originates from the work or works of others is indicated by proper use of citation and references.
+
+	\vspace{2cm}
+	\rule{4cm}{0.1pt} \hfill \rule{7cm}{0.1pt} \\
+	\hspace*{1.75cm} \textsc{Date} \hspace*{6.8cm} \textsc{Signature}
+	}
+}
+
+
+\newcommand{\consentforplagiarismdetection}[5]{%
+	\ifthenelse{\equal{#1}{German}}
+	{\chapter*{Einverständniserklärung}
+		{\small
+		zur Prüfung meiner Arbeit mit einer Software zur Erkennung von Plagiaten
+
+		\begingroup
+			\textbf{Name}:~{#2}\newline
+			\textbf{Matrikelnummer}:~{#3}\newline
+			\textbf{Studiengang}:~{#4}\newline
+			\textbf{Titel der Arbeit}:~{#5}\newline
+		\endgroup
+
+		\textbf{Was ist ein Plagiat?}
+		Als ein Plagiat wird eine Übernahme fremden Gedankengutes in die eigene Arbeit angesehen, bei der die Quelle, aus der die Übernahme erfolgt, nicht kenntlich gemacht wird. Es ist dabei unerheblich, ob z.B. fremde Texte wörtlich übernommen werden, nur Strukturen (z.B. argumentative Figuren oder Gliederungen) aus fremden Quellen entlehnt oder Texte aus einer Fremdsprache übersetzt werden.
+
+		\textbf{Softwarebasierte Überprüfung}
+		Alle Bachelor- und Masterarbeiten werden vom Prüfungsamt mit Hilfe einer entsprechenden Software auf Plagiate geprüft. Die Arbeit wird zum Zweck der Plagiatsüberprüfung an einen Software-Dienstleister übermittelt und dort auf Übereinstimmung mit anderen Quellen geprüft. Zum Zweck eines zukünftigen Abgleichs mit anderen Arbeiten wird die Arbeit dauerhaft in einer Datenbank gespeichert. Ein Abruf der Arbeit ist ausschließlich durch die Wirtschaftswissenschaftliche Fakultät der Westfälischen Wilhelms-Universität Münster möglich. Der Studierende erklärt sich damit einverstanden, dass allein zum beschriebenen Zweck der Plagiatsprüfung die Arbeit dauerhaft gespeichert und vervielfältigt werden darf. Das Ergebnis der elektronischen Plagiatsprüfung wird dem Erstgutachter mitgeteilt.
+
+		\textbf{Sanktionen}
+		Liegt ein Plagiat vor, ist dies ein Täuschungsversuch i.S. der Prüfungsordnung, durch den die Prüfungsleistung als \enquote{nicht bestanden} gewertet wird. Es erfolgt eine Mitteilung an das Prüfungsamt und die dortige Dokumentation. In schwerwiegenden Täuschungsfällen kann der Prüfling von der Prüfung insgesamt ausgeschlossen werden. Dies kann unter Umständen die Exmatrikulation bedeuten. Plagiate können auch nach Abschluss des Prüfungsverfahrens und Verleihung des Hochschulgrades zum Entzug des erworbenen Grades führen.
+
+
+		Hiermit erkläre ich, dass ich die obigen Ausführungen gelesen habe und mit dem Verfahren zur Aufdeckung und Sanktionierung von Plagiaten einverstanden bin.
+		}
+
+		\vspace{2cm}
+		\rule{4cm}{0.1pt} \hfill \rule{7cm}{0.1pt} \\
+		\hspace*{1.75cm} \textsc{Datum} \hspace*{6.8cm} \textsc{Unterschrift}
+	}
+	{\chapter*{Consent Form}
+	{\small
+		for the use of plagiarism detection software to check my thesis
+
+		\begingroup
+		\textbf{Full Name}:~{#2}\newline
+		\textbf{Student Number}:~{#3}\newline
+		\textbf{Course of Study}:~{#4}\newline
+		\textbf{Title of Thesis}:~{#5}\newline
+		\endgroup
+
+		\textbf{What is plagiarism?}
+		Plagiarism is defined as submitting someone else's work or ideas as your own without a complete indication of the source. It is hereby irrelevant whether the work of others is copied word by word without acknowledgment of the source, text structures (e.g. line of argumentation or outline) are borrowed or texts are translated from a foreign language.
+
+		\textbf{Use of plagiarism detection software}
+		The examination office uses plagiarism software to check each submitted bachelor and master thesis for plagiarism. For that purpose the thesis is electronically forwarded to a software service provider where the software checks for potential matches between the submitted work and work from other sources. For future comparisons with other theses, your thesis will be permanently stored in a database. Only the School of Business and Economics of the University of Münster is allowed to access your stored thesis. The student agrees that his or her thesis may be stored and reproduced only for the purpose of plagiarism assessment. The first examiner of the thesis will be advised on the outcome of the plagiarism assessment.
+
+		\textbf{Sanctions}
+		Each case of plagiarism constitutes an attempt to deceive in terms of the examination regulations and will lead to the thesis being graded as \enquote{failed}. This will be communicated to the examination office where your case will be documented. In the event of a serious case of deception the examinee can be generally excluded from any further examination. This can lead to the exmatriculation of the student. Even after completion of the examination procedure and graduation from university, plagiarism can result in a withdrawal of the awarded academic degree.
+
+		I confirm that I have read and understood the information in this document. I agree to the outlined procedure for plagiarism assessment and potential sanctioning.
+		}
+
+		\vspace{2cm}
+		\rule{4cm}{0.1pt} \hfill \rule{7cm}{0.1pt} \\
+		\hspace*{1.75cm} \textsc{Date} \hspace*{6.8cm} \textsc{Signature}
+	}
+}
