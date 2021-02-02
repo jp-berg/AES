@@ -7,7 +7,7 @@
  */
 
 #include "AES_encrypt.h"
-#include <string.h>
+#include "string.h"
 
 /*
  * Adds the roundkey to a block.
