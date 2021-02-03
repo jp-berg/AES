@@ -1,4 +1,4 @@
-
+%!TEX root = thesis.tex
 \hypertarget{functions---constant-generators}{%
 \section{Functions - constant
 generators}\label{functions---constant-generators}}
@@ -27,7 +27,7 @@ implementation in chapter 4.1.1 they suggest only generating a table t
 where table t[a] = 02 * a, since multiplication with one is the factor
 itself and multiplication with three can be efficiently archived by
 XORing the result of the multiplication with two with the original
-number: 03 * a = (02 * a) xor a 
+number: 03 * a = (02 * a) xor a
 
 To avoid leaking more timing data than
 absolutely necessary the present implementation uses a lookup table for
@@ -36,7 +36,7 @@ all values, since this ensures that for each multiplication the CPU
 it always takes the exact same amount of time. This size increase by 2 *
 256b = 512 bytes (compared to the suggested implementation with only one
 row) is negligible for our target of x86-CPU-systems, which today
-typically feature memory sizes in the gigabyte range. 
+typically feature memory sizes in the gigabyte range.
 
 \cite{rijndael} did not
 make a mistake in their implementation suggestion though, since the
@@ -83,7 +83,7 @@ def mult_gal(a, b):
     as a modiefied version of the "peasant's algorithm"
     Tested with https://www.ece.unb.ca/cgi-bin/tervo/calc2.pl
     """
-    
+
     p = 0
     for i in range(8):
         if (a == 0) or (b == 0):
@@ -110,7 +110,7 @@ which equals division by two while ignoring the remainder. The last step
 has two components.
 The first component shifts 'a' to the right by one and cuts off any byte overflow
 by using the modulo function. If such overflow occured, the modulo operation has to be
-applied to the shifted 'a' in order to keep in in $GF(2^{8})$. This is done by XORing it 
+applied to the shifted 'a' in order to keep in in $GF(2^{8})$. This is done by XORing it
 with m(x) which is 100011011 in binary and 1b in hexadecimal, when fit into a byte (because
 this removes the most significant digit of m(x)). To detect overflow 'a' is shifted to the right by 7
 and then negated. If the most significant bit of 'a' was set (which means overflow), 1b gets ANDed
@@ -137,7 +137,7 @@ affine transformation to that inverse. (\cite[ch 3.4.1]{rijndael})
 
 \begin{figure}
 \centering
-\includegraphics[scale = 0.3]{data/figures/affinetrans.png} 
+\includegraphics[scale = 0.3]{data/figures/affinetrans.png}
 \caption{The affine transformation used in the AES S-box depicted as a matrix multiplication.}
 \end{figure}
 
@@ -263,7 +263,7 @@ knowledge/opinions, if not mentioned otherwise.
 
 \begin{figure}
 \centering
-\includegraphics[scale = 0.3]{data/figures/addroundkey.png} 
+\includegraphics[scale = 0.3]{data/figures/addroundkey.png}
 \caption{Addition of the round key to to the state via bitwise XOR. a0,0 xor k0,0 = b0,0 etc.}
 \end{figure}
 
@@ -281,7 +281,7 @@ a different round key (ch. 5.1.4).
 /*
  * Adds the roundkey to a block.
  */
-inline void AddRoundKey(uint8_t * restrict bytes, 
+inline void AddRoundKey(uint8_t * restrict bytes,
                         const uint8_t * restrict keys)
 {
         for(uint8_t i = 0; i < 16; i++) {
@@ -313,7 +313,7 @@ bigger binary.
 
 \begin{figure}
 \centering
-\includegraphics[scale = 0.3]{data/figures/shiftrows.png} 
+\includegraphics[scale = 0.3]{data/figures/shiftrows.png}
 \caption{The ShiftRows-transformation "rotates" the rows of the state (left) by different offsets, resulting in the state on the right}
 \end{figure}
 
@@ -404,7 +404,7 @@ The MixColumns-transformation, a so-called bricklayer permutation, had to fulfil
 
 \begin{figure}
 \centering
-\includegraphics[scale = 0.2]{data/figures/mixcolumn.png} 
+\includegraphics[scale = 0.2]{data/figures/mixcolumn.png}
 \caption{The MixColumns-transformation, represented as matrix multiplication.}
 \label{fig:mixcolumn}
 \end{figure}
@@ -425,7 +425,7 @@ the calculation is invertible. The matrix-multiplication, which is seen
 in \ref{fig:mixcolumn}, is a representation of the modular multiplication with a
 fixed polynomial.
 
-158 - 88 4.1.1. 
+158 - 88 4.1.1.
 
 \hypertarget{implementation-4}{%
 \subsubsection{Implementation}\label{implementation-4}}
@@ -435,7 +435,7 @@ fixed polynomial.
  * Achieves the AES-MixColumns by representing each result byte as a series of
  * table-lookups XORed with each other.
  */
-void MixColumns(uint8_t * restrict block, uint8_t * restrict tempblock, 
+void MixColumns(uint8_t * restrict block, uint8_t * restrict tempblock,
                 const uint8_t (* restrict gal_mult_lookup)[256])
 {
         memcpy(tempblock, block, 16 * sizeof(uint8_t));
@@ -536,7 +536,7 @@ inline void SubBytes(uint8_t * restrict bytes, const uint8_t * restrict sbox)
         for(uint8_t i = 0; i < 16; i++) {
                 bytes[i] = sbox[bytes[i]];
         }
-    
+
 }
 \end{lstlisting}
 
@@ -566,23 +566,23 @@ additional AddRoundKey is performed on the state. \cite[ch. 5.1]{fips197}
 \subsubsection{Implementation}\label{implementation-5}}
 
 \begin{lstlisting}
-void encryptBlock(uint8_t * restrict block, uint8_t * restrict tempblock, 
-                  const uint8_t * restrict keys, const uint8_t rounds, 
-                  const uint8_t * restrict sbox, 
+void encryptBlock(uint8_t * restrict block, uint8_t * restrict tempblock,
+                  const uint8_t * restrict keys, const uint8_t rounds,
+                  const uint8_t * restrict sbox,
                   const uint8_t (* restrict gal_mult_lookup)[256])
-{   
+{
         uint8_t ikeys = 0;
         AddRoundKey(block, keys);
         ikeys += 16;
 
-        for(uint8_t i = 0; i < rounds - 1; i++) {   
+        for(uint8_t i = 0; i < rounds - 1; i++) {
                 SubBytes(block, sbox);
                 ShiftRows(block, tempblock);
                 MixColumns(block, tempblock, gal_mult_lookup);
                 AddRoundKey(block, &keys[ikeys]);
                 ikeys += 16;
         }
-        
+
         SubBytes(block, sbox);
         ShiftRows(block, tempblock);
         AddRoundKey(block, &keys[ikeys]);
@@ -634,7 +634,7 @@ blocks}\label{encryption-of-multiple-consecutive-blocks}}
 Although not explicitly required in context of this work, the present
 implementation contains the possibility to encrypt multiple consecutive
 blocks. With that it enables encryption of for example messages larger
-than sixteen bytes or even files. 
+than sixteen bytes or even files.
 
 \cite[ch. 5.1.1]{paar} describes
 encryption schemes like found in the present implementation the simplest
@@ -647,7 +647,7 @@ each other. Bit errors do not propagate through the whole ciphertext but
 are confined to the block they occurred in. The implementation has also
 the potential to become very fast, thanks to the possibility of
 processing different blocks on different cores, thus enabling
-parallelisation of en- and decryption. 
+parallelisation of en- and decryption.
 
 The weaknesses of this mode
 should not be underestimated though. Due to the fact that every block is
@@ -758,9 +758,9 @@ implementation then adds an array containing the values \{5, 5, 5, 5,
  * Initializes the constant tables sbox, galois-field-multiplication-lookup and keys.
  * Performs AES-encryption on multiple, consecutive blocks.
  */
-void encryptAES(uint8_t * restrict bytes, uint8_t * restrict initval, 
+void encryptAES(uint8_t * restrict bytes, uint8_t * restrict initval,
                    const size_t bytecount, const uint8_t rounds)
-{   
+{
         uint8_t sbox[256];
         uint8_t gal_mult_lookup[3][256];
         for(size_t i = 0; i < 256; i++) {
@@ -771,12 +771,12 @@ void encryptAES(uint8_t * restrict bytes, uint8_t * restrict initval,
                 gal_mult_lookup[i][j] = *initval++;
                 }
         }
-        
+
         const uint8_t *keys = initval;
         uint8_t tempblock[16];
-        
+
         for(size_t i = 0; i < bytecount; i += 16) {
-                encryptBlock(&bytes[i], tempblock, keys, 
+                encryptBlock(&bytes[i], tempblock, keys,
                              rounds, sbox, gal_mult_lookup);
         }
 }

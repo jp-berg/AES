@@ -1,0 +1,175 @@
+%!TEX root = thesis.tex
+\hypertarget{language-choices}{%
+\section{Language Choices}\label{language-choices}}
+
+We chose to implement the algorithm itself in C, while Python handles
+the input and output of our program. This allows us to use both
+languages to their full potential, while avoiding problems of both.
+
+\hypertarget{python}{%
+\subsection{Python}\label{python}}
+
+Python is a popular (\cite{instack}, \cite{octgit}) multi-paradigm (\cite[p. 6]{learningpython})
+programming language. According to \cite{wikipython} it is interpreted,
+high-level and general purpose. Combining its high usage with its thirty
+years of age it can be considered a mature language and as such boasts a
+fair share of success stories (\cite{pythonsuccess}, \cite[p. 9 - 10]{learningpython}. With
+over 280000 Packages available via the Python package manager pip it
+offers a healthy and extensive ecosystem (\cite{pythoncommunity}).
+
+With our design we are able to make use of Pythons advantages:
+
+\begin{itemize}
+
+\item
+  \emph{Readability}: One of Pythons qualities is its ``focus on
+  readability, coherence, and software quality in general''
+  (\cite[p. 3]{learningpython}). C on the other hand is generally considered to be
+  more difficult to understand, especially because of features and
+  concepts not found in other languages (\cite[p. 5]{cmodern}). This implementation
+  therefore tries to cover as much of the functionality with the easier
+  to read Python.
+\item
+  \emph{Memory safety}: All memory used by our program is allocated by
+  python. Since it is a garbage-collected language, the program does not
+  have to worry about freeing unused memory. This avoids memory leaks in
+  the program. (\cite[p. 18]{learningpython})
+\item
+  \emph{Performance}: Python is on the slow end of programming
+  languages, but that is nearly irrelevant for the purpose it is used in
+  the application. The main task is handling input/output and on modern
+  computers it should be fast enough to read/write from/to the command
+  line or disk, without becoming a bottleneck.
+\item
+  \emph{Robustness}: The programming language itself is considered
+  robust and stable (\cite[p. 9]{learningpython}) input in Python is relatively
+  simple and straightforward. There is no undefined behaviour, input
+  length or encoding issues the programmer has to worry about (compare
+  to \cite{scanf}).
+\item
+  \emph{Extensibility}: Pythons package manager, import system and large
+  standard library makes it easy to add new features to our program.
+  Adding password hashing for example could be accomplished by simply
+  importing a new package from the standard library and adding a few
+  lines of code. This opens up a lot of possibilities for extending the
+  functionality of our program in the future. Here Python helps the
+  present implementation to cover up for the lack of a package manager
+  and a less comprehensive standard library in C(compare
+  \cite{cbib} to \cite{pybib}).
+\item
+  \emph{Productivity}: Python is an dynamically typed (\cite[p. 9]{learningpython}), interpreted language, generating a tight development loop
+  uninterrupted by compile times, with almost no delay between writing
+  and executing the code. This helps to improve and iterate over the
+  code rapidly, motivating a more exploratory and incremental approach
+  to program development. Furthermore Python is able to express more
+  functionality in less lines of code than other languages, which helps
+  with readability and maintainability. ``It is deliberately optimized
+  for speed of development'' (\cite[p. 5]{learningpython})
+\item
+  \emph{Portability}: Most Python code is able to run unmodified on
+  ``all major computer platforms''(\cite[p. 4, 17-18]{learningpython}). Combined
+  with the portability of C our program is only limited by its ability
+  to execute the compilation of the C-core, which for now is bound by
+  the ability of Python dispatching the compile command to GCC or Clang,
+  which for now was only tested on Ubuntu, but should theoretically work
+  on at least all Linux Systems with Python and Clang or GCC installed.
+\end{itemize}
+
+\hypertarget{c}{%
+\subsection{C}\label{c}}
+
+C is, like Python, one of the most popular programming languages today
+(\cite{instack}, \cite{octgit}). It is close to 20 years older than Python though,
+dating back to the early 1970s (\cite[p. 2]{cmodern}). It is statically typed
+(\cite[p. 40]{modernc}), compiled (\cite[p. 2]{cmodern}), low-level (meaning providing
+access to concepts more commonly found on the machine level) (\cite[p. 4]{cmodern}) and provides interfaces for manual memory management, but no build in
+garbage collection (\cite[p. 55]{cpointers}). One of the more notable projects
+written in C is the Linux kernel, the basis for the widely used Linux
+operating system (\cite{kernel}).
+
+C is considered one of the fastest and most efficient languages
+(\cite{benchmarkgame}), but is
+more error-prone than others (\cite[p. 5]{modernc}). One has to be careful to avoid
+so called ``undefined behaviour'', buffer overflows (since C-arrays are
+not bounds-checked), and memory management bugs.
+
+A popular example of a serious bug that gets attributed to the fact that
+C is more error-prone than other languages is Heartbleed. A programming
+mistake so serious, that ``[s]ome might argue that it is the worst
+vulnerability found (at least in terms of its potential impact) since
+commercial traffic began to flow on the Internet.'' (\cite{forbes}).
+\cite{wheeler} sees this as a
+direct result of C not including ``any built-in detection or
+countermeasure for improper restriction of buffers'' (ch. 3.9) and
+states that one of ``the most dangerous widely-used languages for
+security-relevant software [is] C''. This type of vulnerability is
+``widely used'' often with ``catastrophic effect'' , but ``Using or
+switching to almost any other language (other than C, C++, or
+Objective-C) would completely eliminate buffer-related vulnerabilities,
+including Heartbleed.'' (ch. 3.9.1)
+
+The following list illustrates how the program uses the advantages of C,
+while avoiding the shortcomings of the language:
+
+\begin{itemize}
+
+\item
+  \emph{Speed}: Since C is considered a fast language (\cite[p. 4]{cmodern}) it is
+  not unusual to rewrite calculation intensive parts of programs in C,
+  even if the project is written in another language
+  (\cite[min. 24:33]{speedup}). Python itself
+  uses this architectural concept, interfacing with compiled C code to
+  make use of Cs speed advantage for certain tasks, like \cite[p. 7]{learningpython} explains. The author even recommends to create compiled extensions
+  for ``domains that do require optimal execution speeds'' and linking
+  those back into the Python code. The calculation intensive part of our
+  project is clearly the AES encryption itself, especially with growing
+  file size. Additionally the architecture of our program allows the C-core to take advantage of '-march='native',
+  a compiler-flag that enables tailoring the binary to the features of the underlying CPU,
+  resulting in even more performance. And this happens automatically without any input required from the user.
+\item
+  \emph{no memory management necessary}: Due to the fact that the C-core
+  operates on byte-arrays allocated by Python, nothing needs to be
+  allocated on heap. Since the rest of the data needed is allocated on
+  the stack all memory used is automatically freed after the encryption
+  function returns, without the need for the programmer to intervene.
+  This avoids memory leaks occurring when allocations on heap are not
+  met with a call to free() after the allocated memory is not needed
+  anymore. So called double free errors are also made impossible (since
+  there is nothing to call `free()' on), meaning there is no risk of
+  freeing the same area of memory twice. This error could potentially
+  corrupt the programs memory management data structures and lead to a
+  crash(\cite[p. 49]{cpointers}).
+\item
+  \emph{straightforward implementation}: The algorithm described in
+  \cite{fips197} translates well to C code. No special imports are needed, no
+  hard-to-understand operations are required to be executed and the
+  depicetd pseudocode functions map reasonably cleanly to C functions.
+  The AES-algorithm itself makes extensive use of
+  Galois-Field-operations in $2^8$. Those can be easily expressed
+  through the native uint8\_t C-data-type, which represents an unsigned
+  byte. Buffer overruns are avoided, because the array AES operates on
+  is allocated by Python. Since Python tracks the length of any object
+  allocated and since we pass the length of the array as a boundary,
+  buffer overruns are highly unlikely. This is one example of how the
+  wrapper ensures the data has the right format, leading to less error
+  handling and thus keeping the C-core simple.
+\item
+  \emph{fast compile times}: Since the C-core encompasses only a few
+  hundred lines of code it compiles in subsecond time on our development
+  machines, even with optimization enabled. This encourages trying new
+  things and helps to get quick feedback even for small changes, either
+  through the static analyzer of the compiler itself or through the
+  included testing libraries. The small and thus fast-compiling C-core
+  is only possible by outsorcing all less calculation intensive tasks to
+  the wrapper.
+\item
+  \emph{portability}: C compiles to numerous platforms and operating
+  systems. \cite{gccsys} demonstrates how
+  many architectures and operating systems can be reached with just one
+  compiler. Since the C-core tries to avoid any platform specifics or
+  targeting specific compilers, it should not be the limiting factor in
+  terms of portability, especially since the reference implementation of
+  Python is written partially in C (\cite{pyref}),
+  which means Python is not able to target CPU architectures or
+  operating systems C cannot run on.
+\end{itemize}

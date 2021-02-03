@@ -1,0 +1,33 @@
+%!TEX root = thesis.tex
+\hypertarget{overview}{%
+\section{Overview}\label{overview}}
+
+In general we decided on the C programming language for implementing
+AES. The source code for our algorithm is compiled to a ``Shared
+Object'', which is then loaded as a ``dynamically loaded library'' into
+a Python wrapper, also referred to as wrapper, which facilitates the
+interaction with the algorithm.
+
+The use of two programming languages allows us leverage the advantages
+of both, while alleviating some shortcomings that they possess. The
+python wrapper provides a command line interface, which enables
+encryption and decryption of files and text input. The c source code
+describing the implementation of the AES-algorithm, also referred to as
+C-core, has test coverage for every function to ensure correctness.
+
+(GRAPHIC?) On calling the wrapper via command line, the program checks,
+whether there are already .so-files available to link. If the wrapper
+cannot find them it compiles them from the .c-files. After that it links
+the libraries and executes the command. It transforms the passed user
+input, either file or text, into a padded byte-array, and generates the
+key. There is either a 16-byte hex key made available by the user or it
+has to be generated via a hash function from a string input by the user.
+After the key expansion (in Python) both the key and the byte-array with
+the user input get passed on to the C-core. The core gets a pointer to
+the array and key. It uses those pointers to transform the
+user-input-array in place. After the transformation is finished the
+wrapper just needs to output the transformed byte-array.
+
+Since the only differences between AES and Rijndael are the sizes of the
+accepted keys and blocks (\cite[p. 31]{rijndael}) the names for both algorithms
+will be used synonymously throughout this document.

@@ -1,0 +1,115 @@
+%!TEX root = thesis.tex
+\hypertarget{possible-areas-of-future-improvements}{%
+\section{Possible areas of future
+improvements}\label{possible-areas-of-future-improvements}}
+
+This chapter is a collection of ideas, which could bring potential
+improvements to the project in the future.
+
+\hypertarget{aes-192-and-aes-256}{%
+\subsection{AES-192 and AES-256}\label{aes-192-and-aes-256}}
+
+Currently the implementation only supports AES with key sizes of 128
+bits, but it would be possible to also support other lengths of the
+standard, namely key lengths of 192 and 256 bits. Changes to the AES
+code itself would be minimal since the only difference would be the
+number of rounds, which is already a flexible parameter in the
+encryption implementation. The prep\_password-function has to be
+tweaked, but the used hashing function makes adjusting the key length
+easy. The test would have to be modified too, although this modification
+seems more like a hassle than a challenge since the logic, that is
+already in place for AES-128, only needs to be adjusted for the
+additional key sizes. Even modifying the key expansion to accommodate
+for two more sizes should be easily doable.
+
+\hypertarget{parallelism}{%
+\subsection{Parallelism}\label{parallelism}}
+
+Since AES encrypts blocks independently from each other the algorithm
+can be categorized as an so called embarrassingly parallel problem
+\cite[p.48]{parallelprog}. Consequently an easy avenue for gaining more
+speed seems to be restructuring the program in such a way, that every
+available CPU-core gets put to work on a separate series of blocks to
+encrypt/decrypt. On short encryption operations in the kilobyte range
+this may not deliver a considerable performance increase, but since the
+present implementation is able to operate on files of unbounded size,
+time saving possibilities become apparent quite fast.
+
+A simple way to archive such parallelism could for example lead through
+the OpenMP-library. This library was designed to provide a shared-memory
+API that allows the program to execute in parallel and is added into the
+program fairly easily (\cite[ch. 5]{parallelprog}. Since the encryption of
+multiple blocks can be expressed as a for-loop, OpenMPs `parallel
+for'-directive may be an easy way to execute the program on multiple
+cores (compare (\cite[ch. 5.5]{parallelprog}).
+
+\hypertarget{t-tables}{%
+\subsection{T-tables}\label{t-tables}}
+
+The present implementation already makes use of lookup tables. \cite[p. 59]{rijndael} proposes a method that makes even more extensive use of lookup
+tables, which needs only 4 array accesses and 4 bitwise XOR operations
+for each round and 4-byte column. They budget in 4kb of memory for the
+lookup tables. This is a negligible amount of memory compared to the
+gigabytes available on modern x86-systems.
+
+\hypertarget{no-constant-value-calculations}{%
+\subsection{No constant value
+calculations}\label{no-constant-value-calculations}}
+
+To fulfill the task of this seminar it was explicitly required to (re-)
+calculate values, that could as well be hardcoded. The additional space
+used by this is calculated as follows: The GFMLT for multiplication with
+two and three can be stored in 2 * 256 bytes (multiplication with one
+does not need to be stored, since it just results in the unmodified
+value itself). The S-box and Inverse S-box are 256 additional bytes
+each, which brings us to a total of 1024 additional bytes of memory.
+This is considered to be a negligible size increase, but saves on
+recalculating the values on program startup.
+
+\hypertarget{block-cipher-mode-of-operation}{%
+\subsection{Block cipher mode of
+operation}\label{block-cipher-mode-of-operation}}
+
+Due to time constraints, it was not possible to implement a different
+block cipher mode of operation, but it is something the current
+implementation would greatly benefit from. \ref{encryption-of-multiple-consecutive-blocks} goes more
+in-depth regarding this topic.
+
+\hypertarget{file-header-argon2-hashing-algorithm-salt-and-hmac}{%
+\subsection{File-header: ARGON2-Hashing algorithm, salt and
+HMAC}\label{file-header-argon2-hashing-algorithm-salt-and-hmac}}
+
+At the moment the passwords are hashed with PBKDF2. This algorithm can
+unfortunately easily be cracked with the right hardware, like \cite[p. 697]{appcrypt} explains and suggests (on p. 701) using the password hashing
+competition winner argon2, which is designed to withstand brute force
+attemptsk by being able to use more memory and parallelism, thus making it
+more expensive for an attacker to guess the password. The
+argon2-parameters would either have to be hardcoded or attached to the
+encrypted text in a header for example.
+
+If such a header would be added, it seems like a logical step to also
+add a public salt to the hash parameters specified within. A salt is a
+random string, regenerated for each new password, that is hashed along
+with the password to prevent any kind of preprocessing attack on the
+password hash. The salt itself is stored in the clear. \cite[p. 693]{appcrypt} At
+the moment the hash is hardcoded to ``aeskurs'', but in the future would
+consist of a randomly generated string from ``os.urandom()''.
+
+The header could also hold the hash for the hash based message
+authentication code or short HMAC (\cite[ch. 12.2.3]{paar}). This would ensure
+integrity of the message, i.e.~that the encrypted data was not changed,
+for example during transit by a malicious third party. This is archived
+by hashing the message before transmission in combination with a secret
+shared only by the communicating parties (like the encryption-password)
+and appending the resulting hash to the message. The receiving party is
+then able to verify the integrity of the message by repeating the steps
+and comparing the generated and the appended hash.
+
+\cite{moxie} recommends to authenticate first before performing any
+cryptographic operation, so a future implementation would probably first
+encrypt the message, then hash it and append the hash to the header.
+Since we want to ensure that the correct password-hashing parameters
+were received, those would be also fed into the HMAC if a future
+implementation makes use of said parameters. The HMAC algorithm would
+probably a SHA3-variant, as specified in \cite{fips202}, providing the HMAC
+with adequate cryptographic strength.

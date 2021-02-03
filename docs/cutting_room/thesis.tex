@@ -17,7 +17,7 @@ BCOR=1cm, % Bindekorrektur: Change this accordingly, also read the KomaScript Gu
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 % Set data about yourself										%
 \newcommand{\authorname}{Jan Philipp Berg, Simon Keil}								%
-\newcommand{\studentnumber}{000000}	% Matrikelnummer			%
+\newcommand{\studentnumber}{440741, 405936}	% Matrikelnummer			%
 \newcommand{\courseofstudy}{Information Systems} % Studiengang	%
 																%
 % Set data about your thesis									%
@@ -32,6 +32,7 @@ BCOR=1cm, % Bindekorrektur: Change this accordingly, also read the KomaScript Gu
 % if you really need additionall packages include them here
 %\usepackage{package}
 
+\usepackage[table,xcdraw]{xcolor}
 
 % DO NOT EDIT THE _settins FILE!
 \include{_settings}
@@ -56,19 +57,25 @@ BCOR=1cm, % Bindekorrektur: Change this accordingly, also read the KomaScript Gu
 \chapter{Introduction} \label{chap:intro}
 %\pagenumbering{arabic} %switches to arabic numbers for the rest of the text
 
-\input{decryption}
+\input{overview}
 
-\input{key_expansion}
+\input{language_choices}
 
-\input{commandline_interface}
+\input{wrapper}
 
 \input{file_structure}
 
 \input{testing}
 
-\input{documentation_enc}
+\input{commandline_interface}
 
-\input{general_architecture}
+\input{key_expansion}
+
+\input{encryption}
+
+\input{decryption}
+
+\input{future_improvement}
 
 \appendix
 %\input{chap_appendix}
