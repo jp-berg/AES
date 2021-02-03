@@ -17,7 +17,7 @@ On the first execution of the program, the .c files contained within the `src/` 
 Optionally you can add the program directory to your `PATH` and simply run it from anywhere with `aes`. You probably should not do that though, as this program is immature and not meant for production.
 
 ## Usage
-For a quick start simply run `./aes --help`.
+For a quick start, make the `aes` script executable (`sudo chmod +x aes`) simply run `./aes --help`.
 
 The program has four main commands and corresponding modes of operation:
 * text encrypt `te`
