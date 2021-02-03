@@ -15,15 +15,15 @@ generator}\label{galois-field-multiplication-lookup-table-generator}}
 \subsubsection{Description}\label{description}}
 
 As \cite{rijndael} recommends in chapter 4.1.1 Galois field multiplications
-used in MixColumns were implemented as lookup tables in GFMLT. Since the
+used in MixColumns were implemented as lookup tables in the Galois field multiplication lookup table (GFMLT). Since the
 number of possible multiplication results is highly restricted in $GF(2^{8})$
-the table storing all results uses neglibe memory. This avoids computing
+the table storing all results uses negligible memory. This avoids computing
 the multiplications over and over. Furthermore in chapter 10.8.1 the
 authors suggest, that implementing the multiplications as table lookups
 makes the algorithm more resistant to timing attacks, since the finite
 field multiplication performed in MixColumns is the only operation in
-Rijdael that is not computed in constant time. In their 8-bit
-implementation in chapter 4.1.1 they suggest only generating a table
+Rijndael that is not computed in constant time. In their 8-bit
+implementation in chapter 4.1.1 they suggest only generating a table t
 where table t[a] = 02 * a, since multiplication with one is the factor
 itself and multiplication with three can be efficiently archived by
 XORing the result of the multiplication with two with the original
@@ -52,10 +52,10 @@ in the present implementation.
 
 In the end the suggestions \cite{rijndael} makes regarding this topic have to
 be taken with a grain of salt, since the extensive use of lookup tables
-seems to enable new side channel attack vectors as previously discussed.
+seems to enable new side channel attack vectors as previously discussed in the thesis.
 
 The lookup table used by the present implementation extends over two
-dimensions: three rows for the multiplicators one, two and three and 256
+dimensions: three rows for the multiplicands one, two and three and 256
 columns to store the results of the multiplications with the numbers
 denoting the column indices. Since the first dimension denotes the
 multiplicator m, m - 1 accesses the right array for multiplication with
@@ -119,8 +119,8 @@ with -1 or 11111111 in binary (due to the two's complement), thus resulting in t
 'gen\_mult\_lookup()' then uses the function to generate the values for
 multiplication of all numbers in $GF(2^{8})$ with two and three.
 
-The results (App.XXX) were spot-checked against
-https://www.ece.unb.ca/cgi-bin/tervo/calc2.pl with P(x) = 100011011.
+The results (\ref{t:GFMLT}) were spot-checked against
+\cite{galcalc} with P(x) = 100011011.
 
 \hypertarget{s-box-generator}{%
 \subsection{S-box generator}\label{s-box-generator}}
@@ -142,7 +142,7 @@ affine transformation to that inverse. (\cite[ch 3.4.1]{rijndael})
 \end{figure}
 
 The S-box contains a substitution for every value an unsigned byte is
-able to contain. Fig. XXX shows the S-box filled with values (in
+able to contain. \ref{t:sbox} shows the S-box filled with values (in
 hexadecimal) the present implementation generates. To use it in this
 table format one has to split the byte to substitute into its digits.
 The most significant digit is used to look up the row, the least
@@ -191,11 +191,12 @@ with each other (basically a brute-force approach) to see if the product
 equals 1. In that case the value r from `list\_start' is appended to
 `list\_res' at the index of the current value of p. After that r is
 removed from list\_start, since every p has only one inverse in $GF(2^{8})$
-modulo m(x) (proven experimentally by multiplying all elements in $GF(2^{8})$
-with each other and noting the occurrences of products equal 1). In the
+modulo m(x). In the
 end the function returns `list\_res' converted to a byte array,
 containing numbers that are the inverses of the values of their indices
-(eg. element in listindex 37 is the inverse to the number 37).
+(eg. element at list index 37 is the inverse to the number 37).
+The result of the function was compared against \cite[Table A.5.]{rijndael} to verify
+correctness.
 
 \begin{lstlisting}
 def shift_left(byte, rot):
@@ -215,7 +216,7 @@ e.g. 0-255. The reduced result is placed into the variable `temp'. Now
 the bits of `byte' that got shifted to the left and `cut off' by the
 modulo operation have to be brought back to the right. For that we shift
 `byte' 8 - `rot' bits to the right. Now the two `halves' get combined by
-applying a bitwise OR to `temp' and the result of the rightshift. This
+applying a bitwise OR to `temp' and the result of the right shift. This
 result is saved in `byte'. Finally the function returns `byte'.
 
 \begin{lstlisting}
@@ -245,7 +246,7 @@ obtain the result of the transformation.
 function finishes by returning the S-box-byte-array.
 
 Since this is a static function generating always the same array, the
-resulting array was compared once with the table in \cite[Fig. 7](fips197)
+resulting array was compared once with the table in \cite[Fig. 7]{fips197}
 
 \hypertarget{functions---encryption}{%
 \section{Functions - encryption}\label{functions---encryption}}
@@ -267,12 +268,11 @@ knowledge/opinions, if not mentioned otherwise.
 \end{figure}
 
 In this transformation a round key is
-combined with the state, thus modifying it. The combination is
-accomplished using the bitwise XOR operation. The round key array is
+XORed with the state. The round key array is
 derived from the initial cipher key using the key schedule. Containing
 16 bytes, each round key is equally long to a block. Since there are N+1
 round keys generated (where N is the number of rounds), each round uses
-a different round key (5.1.4).
+a different round key (ch. 5.1.4).
 
 \hypertarget{implementation-2}{%
 \subsubsection{Implementation}\label{implementation-2}}
@@ -301,8 +301,8 @@ used in the XOR operation, meaning that first byte one of the block will
 be XORed with byte one of the round key and then the result will be
 stored in place of byte one and so forth for all sixteen bytes.
 
-Since the function is relativly short the `inline'-keyword is used to
-save the overhead of an additional function call in tradeoff with a
+Since the function is relatively short the `inline'-keyword is used to
+save the overhead of an additional function call in trade-off with a
 bigger binary.
 
 \hypertarget{shift-rows}{%
@@ -317,20 +317,20 @@ bigger binary.
 \caption{The ShiftRows-transformation "rotates" the rows of the state (left) by different offsets, resulting in the state on the right}
 \end{figure}
 
-(rijndael)(p.37) states, that this transformation of the state represents a byte transposition, using
+\cite[p. 37]{rijndael} states, that this transformation of the state represents a byte transposition, using
 cyclical shifts with different offsets. The first row of the 4x4-Matrix
 of 16 bytes that constitutes the so called state is not shifted at all,
 the second row by one step to the left, the third row uses two steps and
 the fourth row three.
 
-According to (rijndael) this transformation step is needed to ensure
-optimal diffusion of the state. The diffusion is supposed to protect
+According to \cite{rijndael} this transformation step is needed to ensure
+optimal diffusion of the state, thus protecting
 against differential and linear cryptanalysis. The authors further
 elaborate, that in order to archive optimal diffusion all
 offsets of the cyclical shifts have to be different.
 
 Since there are multiple possibilities for different offsets and not all
-of them provided equal protection studies of attacks against Rijndael
+of them provided equal protection, studies of attacks against Rijndael
 were analyzed. From the offsets that proved to be the most resistant the
 simplest offset was chosen.
 
@@ -374,10 +374,8 @@ shifts from the tempblock,
 \hypertarget{description-4}{%
 \subsubsection{Description}\label{description-4}}
 
-The MixColumns-transformation is called a bricklayer permutation by
-(rijndael). The authors
-mention multiple design criteria, they deemed important for this
-particular transformation:
+The MixColumns-transformation, a so-called bricklayer permutation, had to fulfill
+\cite[p.39]{rijndael} multiple design criteria deemed as important by the authors:
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
@@ -385,11 +383,11 @@ particular transformation:
 \item
   \emph{The bricklayer transformation is supposed to operate on columns
   containing 4 bytes.} This aspect is supposed to aid with the optimal
-  implementation of look-up tables on 32-bit architectures, thus
+  implementation of lookup tables on 32-bit architectures, thus
   ensuring a speedy computation of the transformation.
 \item
   \emph{The operation should be linear over GF(2)}, meaning the Galois
-  Field of the two elements 0 and 1. This property aides the authors in
+  field of the two elements 0 and 1. This property aides the authors in
   their so-called `Wide Trail Strategy' (p.126) which is supposed to
   protect against differential and linear cryptanalysis.
 \item
@@ -398,7 +396,7 @@ particular transformation:
   support the `Wide Tail Strategy'.
 \item
   \emph{The authors put emphasis on the performance of this step on 8-bit
-  CPUs.} They deemed this neccessary, as they feared that the MixColumns
+  CPUs.} They deemed this necessary, as they feared that the MixColumns
   transformation would be ``the only step that good performance on 8-bit
   processors is not trivial to obtain for.''(p.39)
 \end{enumerate}
@@ -408,6 +406,7 @@ particular transformation:
 \centering
 \includegraphics[scale = 0.2]{data/figures/mixcolumn.png} 
 \caption{The MixColumns-transformation, represented as matrix multiplication.}
+\label{fig:mixcolumn}
 \end{figure}
 
 The transformation itself partitions the
@@ -415,15 +414,15 @@ state-matrix into four columns. Each of those columns is transformed
 independently from the other three. A single column acts as a polynomial
 over $GF(2^{8})$, which is multiplied modulo $x^4 + 1$ with a fixed polynomial. In
 order to meet the aforementioned criteria regarding performance,
-diffusion and to fullfill the additional condition of creating an
+diffusion and to fulfill the additional condition of creating an
 invertible transformation (in regards to encryption) the authors were
-forced to impose conditions on the fixed polynomials (rijndael). For
+forced to impose conditions on the fixed polynomials \cite[p. 39]{rijndael}. For
 example, performance was archived by using only simple values for the
 coefficients of the fixed polynomial. The fixed polynomial c(x) Daemen
 and Rijmen settled on is $c(x) = 03 * x^3 + 01 * x^2 + 01 * x + 02$. They
 state, that since c(x) and the aforementioned modulo $x^4+1$ are coprime
 the calculation is invertible. The matrix-multiplication, which is seen
-in Fig XXXX, is a representation of the modular multiplication with a
+in \ref{fig:mixcolumn}, is a representation of the modular multiplication with a
 fixed polynomial.
 
 158 - 88 4.1.1. 
@@ -496,35 +495,34 @@ state}
 \end{figure}
 
 Being the only non linear transformation, SubBytes is labeled a
-bricklayer permutation by (rijndael) that applies byte substitution to
-each byte of the state. This substitution is facilitated throught the
-AES Sbox. AES uses
-only this one Sbox, although the authors mention, that Rijndael ``could
+bricklayer permutation by \cite[p. 34]{rijndael} that applies byte substitution to
+each byte of the state. This substitution is facilitated through the
+AES S-box. AES uses
+only this one S-box, although the authors mention, that Rijndael ``could
 as easily be defined with different S-boxes for every byte.'' (p.35).
-They descided against it, because one key criteria during the
-developement process for them was simplicity (ch.~5.2). Rijmen and
-Daemen argue, that simplicity is an important contributer towards a
+They decided against it, because one key criteria during the
+development process for them was simplicity (ch. 5.2). Rijmen and
+Daemen argue, that simplicity is an important contributor towards a
 correct implementation, that it helps to get more people to review it,
 since it is easier than reviewing more complex software and that it may
 aide the notion it is easier to attack, thus motivating more of such
 attacks. They further elaborate that the latter two points contribute to
-the cryptographic credebility of the algorithm, especially if out of
-many tries no successful attack can be mounted. Furthermore simpicity as
+the cryptographic credibility of the algorithm, especially if out of
+many tries no successful attack can be mounted. Furthermore simplicity as
 a design criterion was used to balance the security with the factors
 efficiency and versatility. This simplicity was partially archived by
 designing the algorithm following the principle of what they call
 ``symmetry''. Their tenet of symmetry within the round transformation
-(ch.~5.3.2) " implies that it treats all bits of the state in a similar
-way." (p.66). They explain that this imposes some restrictions, amongst
+(ch. 5.3.2) " implies that it treats all bits of the state in a similar
+way." (p. 66). They explain that this imposes some restrictions, amongst
 others the requirement to use only one S-box for the whole state in their
-non-linear step. Symmetry across all rounds (ch.~5.31.) dictates that
+non-linear step. Symmetry across all rounds (ch. 5.31.) dictates that
 all rounds have to be identical. This keeps the specification and
 implementation short, since only one round has to be described/expressed
-in code. This tersness in definition is also of benefit for hardware
+in code. This terseness in definition is also of benefit for hardware
 implementations, since there has to be only one circuit designed to
 implement all rounds, instead of one circuit per round. The other consequence is,
-that only one S,box can be used for all rounds
-(contrary to DES (XXX)).
+that only one S-box can be used for all rounds.
 
 \hypertarget{implementation-4}{%
 \subsubsection{Implementation}\label{implementation-4}}
@@ -543,9 +541,9 @@ inline void SubBytes(uint8_t * restrict bytes, const uint8_t * restrict sbox)
 \end{lstlisting}
 
 The SubBytes-implementation is pretty straightforward. The function
-recieves two restricted pointers, one called `bytes', pointing to the
+receives two restricted pointers, one called `bytes', pointing to the
 first byte of the current state, and one pointer to a constant array,
-which contains the sbox to be used. The function now iterates through
+which contains the S-box to be used. The function now iterates through
 `bytes', assigning every element from that array a new value by
 accessing the element of the `sbox'-array, which corresponds to the
 value in the current `bytes' element.
@@ -562,7 +560,7 @@ transformation employed in the encryption algorithm. Those transformations are (
 If N is the number of rounds specified by the encryption standard then
 the algorithm will execute N-1 * r, while the Nth round omits the
 MixColumns step, but is otherwise identical. Before the first round one
-additional AddRoundKey is performed on the state.
+additional AddRoundKey is performed on the state. \cite[ch. 5.1]{fips197}
 
 \hypertarget{implementation-5}{%
 \subsubsection{Implementation}\label{implementation-5}}
@@ -594,11 +592,11 @@ void encryptBlock(uint8_t * restrict block, uint8_t * restrict tempblock,
 The present implementation of the Cipher takes multiple arguments. Like
 in all other functions a restricted pointer to the first element in the
 state array is provided. The second argument is a restricted pointer to
-another bytearray of length sixteen, that can be used to store temporary
+another byte array of length sixteen, that can be used to store temporary
 values. The third argument is a restricted pointer to a constant
-bytearray, which contains the roundkeys. The next argument is a constant
+byte array, which contains the roundkeys. The next argument is a constant
 byte denoting the number of rounds for the algorithm. It is passed to
-provide future extensebility in case different key lengths are used and
+provide future extensibility in case different key lengths are used and
 thus different round numbers are needed, since this number depends on
 the key length. The fifth argument is a restricted pointer to a constant
 array containing the S-box values. The last argument is a restricted
@@ -638,16 +636,16 @@ implementation contains the possibility to encrypt multiple consecutive
 blocks. With that it enables encryption of for example messages larger
 than sixteen bytes or even files. 
 
-(paar) (ch.~5.1.1) describes
+\cite[ch. 5.1.1]{paar} describes
 encryption schemes like found in the present implementation the simplest
-block cipher modes of operation, called `Electronic Codebook Mode'  (ECB).
+block cipher modes of operation, called `Electronic Codebook Mode' (ECB).
 Every cipher block is generated by simply encrypting the plaintext with
 the round keys and appending the encrypted blocks. The first advantage
 of this method is that no synchronization between the en- and decrypting
 party is necessary, since each block can be processed independently of
 each other. Bit errors do not propagate through the whole ciphertext but
-are confined to the block they occured in. The implementation has also
-the potential to become very fast, thanks to the posibility of
+are confined to the block they occurred in. The implementation has also
+the potential to become very fast, thanks to the possibility of
 processing different blocks on different cores, thus enabling
 parallelisation of en- and decryption. 
 
@@ -657,55 +655,54 @@ encrypted with the same key, the same plaintexts will generate the same
 outputs. If the ciphertext is examined at a block level this is not of
 greater significance, since AES guarantees that each encrypted block is
 indistinguishable from randomly generated bytes. But if the plaintext as
-a whole gets analyzed patterns may emerge. Those patterns leak
+a whole gets analyzed, patterns may emerge. Those patterns leak
 information about what parts of the plaintext contain the same 128-bit
-sequence, because those parts also share a (different) bit seqence in
+sequence, because those parts also share a bit sequence in
 the corresponding ciphertext. Furthermore, a third party watching an
 exchange encrypted in ECB can tell, when the same
 message is send twice, or if the header of different messages is the
-same, for examle if each message was using the same salutation. (paar)
+same, for example if each message was using the same salutation. \cite{paar}
 demonstrates two attack avenues, that are a direct result of ECB. The
 first one exploits the ECB-encrypted communication channel between two
 banks. Here the attacker A just needs to open one account on both banks
 and review the communication channel for patterns from test transactions
 he is sending between the two accounts. If the banks do not rotate keys
 A will soon know which encrypted blocks belong to his account number and
-which block denote the recieving account. After learning that they can
+which block denote the recieving account in such a test message. After learning that they can
 exchange all blocks they know as reserved for the number of the
-recieving account with the blocks for their own account number and
+receiving account with the blocks for their own account number and
 divert all transactions between the two banks to A's account. The other
 attack avenue is the emergence of patterns visible to the naked eye. For
-this example we created an image in the bitmap format(Fig. XXX). This
+this example we created an image in the bitmap format(\ref{fig:aespng}). This
 image was encrypted with a modified variant of the present
 implementations file encryption mode \footnote{Encrypted with the following settings for key generation: key = "passwort", iterations = 20, salt = "aeskurs"}. The modification (inserted just
 before the while-loop) ensures that the header of the .bmp-file is
 preserved and not corrupted by the encryption. It reads the first 55
 bytes (since the header is 54 bytes long
 (https://www.daubnet.com/en/file-format-bmp)) and writes them to the
-encrypted file without encrypting them. After that, the rest of Fig. XXX
-is read, encrypted and appended. The result Fig. XXX, albeit encrypted
-with an algorithm concidered secure, shows a clear and readable pattern.
+encrypted file without encrypting them. After that, the rest of \ref{fig:aespng}
+is read, encrypted and appended. The result \ref{fig:aesecbpng}, albeit encrypted
+with an algorithm considered secure, shows a clear and readable pattern.
 For comparison we used the `pyaes'-library to encrypt the image in the
 same way with the same key\footnote{Encrypted with the following settings for key generation: key = "passwort", iterations = 20, salt = "aeskurs"} and preservation method of the header, but
-applied the Counter Mode of Operation. The result, displayed in Fig.
-XXX, demonstrates, that any visible pattern resulting from
+applied the Counter Mode of Operation. The result, displayed in \ref{figaesctrpng}, demonstrates, that any visible pattern resulting from
 ECB-encryption disappears with the right Block Cipher Mode of Operation.
-(paar)(ch.5.1.5) describes how the Counter Mode is an example of block
+\cite[ch. 5.1.5]{paar} describes how the Counter Mode is an example of block
 cipher modes of operation that avoids such patterns. First an
-initialization vector IV gets choosen. This ensures that every
+initialization vector IV gets chosen. This ensures that every
 encryption pass is as unique as the IV. Due to this fact it is
-recommended to never reuse the IV. This IV is then concatenated counter.
+recommended to never reuse the IV. This IV is then concatenated with a counter.
 This combination with the length of 128 bits is then encrypted with AES
 and the password. The result is XORed with 128 bits of plaintext to
-create the ciphertext. The counter is increased for each concecutive
+create the ciphertext. The counter is increased for each consecutive
 block that needs to be encrypted. This way each block of plaintext is
-XORed with an uniqe combiation of IV, nonce and key. This makes it
+XORed with an unique combination of IV, nonce and key. This makes it
 highly unlikely for two identical blocks of plaintext to be encrypted
 into two identical blocks of ciphertext, thus avoiding leakage of
 information.
 
 The present implementation is required to use ECB, since it has to be
-able to reproduce the testvectors from (fips197). Due to time constraints
+able to reproduce the testvectors from \cite[Ap. B, Ap. C.1]{fips197}. Due to time constraints
 it was decided not to implement two different block cipher modes of
 operation.
 
@@ -744,8 +741,7 @@ This ensures the last byte of the decrypted string always contains the
 information on how many bytes are padded and need to be removed, since
 without this procedure a value for the last byte of one would be
 ambiguous: does the last byte need to be removed since it is padding of
-one or is it part of the message? This follows the concept of (PKCS \#7
-RFC2315).
+one or is it part of the message? This follows the concept of \cite[ch. 10.3 Note 2]{RFC2315}.
 
 \begin{quote}
 The array containing the plaintext is 357 bytes long. Since 357 modulo 16 = 5,
@@ -808,9 +804,9 @@ respective dimensions of the array.
 After populating the arrays the pointer has moved far enough through
 `initvals' that it now points to the first byte of the first round key.
 To make this more clear and to enable possible compiler optimizations we
-create a new pointer named `keys' poining to a constant array, which is
+create a new pointer named `keys' pointing to a constant array, which is
 in this case `initvals'. All future accesses to this array will be
-throught `keys' or descendants of this pointer. The last step before
+through `keys' or descendants of this pointer. The last step before
 starting the encryption routine is the creation of an array of sixteen
 unsigned bytes called `tempblock'. The next for loop starts the
 encryption. Every iteration processes one block and increments the loop
@@ -818,7 +814,7 @@ index variable by sixteen, so that it can point to the next block to be
 processed. In every iteration of this loop the function `enrcryptBlock'
 is called with the address of the current block to encrypt, a pointer to
 the temporary block, a pointer to the array containing the round keys, a
-variable containing the number of rounds, a pointer to the sbox and a
+variable containing the number of rounds, a pointer to the S-box and a
 pointer to the GFMLT.
 
 Since parallelisation of the de- and encryption routine seems to be a

@@ -6,6 +6,8 @@ The test files are located in the \lstinline|tests| directory below the wrapper 
 
 The \lstinline|__init__.py| file is empty and simply needed because of the python module types pytest can handle. During test execution pytest will look through all subdirectories and find all the import locations for the modules required for the tests.
 
+In the testing of the encryption-functions the additional library 'pyaes' is used as a reference for testing the encryption on random data, to further increase confidence in the correctness  of the implementation. The decryption does not contain these random-value-tests, since proving correct encryption of random values, proving that the decryption function is able to reverse the encryption proves correctness of the decryption, thus rendering random-value-testing of the decryption superfluous.
+
 \subsection{Structure of a Test Function}
 Test functions are marked by starting with the keyword \lstinline|test| (e.g \lstinline|test_inverseShiftRows|). The pytest decorator \lstinline|mark.parametrize| can be used to define tuples of test cases. Pytest will run all cases given in the decorator against the function during execution. The function itself contains all the setup code needed to call execute the functionality to be tested. At the end of a test function is an \lstinline|assert| statement. Pytest checks for this assertion to judge the outcome of the test. 
 
@@ -16,3 +18,4 @@ Before execution pytest must be installed on the system. The installation proces
 To execute the test suite the \lstinline|pytest| script needs to be run from the program root (the directory \lstinline|wrapper.py| is located in). It can simply be typed into a terminal on that path. It will collect all the functions starting with the keyword \lstinline|test| and run them.
 
 Each dot after the test file represents successful test case, \enquote{s} denotes a skipped test case, and \enquote{f} a failed test case.
+

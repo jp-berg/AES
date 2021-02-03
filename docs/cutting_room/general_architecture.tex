@@ -56,7 +56,7 @@ With our design we are able to make use of Pythons advantages:
 \item
   \emph{Readability}: One of Pythons qualities is its ``focus on
   readability, coherence, and software quality in general''
-  (learningpython 3). C on the other hand is generally considered to be
+  (\cite[p. 3]{learningpython}). C on the other hand is generally considered to be
   more difficult to understand, especially because of features and
   concepts not found in other languages (\cite[p. 5]{cmodern}). This implementation
   therefore tries to cover as much of the functionality with the easier
@@ -73,8 +73,8 @@ With our design we are able to make use of Pythons advantages:
   computers it should be fast enough to read/write from/to the command
   line or disk, without becoming a bottleneck.
 \item
-  \emph{Robustness}: The programming language itself is concidered
-  robust and stable (\cite[p. 9]{learningpython}) input in Python is relativly
+  \emph{Robustness}: The programming language itself is considered
+  robust and stable (\cite[p. 9]{learningpython}) input in Python is relatively
   simple and straightforward. There is no undefined behaviour, input
   length or encoding issues the programmer has to worry about (compare
   to \cite{scanf}).
@@ -119,7 +119,7 @@ garbage collection (\cite[p. 55]{cpointers}). One of the more notable projects
 written in C is the Linux kernel, the basis for the widely used Linux
 operating system (\cite{kernel}).
 
-C is concidered one of the fastest and most efficient languages
+C is considered one of the fastest and most efficient languages
 (\cite{benchmarkgame}), but is
 more error-prone than others (\cite[p. 5]{modernc}). One has to be careful to avoid
 so called ``undefined behaviour'', buffer overflows (since C-arrays are
@@ -146,16 +146,18 @@ while avoiding the shortcomings of the language:
 \begin{itemize}
 
 \item
-  \emph{Speed}: Since C is considered a fast language (cmodern, 4) it is
+  \emph{Speed}: Since C is considered a fast language (\cite[p. 4]{cmodern}) it is
   not unusual to rewrite calculation intensive parts of programs in C,
   even if the project is written in another language
   (\cite[min. 24:33]{speedup}). Python itself
   uses this architectural concept, interfacing with compiled C code to
   make use of Cs speed advantage for certain tasks, like \cite[p. 7]{learningpython} explains. The author even recommends to create compiled extensions
-  for ``domains that do require op- timal execution speeds'' and linking
+  for ``domains that do require optimal execution speeds'' and linking
   those back into the Python code. The calculation intensive part of our
   project is clearly the AES encryption itself, especially with growing
-  file size.
+  file size. Additionally the architecture of our program allows the C-core to take advantage of '-march='native',
+  a compiler-flag that enables tailoring the binary to the features of the underlying CPU,
+  resulting in even more performance. And this happens automatically without any input required from the user.
 \item
   \emph{no memory management necessary}: Due to the fact that the C-core
   operates on byte-arrays allocated by Python, nothing needs to be
@@ -229,10 +231,10 @@ them, it tries to compile them by communicating over the Python
 subprocess-library with Clang or GCC. A successful compilation
 guarantees that the C-core is able to run on the platform it was
 compiled to. Furthermore the compiler may be able to leverage platform
-specific optimizations if they are available. Since compilation time is
+specific optimizations if they are available \footnote{This is mainly accomplished through the \lstinline{-march='native'} flag}. Since compilation time is
 short and done only once it is a reasonable way to ensure portability
 and performance. Finally it made testing changes to the C-code easier,
-since one only had to delete the old library files and run the code
+since one only has to delete the old library files and run the program
 again to trigger a recompile.
 
 \hypertarget{en--and-decryption}{%
@@ -241,7 +243,7 @@ again to trigger a recompile.
 The C-code, once it is compiled to a .so-file, can be dynamically linked
 with the Python standard-library ctypes. This allows calling C functions
 directly from Python and passing pointers to Python byte arrays. Those
-byte arrays can be modified directly by the called C-code. The wrapper
+byte arrays can be modified by the called C-code. The wrapper
 calls the en- and decrypt functions of the C implementations via the two
 python functions ``encrypt'' and ``decrypt'', that both take the byte
 array that is supposed to be processed and the expanded keys. The two
@@ -357,7 +359,7 @@ operation}\label{block-cipher-mode-of-operation}}
 
 Due to time constraints, it was not possible to implement a different
 block cipher mode of operation, but it is something the current
-implementation would greatly benefit from. Chapter XXX goes more
+implementation would greatly benefit from. \ref{encryption-of-multiple-consecutive-blocks} goes more
 in-depth regarding this topic.
 
 \hypertarget{file-header-argon2-hashing-algorithm-salt-and-hmac}{%
@@ -367,7 +369,7 @@ HMAC}\label{file-header-argon2-hashing-algorithm-salt-and-hmac}}
 At the moment the passwords are hashed with PBKDF2. This algorithm can
 unfortunately easily be cracked with the right hardware, like \cite[p. 697]{appcrypt} explains and suggests (on p. 701) using the password hashing
 competition winner argon2, which is designed to withstand brute force
-attemts by being able to use more memory and parallelism, thus making it
+attempts by being able to use more memory and parallelism, thus making it
 more expensive for an attacker to guess the password. The
 argon2-parameters would either have to be hardcoded or attached to the
 encrypted text in a header for example.
@@ -398,13 +400,3 @@ were received, those would be also fed into the HMAC if a future
 implementation makes use of said parameters. The HMAC algorithm would
 probably a SHA3-variant, as specified in \cite{fips202}, providing the HMAC
 with adequate cryptographic strength.
-
-\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
-
-\begin{itemize}
-
-\item
-  GFMLT Galois Field multiplication lookup table
-\item
-  I/O: input/output
-\end{itemize}

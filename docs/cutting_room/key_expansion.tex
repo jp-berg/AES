@@ -1,7 +1,7 @@
 %!TEX root = thesis.tex
 \section{Key Expansion}
 \label{ch:key_expansion}
-The key expansion is defined in the \lstinline{key_expansion.py} file. It provides all the functions necessary to compute all round-keys. It was implemented jointly between the authors. It is written in python as it only needs to be executed once at the start of the en- or decryption. Therefore time complexity was no concern here.
+The key expansion \ref{fig:keyexpansion}is defined in the \lstinline{key_expansion.py} file. It provides all the functions necessary to compute all round-keys. It was implemented jointly between the authors. It is written in python as it only needs to be executed once at the start of the en- or decryption. Therefore time complexity was no concern here.
 
 \subsection{Expand Key}
 \label{ch:expand_key}
@@ -27,7 +27,7 @@ Function that uses the XOR operator or two bytes. This function is necessary bec
 \textbf{Args:}
 \begin{itemize}
   \item \lstinline{ba1} first byte of the XOR operation
-  \item \lstinline{ba2} seconds byte of the XOR operation
+  \item \lstinline{ba2} second byte of the XOR operation
 \end{itemize}
 
 \textbf{Returns:}
