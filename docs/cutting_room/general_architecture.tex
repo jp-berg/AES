@@ -369,7 +369,7 @@ HMAC}\label{file-header-argon2-hashing-algorithm-salt-and-hmac}}
 At the moment the passwords are hashed with PBKDF2. This algorithm can
 unfortunately easily be cracked with the right hardware, like \cite[p. 697]{appcrypt} explains and suggests (on p. 701) using the password hashing
 competition winner argon2, which is designed to withstand brute force
-attempts by being able to use more memory and parallelism, thus making it
+attemptsk by being able to use more memory and parallelism, thus making it
 more expensive for an attacker to guess the password. The
 argon2-parameters would either have to be hardcoded or attached to the
 encrypted text in a header for example.
