@@ -79,7 +79,7 @@ def setup():
 
 @click.group()
 def cli():
-    """Function to capture all cli components into a group"""
+    """AES-128 encryption and decryption for text and files"""
     pass
 
 
