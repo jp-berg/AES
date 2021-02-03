@@ -1,6 +1,5 @@
-from time import perf_counter
 from os import urandom, getcwd
-from os.path import isfile, join, splitext, expanduser
+from os.path import join
 import pytest
 import ctypes
 import pyaes

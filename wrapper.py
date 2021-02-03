@@ -1,9 +1,8 @@
 import ctypes
-from os.path import isfile, join, splitext, expanduser, exists
-from os import cpu_count, getcwd, urandom, mkdir
+from os.path import exists, isfile, join
+from os import cpu_count, getcwd, mkdir
 from subprocess import check_output
 import hashlib
-import binascii
 import click
 from src.key_expansion import expand_key
 from src.AES_generator import gen_mult_lookup, gen_sbox, gen_inverse_sbox
@@ -80,7 +79,6 @@ def setup():
 @click.group()
 def cli():
     """AES-128 encryption and decryption for text and files"""
-    pass
 
 
 def pad_input(ba):
