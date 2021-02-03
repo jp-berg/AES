@@ -1,12 +1,14 @@
 %!TEX root = thesis.tex
 \hypertarget{overview}{%
-\section{Overview}\label{overview}}
+\chapter{Overview}\label{overview}}
 
-In general we decided on the C programming language for implementing
-AES. The source code for our algorithm is compiled to a ``Shared
+This is the documentation to an implementation of the Advanced Encryption Standard (AES). It outlines the general architecture, as well as how specific functions are implemented.
+
+The C programming language is used for implementing
+AES. The source code for the algorithm is compiled to a ``Shared
 Object'', which is then loaded as a ``dynamically loaded library'' into
 a Python wrapper, also referred to as wrapper, which facilitates the
-interaction with the algorithm.
+interaction with the algorithm. More information on the wrapper can be found in section~\ref{the-wrapper}.
 
 The use of two programming languages allows us leverage the advantages
 of both, while alleviating some shortcomings that they possess. The
@@ -15,7 +17,7 @@ encryption and decryption of files and text input. The c source code
 describing the implementation of the AES-algorithm, also referred to as
 C-core, has test coverage for every function to ensure correctness.
 
-(GRAPHIC?) On calling the wrapper via command line, the program checks,
+On calling the wrapper via command line, the program checks,
 whether there are already .so-files available to link. If the wrapper
 cannot find them it compiles them from the .c-files. After that it links
 the libraries and executes the command. It transforms the passed user

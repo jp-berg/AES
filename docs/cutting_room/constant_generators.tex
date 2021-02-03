@@ -1,6 +1,6 @@
 %!TEX root = thesis.tex
 \hypertarget{functions---constant-generators}{%
-\section{Functions - constant
+\chapter{Functions - constant
 generators}\label{functions---constant-generators}}
 
 The following functions are from `AES\_encrypt\_generator.py' No
@@ -8,11 +8,11 @@ function in the following chapter does error checking, since they are
 only intended for use inside a static, unchanging setting.
 
 \hypertarget{galois-field-multiplication-lookup-table-generator}{%
-\subsection{Galois field multiplication lookup table
+\section{Galois field multiplication lookup table
 generator}\label{galois-field-multiplication-lookup-table-generator}}
 
 \hypertarget{description}{%
-\subsubsection{Description}\label{description}}
+\subsection{Description}\label{description}}
 
 As \cite{rijndael} recommends in chapter 4.1.1 Galois field multiplications
 used in MixColumns were implemented as lookup tables in the Galois field multiplication lookup table (GFMLT). Since the
@@ -71,7 +71,7 @@ gal\_mult\_lookup[2][86] etc.
 \end{quote}
 
 \hypertarget{implementation}{%
-\subsubsection{Implementation}\label{implementation}}
+\subsection{Implementation}\label{implementation}}
 
 \begin{lstlisting}
 def mult_gal(a, b):
@@ -123,10 +123,10 @@ The results (\ref{t:GFMLT}) were spot-checked against
 \cite{galcalc} with P(x) = 100011011.
 
 \hypertarget{s-box-generator}{%
-\subsection{S-box generator}\label{s-box-generator}}
+\section{S-box generator}\label{s-box-generator}}
 
 \hypertarget{description-1}{%
-\subsubsection{Description}\label{description-1}}
+\subsection{Description}\label{description-1}}
 
 The S-box generator is used to generate the S-box needed in the
 SubBytes-function.
@@ -159,7 +159,7 @@ intersect each other.
 \end{quote}
 
 \hypertarget{implementation-1}{%
-\subsubsection{Implementation}\label{implementation-1}}
+\subsection{Implementation}\label{implementation-1}}
 
 \begin{lstlisting}
 def mult_inv_gal():
@@ -246,4 +246,4 @@ obtain the result of the transformation.
 function finishes by returning the S-box-byte-array.
 
 Since this is a static function generating always the same array, the
-resulting array was compared once with the table in \cite[Fig. 7]{fips197}
+resulting array was compared once with the table in \cite[Fig. 7]{aes2001}

@@ -1,7 +1,10 @@
 %!TEX root = thesis.tex
-\section{Commandline Interface}
+\chapter{Commandline Interface}
+\label{commandline_interface}
 The only way to interact with the program is via the commandline. In order to provide a usable interface for the user, the python module "click" is used. The module provides ways to pass command line arguments to function without a lot of code. This is achieved via the python concept knows as decorators.
 
-Click or \enquote{Command Line Interface Creation Kit} is a python package for creating command line interfaces \cite{click}. The simplicity of the packages comes from how the cli is constructed. By adding a \lstinline{@click.command()} decorator to a function, the function becomes directly callable from the command line. Further decorators add options, defaults, callbacks, and arguments. To combine multiple commands for a program a concept known as \enquote{groups} is used.
+Click or \enquote{Command Line Interface Creation Kit} is a python package for creating command line interfaces \cite{click}. The simplicity of the packages comes from how the cli is constructed. By adding a \lstinline{@click.command()} decorator to a function, the function becomes directly callable from the commandline. Further decorators add options, defaults, callbacks, and arguments. To combine multiple commands for a program a concept known as \enquote{groups} is used.
 
 Click automatically generates help messages for the user. The basis for these messages are the docstrings found in the code, as well as the arguments of the functions. They either appear, when the program is run without a command (listing available commands) or when a command is run without arguments (providing documentation for the function).
+
+In order to use the program without calling the python interpreter explicitly every time, the \lstinline|aes| script is used. It contains the shebang \lstinline|#!/usr/bin/env python3| and passes all arguments given to it to the wrapper. Because of the shebang it can be run by itself in a bash terminal (or similar like fish, zsh). If the program directory is added to the \lstinline|PATH| environment variable of the terminal session, the script can be called from anywhere by its name alone. This way of implementing runnable Python scripts is common practice. The library used for testing (pytest) uses the same concept for its executable script.

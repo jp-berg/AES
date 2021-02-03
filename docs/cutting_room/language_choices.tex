@@ -15,7 +15,7 @@ high-level and general purpose. Combining its high usage with its thirty
 years of age it can be considered a mature language and as such boasts a
 fair share of success stories (\cite{pythonsuccess}, \cite[p. 9 - 10]{learningpython}. With
 over 280000 Packages available via the Python package manager pip it
-offers a healthy and extensive ecosystem (\cite{pythoncommunity}).
+offers a healthy and extensive ecosystem (\cite{pythonpackages}).
 
 With our design we are able to make use of Pythons advantages:
 
@@ -42,8 +42,8 @@ With our design we are able to make use of Pythons advantages:
   line or disk, without becoming a bottleneck.
 \item
   \emph{Robustness}: The programming language itself is considered
-  robust and stable (\cite[p. 9]{learningpython}) input in Python is relatively
-  simple and straightforward. There is no undefined behaviour, input
+  robust and stable  input in Python is relatively
+  simple and straightforward (\cite[p. 9]{learningpython}). There is no undefined behavior, input
   length or encoding issues the programmer has to worry about (compare
   to \cite{scanf}).
 \item
@@ -55,9 +55,9 @@ With our design we are able to make use of Pythons advantages:
   functionality of our program in the future. Here Python helps the
   present implementation to cover up for the lack of a package manager
   and a less comprehensive standard library in C(compare
-  \cite{cbib} to \cite{pybib}).
+  \cite{clib} to \cite{pybib}).
 \item
-  \emph{Productivity}: Python is an dynamically typed (\cite[p. 9]{learningpython}), interpreted language, generating a tight development loop
+  \emph{Productivity}: Python is a dynamically typed (\cite[p. 9]{learningpython}), interpreted language, generating a tight development loop
   uninterrupted by compile times, with almost no delay between writing
   and executing the code. This helps to improve and iterate over the
   code rapidly, motivating a more exploratory and incremental approach
@@ -123,7 +123,7 @@ while avoiding the shortcomings of the language:
   for ``domains that do require optimal execution speeds'' and linking
   those back into the Python code. The calculation intensive part of our
   project is clearly the AES encryption itself, especially with growing
-  file size. Additionally the architecture of our program allows the C-core to take advantage of '-march='native',
+  file size. Additionally the architecture of our program allows the C-core to take advantage of '-march=native',
   a compiler-flag that enables tailoring the binary to the features of the underlying CPU,
   resulting in even more performance. And this happens automatically without any input required from the user.
 \item
@@ -141,7 +141,7 @@ while avoiding the shortcomings of the language:
   crash(\cite[p. 49]{cpointers}).
 \item
   \emph{straightforward implementation}: The algorithm described in
-  \cite{fips197} translates well to C code. No special imports are needed, no
+  \cite{aes2001} translates well to C code. No special imports are needed, no
   hard-to-understand operations are required to be executed and the
   depicetd pseudocode functions map reasonably cleanly to C functions.
   The AES-algorithm itself makes extensive use of
@@ -160,7 +160,7 @@ while avoiding the shortcomings of the language:
   things and helps to get quick feedback even for small changes, either
   through the static analyzer of the compiler itself or through the
   included testing libraries. The small and thus fast-compiling C-core
-  is only possible by outsorcing all less calculation intensive tasks to
+  is only possible by outsourcing all less calculation intensive tasks to
   the wrapper.
 \item
   \emph{portability}: C compiles to numerous platforms and operating

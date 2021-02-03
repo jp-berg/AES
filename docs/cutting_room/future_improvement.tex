@@ -1,13 +1,13 @@
 %!TEX root = thesis.tex
 \hypertarget{possible-areas-of-future-improvements}{%
-\section{Possible areas of future
+\chapter{Possible areas of future
 improvements}\label{possible-areas-of-future-improvements}}
 
 This chapter is a collection of ideas, which could bring potential
 improvements to the project in the future.
 
 \hypertarget{aes-192-and-aes-256}{%
-\subsection{AES-192 and AES-256}\label{aes-192-and-aes-256}}
+\section{AES-192 and AES-256}\label{aes-192-and-aes-256}}
 
 Currently the implementation only supports AES with key sizes of 128
 bits, but it would be possible to also support other lengths of the
@@ -23,7 +23,7 @@ additional key sizes. Even modifying the key expansion to accommodate
 for two more sizes should be easily doable.
 
 \hypertarget{parallelism}{%
-\subsection{Parallelism}\label{parallelism}}
+\section{Parallelism}\label{parallelism}}
 
 Since AES encrypts blocks independently from each other the algorithm
 can be categorized as an so called embarrassingly parallel problem
@@ -44,7 +44,7 @@ for'-directive may be an easy way to execute the program on multiple
 cores (compare (\cite[ch. 5.5]{parallelprog}).
 
 \hypertarget{t-tables}{%
-\subsection{T-tables}\label{t-tables}}
+\section{T-tables}\label{t-tables}}
 
 The present implementation already makes use of lookup tables. \cite[p. 59]{rijndael} proposes a method that makes even more extensive use of lookup
 tables, which needs only 4 array accesses and 4 bitwise XOR operations
@@ -53,7 +53,7 @@ lookup tables. This is a negligible amount of memory compared to the
 gigabytes available on modern x86-systems.
 
 \hypertarget{no-constant-value-calculations}{%
-\subsection{No constant value
+\section{No constant value
 calculations}\label{no-constant-value-calculations}}
 
 To fulfill the task of this seminar it was explicitly required to (re-)
@@ -67,7 +67,7 @@ This is considered to be a negligible size increase, but saves on
 recalculating the values on program startup.
 
 \hypertarget{block-cipher-mode-of-operation}{%
-\subsection{Block cipher mode of
+\section{Block cipher mode of
 operation}\label{block-cipher-mode-of-operation}}
 
 Due to time constraints, it was not possible to implement a different
@@ -76,13 +76,13 @@ implementation would greatly benefit from. \ref{encryption-of-multiple-consecuti
 in-depth regarding this topic.
 
 \hypertarget{file-header-argon2-hashing-algorithm-salt-and-hmac}{%
-\subsection{File-header: ARGON2-Hashing algorithm, salt and
+\section{File-header: ARGON2-Hashing algorithm, salt and
 HMAC}\label{file-header-argon2-hashing-algorithm-salt-and-hmac}}
 
 At the moment the passwords are hashed with PBKDF2. This algorithm can
 unfortunately easily be cracked with the right hardware, like \cite[p. 697]{appcrypt} explains and suggests (on p. 701) using the password hashing
 competition winner argon2, which is designed to withstand brute force
-attemptsk by being able to use more memory and parallelism, thus making it
+attempts by being able to use more memory and parallelism, thus making it
 more expensive for an attacker to guess the password. The
 argon2-parameters would either have to be hardcoded or attached to the
 encrypted text in a header for example.

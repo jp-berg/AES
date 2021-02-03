@@ -1,9 +1,9 @@
 %!TEX root = thesis.tex
-\section{Quickstart Guide}
+\chapter{Quickstart Guide}
 
 This program implements several modes of the AES-128 algorithm to encrypt and decrypt data. This section details the requirements and installation process, as well as the execution of those modes.
 
-\subsection{Installation}
+\section{Installation}
 
 The program is written in C and Python3. It requires a current python interpreter as well as a compiler for the parts written in C. The requirements are:
 \begin{itemize}
@@ -19,7 +19,7 @@ If the above requirements are met, copy the program to the desired location. Opt
 
 When the python dependencies are installed simply run the \lstinline{aes} script. On the first execution it will try to compile the .C files into shared-object libraries. The program is now fully setup and ready to use.
 
-\subsection{Usage Guide}
+\section{Usage Guide}
 The program has four main commands and corresponding modes of operation:
 \begin{itemize}
   \item text encrypt -  \lstinline{te}
@@ -29,7 +29,7 @@ The program has four main commands and corresponding modes of operation:
 \end{itemize}
 To get help on the program itself or each command specifically run \lstinline{./aes [COMMAND] --help}.
 
-\subsubsection{Text Encrypt}
+\subsection{Text Encrypt}
 The command \lstinline{te} makes the program encrypt a text given on the command line. The command is structured as follows:
 \begin{lstlisting}
   aes te [OPTIONS] PASSWORD CIPHERTEXT
@@ -59,7 +59,7 @@ Encryption of a sample block from the FIPS 197 AES standard document \cite{aes20
 69c4e0d86a7b0430d8cdb78070b4c55a
 \end{lstlisting}
 
-\subsubsection{Text Decrypt}
+\subsection{Text Decrypt}
 The command \lstinline{td} makes the program decrypt a ciphertext given on the command line. The command is structured as follows:
 \begin{lstlisting}
   aes td [OPTIONS] PASSWORD CIPHERTEXT
@@ -84,7 +84,7 @@ Decryption of the sample block from FIPS 197 \cite{aes2001} has the following in
 \end{lstlisting}
 
 
-\subsubsection{File Encrypt}
+\subsection{File Encrypt}
 The command \lstinline{fe} makes the program encrypt a given file with AES-128. The command is structured as follows:
 \begin{lstlisting}
 aes fe [OPTIONS] PASSWORD FILEPATH_IN [CHUNKSIZE]
@@ -101,7 +101,7 @@ Encryption of the local file \lstinline|foo| with password \lstinline|correcthor
 The output is the file \lstinline|foo.enc|.
 
 
-\subsubsection{File Decrypt}
+\subsection{File Decrypt}
 The command \lstinline{fd} makes the program decrypt a given file with AES-128. The command is structured as follows:
 \begin{lstlisting}
 aes fd [OPTIONS] PASSWORD FILEPATH_IN [CHUNKSIZE]

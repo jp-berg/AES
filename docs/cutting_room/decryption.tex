@@ -1,10 +1,10 @@
 %!TEX root = thesis.tex
-\section{Functions - Decryption}
+\chapter{Functions - Decryption}
 \label{ch:decryption}
 
 AES is a symmetric encryption algorithm. Therefore the decryption is the inverse of the encryption. As AES encryption works on 16 byte blocks, the decryption does the same. There are also the same number of rounds.
 
-\subsection{Decryption of Multiple Blocks}
+\section{Decryption of Multiple Blocks}
 \label{ch:dec_multipleblocks}
 The \lstinline|decryptBlocks| function is used when an input of more than 16 bytes (one block) has to be decrypted. It assumes a padded input, meaning the input array has to be of a length divisible by 16. Padding is handled in the wrapper and can therefore be taken as a given.
 
@@ -20,10 +20,10 @@ The \lstinline|decryptBlocks| function is used when an input of more than 16 byt
   \item The function does not return anything as the work is done on the data that the \lstinline{*bytes} pointer references. It can simply be read out of memory afterwards.
 \end{itemize}
 
-\subsubsection{Order of Operations}
+\subsection{Order of Operations}
 The function simply loops over the data in 16 byte steps and calls the \lstinline{decryptBlock} function on each of the blocks. This mode of operation of encrypting and decrypting multiple blocks each by itself is (as previously mentioned) called \enquote{Electronic Code Book Mode} (ECB).
 
-\subsection{Decrypt Block}
+\section{Decrypt Block}
 \label{ch:dec_block}
 The \lstinline{decryptBlock} function outlines the main part of the AES decryption algorithm. It calls all the functions that do operations on the data in the right order.
 
@@ -38,7 +38,7 @@ The \lstinline{decryptBlock} function outlines the main part of the AES decrypti
   \item The function does not return anything as the work is done on the data that the \lstinline{*bytes} pointer references. It can simply be read out of memory afterwards.
 \end{itemize}
 
-\subsubsection{Order of Operations}
+\subsection{Order of Operations}
 The function strictly follows the order of the inverse cipher given in the FIPS 197 (Chapter 5.3 Figure 12) standard document. The order is as follows:
 \begin{enumerate}
   \item The last round-key is added to the data. As the key-bytearray is passed to the function in reverse order, the first key of the array can be used here. The function that is being called for this step is called \lstinline{addRoundKey}.
@@ -53,7 +53,7 @@ The function strictly follows the order of the inverse cipher given in the FIPS 
 \end{enumerate}
 
 
-\subsection{Add Round Key}
+\section{Add Round Key}
 \label{ch:dec_addroundkey}
 For adding the current round-key to the data the \lstinline{addRoundKey} function is used. As all mathematical operations of the AES take place in the GF(256) addition is represented by bitwise XOR.
 
@@ -68,7 +68,7 @@ For adding the current round-key to the data the \lstinline{addRoundKey} functio
   \item The function does not return anything as the work is done on the data that the \lstinline{*bytes} pointer references. It can simply be read out of memory afterwards.
 \end{itemize}
 
-\subsubsection{Order of Operations}
+\subsection{Order of Operations}
 A for-loop over the 16 bytes of the block and key is being initiated at the start of the function. The byte at the place of the counter is then rewritten to be itself XOR the corresponding byte of the current round-key:
 
 \begin{lstlisting}
@@ -79,7 +79,7 @@ for(uint8_t i = 0; i < 16; i++)
 \end{lstlisting}
 
 
-\subsection{Inverse Shifts Rows}
+\section{Inverse Shifts Rows}
 \label{ch:dec_inverseshiftrows}
 
 The \lstinline{inverseShiftRows} function represents the inverse of the \lstinline{shiftRows} function found in the encryption. It cyclically shifts the last three rows of the data block in matrix representation by different fixed offsets. These offsets are hardcoded as they never change.
@@ -94,10 +94,10 @@ The \lstinline{inverseShiftRows} function represents the inverse of the \lstinli
   \item The function does not return anything as the work is done on the data that the \lstinline{*bytes} pointer references. It can simply be read out of memory afterwards.
 \end{itemize}
 
-\subsubsection{Order of Operation}
+\subsection{Order of Operation}
 
 
-\subsection{Multiplication in the GF(256)}
+\section{Multiplication in the GF(256)}
 \label{ch:dec_multiplication}
 The mix-columns step includes multiplications in the GF(256). These multiplications are not atomic operations. The function \lstinline{multiply} executes a multiplication in the GF(256) on the two factors it is given.
 
@@ -112,7 +112,7 @@ The mix-columns step includes multiplications in the GF(256). These multiplicati
   \item \lstinline{product} the result of the multiplication of the two factors in the GF(256)
 \end{itemize}
 
-\subsubsection{Peasant's algorithm}
+\subsection{Peasant's algorithm}
 The multiplication is done by utilizing the russian peasant algorithm. The code for the algorithm is as follows:
 \begin{lstlisting}
 uint8_t multiply(uint8_t a, uint8_t b)
@@ -134,7 +134,7 @@ uint8_t multiply(uint8_t a, uint8_t b)
 
 The \lstinline{product} variable has to be \lstinline{uint16_t} in order to save overflows when they occur. The algorithm then proceeds in a for-loop of length eight. This can be done because it is known that the inputs are always bytes. If the factor "b" is odd, then the corresponding a is added to the product. Addition in the GF(256) is equal to bitwise XOR. The factor "b" is then shifted to the right, corresponding to dividing the factor by two. The boolean \lstinline{carry} holds whether or not the factor "a" is larger than 255, which would constitute an overflow in the GF(256). The factor "a" is then shifted to the left, corresponding to multiplication by two. If there was an overflow bit, factor "a" is rewritten to be itself XOR the irreducible polynomial represented by \lstinline{0x1B}. At the end of the eight loop iterations, the variable \lstinline{product} contains the final result and can be returned. The product is represented as sum of all a's where the corresponding b was odd.
 
-\subsection{Inverse Mix Columns}
+\section{Inverse Mix Columns}
 \label{ch:dec_inversemixcolumns}
 The \lstinline{inverseMixcolumns} function operates on the given data in a column-by-column manner. Each column is treated as a four-term polynomial. The operations represent matrix multiplication of the column with a specific matrix of factors. This matrix is saved in the program as the \lstinline{state_matrix_flipped} and defined as per the FIPS 197 document as:
 \begin{lstlisting}
@@ -156,5 +156,5 @@ const uint8_t state_matrix_flipped[16] = {
   \item The function does not return anything as the work is done on the data that the \lstinline{*bytes} pointer references. It can simply be read out of memory afterwards.
 \end{itemize}
 
-\subsubsection{Order of Operations}
+\subsection{Order of Operations}
 The function first creates a copy of the state to read from during the operations. It then initiates a for-loop that steps through the four first elements of the columns. Inside of the loop it is a normal matrix multiplication with the \lstinline{multiply} function and XOR being used for the atomic operations of * and + in the GF(256).

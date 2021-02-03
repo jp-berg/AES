@@ -1,21 +1,21 @@
 %!TEX root = thesis.tex
-\hypertarget{functions---encryption}{%
-\section{Functions - encryption}\label{functions---encryption}}
+\hypertarget{functions---Encryption}{%
+\chapter{Functions - encryption}\label{functions---encryption}}
 
-The following functions are from `AES\_encrypt.c'
-(`Implementation'-chapters). The following chapter is based on \cite{fips197} and the authors own
+The following functions are from \lstinline|AES_encrypt.c|
+(`Implementation'-chapters). The following chapter is based on \cite{aes2001} and the authors own
 knowledge/opinions, if not mentioned otherwise.
 
 \hypertarget{key-addition}{%
-\subsection{Key Addition}\label{key-addition}}
+\section{Key Addition}\label{key-addition}}
 
 \hypertarget{description-2}{%
-\subsubsection{Description}\label{description-2}}
+\subsection{Description}\label{description-2}}
 
 \begin{figure}
 \centering
 \includegraphics[scale = 0.3]{data/figures/addroundkey.png}
-\caption{Addition of the round key to to the state via bitwise XOR. a0,0 xor k0,0 = b0,0 etc.}
+\caption{Addition of the round key to to the state via bitwise XOR. $a_{0,0}$ xor $k_{0,0} = b_{0,0}$ etc.}
 \end{figure}
 
 In this transformation a round key is
@@ -26,7 +26,7 @@ round keys generated (where N is the number of rounds), each round uses
 a different round key (ch. 5.1.4).
 
 \hypertarget{implementation-2}{%
-\subsubsection{Implementation}\label{implementation-2}}
+\subsection{Implementation}\label{implementation-2}}
 
 \begin{lstlisting}
 /*
@@ -57,10 +57,10 @@ save the overhead of an additional function call in trade-off with a
 bigger binary.
 
 \hypertarget{shift-rows}{%
-\subsection{Shift rows}\label{shift-rows}}
+\section{Shift rows}\label{shift-rows}}
 
 \hypertarget{description-3}{%
-\subsubsection{Description}\label{description-3}}
+\subsection{Description}\label{description-3}}
 
 \begin{figure}
 \centering
@@ -86,7 +86,7 @@ were analyzed. From the offsets that proved to be the most resistant the
 simplest offset was chosen.
 
 \hypertarget{implementation-3}{%
-\subsubsection{Implementation}\label{implementation-3}}
+\subsection{Implementation}\label{implementation-3}}
 
 \begin{lstlisting}
 /*
@@ -111,7 +111,7 @@ void ShiftRows(uint8_t * restrict block, uint8_t * restrict tempblock)
 }
 \end{lstlisting}
 
-The function ShiftRows performs the ShiftRows-transformation on the
+The function \lstinline|ShiftRows| performs the ShiftRows-transformation on the
 state. It takes a restricted pointer to the first byte of the block the
 cipher is currently operating on and a restricted pointer to a temporary
 block. First the content of the block is copied into the array the
@@ -120,10 +120,10 @@ by assigning the bytes into their positions in the block after the
 shifts from the tempblock,
 
 \hypertarget{mix-columns}{%
-\subsection{Mix columns}\label{mix-columns}}
+\section{Mix columns}\label{mix-columns}}
 
 \hypertarget{description-4}{%
-\subsubsection{Description}\label{description-4}}
+\subsection{Description}\label{description-4}}
 
 The MixColumns-transformation, a so-called bricklayer permutation, had to fulfill
 \cite[p.39]{rijndael} multiple design criteria deemed as important by the authors:
@@ -176,10 +176,24 @@ the calculation is invertible. The matrix-multiplication, which is seen
 in \ref{fig:mixcolumn}, is a representation of the modular multiplication with a
 fixed polynomial.
 
-158 - 88 4.1.1.
-
 \hypertarget{implementation-4}{%
-\subsubsection{Implementation}\label{implementation-4}}
+\subsection{Implementation}\label{implementation-4}}
+
+The function \lstinline|MixColumns| takes multiple arguments. First it takes a
+restricted pointer to the first byte of the block the cipher is
+currently operating on, followed by a restricted pointer to a temporary
+block and lastly the function gets a restricted pointer to the constant,
+multi-dimensional GFMLT. \lstinline|MixColumns| starts by copying the current state
+from \lstinline|block| into \lstinline|tempblock|. After that it iterates through every row
+by processing 4 consecutive bytes at a time, before it moves to the
+following for consecutive bytes of `block'. Each Byte in `block' becomes
+the result of four Galois field multiplications combined through the
+bitwise XOR-operation, which represents the Galois field addition. The
+multiplications are implemented as lookups in the GFMLT and combine the
+coefficients of the fixed polynomial c(x) with the bytes of the current
+row. After processing all four rows and returning, \lstinline|MixColumns| has
+written the results of this transformation in place of the current block
+being processed.
 
 \begin{lstlisting}
 /*
@@ -216,27 +230,13 @@ void MixColumns(uint8_t * restrict block, uint8_t * restrict tempblock,
 }
 \end{lstlisting}
 
-The function MixColumns takes multiple arguments. First it takes a
-restricted pointer to the first byte of the block the cipher is
-currently operating on, followed by a restricted pointer to a temporary
-block and lastly the function gets a restricted pointer to the constant,
-multi-dimensional GFMLT. MixColumns starts by copying the current state
-from `block' into `tempblock'. After that it iterates through every row
-by processing 4 consecutive bytes at a time, before it moves to the
-following for consecutive bytes of `block'. Each Byte in `block' becomes
-the result of four Galois field multiplications combined through the
-bitwise XOR-operation, which represents the Galois field addition. The
-multiplications are implemented as lookups in the GFMLT and combine the
-coefficients of the fixed polynomial c(x) with the bytes of the current
-row. After processing all four rows and returning, MixColumns has
-written the results of this transformation in place of the current block
-being processed.
+
 
 \hypertarget{substitute-bytes}{%
-\subsection{Substitute bytes}\label{substitute-bytes}}
+\section{Substitute bytes}\label{substitute-bytes}}
 
 \hypertarget{description-5}{%
-\subsubsection{Description}\label{description-5}}
+\subsection{Description}\label{description-5}}
 
 \begin{figure}
 \centering
@@ -275,8 +275,8 @@ implementations, since there has to be only one circuit designed to
 implement all rounds, instead of one circuit per round. The other consequence is,
 that only one S-box can be used for all rounds.
 
-\hypertarget{implementation-4}{%
-\subsubsection{Implementation}\label{implementation-4}}
+\hypertarget{implementation-8}{%
+\subsection{Implementation}\label{implementation-8}}
 
 \begin{lstlisting}
 /*
@@ -300,10 +300,10 @@ accessing the element of the `sbox'-array, which corresponds to the
 value in the current `bytes' element.
 
 \hypertarget{full-block-encryption}{%
-\subsection{Full block encryption}\label{full-block-encryption}}
+\section{Full block encryption}\label{full-block-encryption}}
 
 \hypertarget{description-6}{%
-\subsubsection{Description}\label{description-6}}
+\subsection{Description}\label{description-6}}
 
 To encrypt one block of AES the whole cipher with all rounds has to be
 executed. One round consists of four steps, which represent the four
@@ -311,10 +311,10 @@ transformation employed in the encryption algorithm. Those transformations are (
 If N is the number of rounds specified by the encryption standard then
 the algorithm will execute N-1 * r, while the Nth round omits the
 MixColumns step, but is otherwise identical. Before the first round one
-additional AddRoundKey is performed on the state. \cite[ch. 5.1]{fips197}
+additional AddRoundKey is performed on the state. \cite[ch. 5.1]{aes2001}
 
 \hypertarget{implementation-5}{%
-\subsubsection{Implementation}\label{implementation-5}}
+\subsection{Implementation}\label{implementation-5}}
 
 \begin{lstlisting}
 void encryptBlock(uint8_t * restrict block, uint8_t * restrict tempblock,
@@ -376,11 +376,11 @@ function executes one more round without the call to MixColumns and the
 increase of the `ikeys'-counter variable and then it returns.
 
 \hypertarget{encryption-of-multiple-consecutive-blocks}{%
-\subsection{Encryption of multiple consecutive
+\section{Encryption of multiple consecutive
 blocks}\label{encryption-of-multiple-consecutive-blocks}}
 
 \hypertarget{description-7}{%
-\subsubsection{Description}\label{description-7}}
+\subsection{Description}\label{description-7}}
 
 Although not explicitly required in context of this work, the present
 implementation contains the possibility to encrypt multiple consecutive
@@ -398,7 +398,7 @@ each other. Bit errors do not propagate through the whole ciphertext but
 are confined to the block they occurred in. The implementation has also
 the potential to become very fast, thanks to the possibility of
 processing different blocks on different cores, thus enabling
-parallelisation of en- and decryption.
+parallelization of en- and decryption.
 
 The weaknesses of this mode
 should not be underestimated though. Due to the fact that every block is
@@ -419,14 +419,14 @@ banks. Here the attacker A just needs to open one account on both banks
 and review the communication channel for patterns from test transactions
 he is sending between the two accounts. If the banks do not rotate keys
 A will soon know which encrypted blocks belong to his account number and
-which block denote the recieving account in such a test message. After learning that they can
+which block denote the receiving account in such a test message. After learning that they can
 exchange all blocks they know as reserved for the number of the
 receiving account with the blocks for their own account number and
 divert all transactions between the two banks to A's account. The other
 attack avenue is the emergence of patterns visible to the naked eye. For
 this example we created an image in the bitmap format(\ref{fig:aespng}). This
 image was encrypted with a modified variant of the present
-implementations file encryption mode \footnote{Encrypted with the following settings for key generation: key = "passwort", iterations = 20, salt = "aeskurs"}. The modification (inserted just
+implementations file encryption mode \footnote{Encrypted with the following settings for key generation: key = "password", iterations = 20, salt = "aeskurs"}. The modification (inserted just
 before the while-loop) ensures that the header of the .bmp-file is
 preserved and not corrupted by the encryption. It reads the first 55
 bytes (since the header is 54 bytes long
@@ -436,7 +436,7 @@ is read, encrypted and appended. The result \ref{fig:aesecbpng}, albeit encrypte
 with an algorithm considered secure, shows a clear and readable pattern.
 For comparison we used the `pyaes'-library to encrypt the image in the
 same way with the same key\footnote{Encrypted with the following settings for key generation: key = "passwort", iterations = 20, salt = "aeskurs"} and preservation method of the header, but
-applied the Counter Mode of Operation. The result, displayed in \ref{figaesctrpng}, demonstrates, that any visible pattern resulting from
+applied the Counter Mode of Operation. The result, displayed in \ref{fig:aesctrpng}, demonstrates, that any visible pattern resulting from
 ECB-encryption disappears with the right Block Cipher Mode of Operation.
 \cite[ch. 5.1.5]{paar} describes how the Counter Mode is an example of block
 cipher modes of operation that avoids such patterns. First an
@@ -453,7 +453,7 @@ into two identical blocks of ciphertext, thus avoiding leakage of
 information.
 
 The present implementation is required to use ECB, since it has to be
-able to reproduce the testvectors from \cite[Ap. B, Ap. C.1]{fips197}. Due to time constraints
+able to reproduce the test-vectors from \cite[Ap. B, Ap. C.1]{aes2001}. Due to time constraints
 it was decided not to implement two different block cipher modes of
 operation.
 
@@ -502,7 +502,7 @@ implementation then adds an array containing the values \{5, 5, 5, 5,
 \end{quote}
 
 \hypertarget{implementation-6}{%
-\subsubsection{Implementation}\label{implementation-6}}
+\subsection{Implementation}\label{implementation-6}}
 
 \begin{lstlisting}
 /*
@@ -538,7 +538,7 @@ to an array containing the bytes that need to be encrypted. The second
 argument is a restricted pointer to an array containing the
 initialization values: first the elements of the S-box, followed by the
 bytes of the GFMLT, while the rest are the bytes of the round keys. The
-third is a constant unsigned variable which width equals the wordwidth
+third is a constant unsigned variable which width equals the word width
 of the CPU architecture the source code gets compiled on. The last
 argument is a constant byte containing the number of rounds. The
 function starts by allocation an array of 256 unsigned bytes called
@@ -568,8 +568,8 @@ the temporary block, a pointer to the array containing the round keys, a
 variable containing the number of rounds, a pointer to the S-box and a
 pointer to the GFMLT.
 
-Since parallelisation of the de- and encryption routine seems to be a
-worthwhile endeavour for the future, this function was already designed
+Since parallelization of the de- and encryption routine seems to be a
+worthwhile endeavor for the future, this function was already designed
 with that in mind. An allocation of the temporary block as a local
 variable instead of a global one avoids the need for thread
 synchronization, since every thread would use their own temporary block,

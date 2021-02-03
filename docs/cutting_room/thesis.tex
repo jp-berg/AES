@@ -32,7 +32,7 @@ BCOR=1cm, % Bindekorrektur: Change this accordingly, also read the KomaScript Gu
 % if you really need additionall packages include them here
 %\usepackage{package}
 
-\usepackage[table,xcdraw]{xcolor}
+\usepackage[table, xcdraw]{xcolor}
 
 % DO NOT EDIT THE _settins FILE!
 \include{_settings}
@@ -51,13 +51,14 @@ BCOR=1cm, % Bindekorrektur: Change this accordingly, also read the KomaScript Gu
 \tableofcontents
 
 % include all your chapters as .tex files,
-% each file contains sections \section{name of section},
-% subsections \subsections{...} and so on...
-
-\chapter{Introduction} \label{chap:intro}
-%\pagenumbering{arabic} %switches to arabic numbers for the rest of the text
+% each file contains sections \chapter{name of section},
+% subsections \sections{...} and so on...
 
 \input{overview}
+
+\chapter{General Architecture}
+
+This chapter details the architecture of the program and describes the design choices that were made. First, the programming language choices are presented, then the wrapper and file structure are outlined.
 
 \input{language_choices}
 
@@ -78,27 +79,13 @@ BCOR=1cm, % Bindekorrektur: Change this accordingly, also read the KomaScript Gu
 \input{future_improvement}
 
 \appendix
-%\input{chap_appendix}
+\input{chap_appendix}
 
 \pagestyle{scrplain} % turn off headers and footers
 % generate list of figures, optional, remove it if you do not like it
 \listoffigures
 \cleardoublepage
 
-% generate list of tables, optional, remove it if you do not like it
-\listoftables
-\cleardoublepage
-
-% generate list of algorithms, optional, remove it if you do not like it
-\phantomsection
-\addcontentsline{toc}{chapter}{List of Algorithms}
-\listofalgorithmes
-\cleardoublepage
-
-% generate list of listings, optional, remove it if you do not like it
-\renewcommand*{\lstlistlistingname}{List of Listings}
-\lstlistoflistings
-\cleardoublepage
 
 % generate bibliography with bibtex, the bibfile here is "paper.bib"
 % use alphanumerical style
