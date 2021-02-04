@@ -29,7 +29,7 @@ Since AES encrypts blocks independently from each other the algorithm
 can be categorized as an so called embarrassingly parallel problem
 \cite[p.48]{parallelprog}. Consequently an easy avenue for gaining more
 speed seems to be restructuring the program in such a way, that every
-available CPU-core gets put to work on a separate series of blocks to
+available \ac{CPU}-core gets put to work on a separate series of blocks to
 encrypt/decrypt. On short encryption operations in the kilobyte range
 this may not deliver a considerable performance increase, but since the
 present implementation is able to operate on files of unbounded size,
@@ -47,10 +47,10 @@ cores (compare (\cite[ch. 5.5]{parallelprog}).
 \section{T-tables}\label{t-tables}}
 
 The present implementation already makes use of lookup tables. \cite[p. 59]{rijndael} proposes a method that makes even more extensive use of lookup
-tables, which needs only 4 array accesses and 4 bitwise XOR operations
+tables, which needs only 4 array accesses and 4 bitwise \ac{XOR} operations
 for each round and 4-byte column. They budget in 4kb of memory for the
 lookup tables. This is a negligible amount of memory compared to the
-gigabytes available on modern x86-systems.
+gigabytes available on modern \ac{x86}-systems.
 
 \hypertarget{no-constant-value-calculations}{%
 \section{No constant value
@@ -58,7 +58,7 @@ calculations}\label{no-constant-value-calculations}}
 
 To fulfill the task of this seminar it was explicitly required to (re-)
 calculate values, that could as well be hardcoded. The additional space
-used by this is calculated as follows: The GFMLT for multiplication with
+used by this is calculated as follows: The \ac{GFMLT} for multiplication with
 two and three can be stored in 2 * 256 bytes (multiplication with one
 does not need to be stored, since it just results in the unmodified
 value itself). The S-box and Inverse S-box are 256 additional bytes

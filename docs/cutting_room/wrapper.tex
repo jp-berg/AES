@@ -37,7 +37,7 @@ python functions ``encrypt'' and ``decrypt'', that both take the byte
 array that is supposed to be processed and the expanded keys. The two
 functions then prepare the arrays for the \enquote{ctypes} interface and pass them
 on to the C-function for en- and decryption, along with the \enquote{initvals},
-which consists of the values for the S-box and the values of the GFMLT
+which consists of the values for the S-box and the values of the \ac{GFMLT}
 (both generated at program startup) concatenated with the expanded keys.
 Since the C-core modifies the byte arrays in place they just get
 returned, after the C-function returns.

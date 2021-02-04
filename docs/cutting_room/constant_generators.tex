@@ -26,7 +26,7 @@ Rijndael that is not computed in constant time. In their 8-bit
 implementation in chapter 4.1.1 they suggest only generating a table t
 where table $t[a] = 02 * a$, since multiplication with one is the factor
 itself and multiplication with three can be efficiently archived by
-XORing the result of the multiplication with two with the original
+\ac{XOR}ing the result of the multiplication with two with the original
 number: $03 * a = (02 * a)$ xor $a$
 
 To avoid leaking more timing data than
@@ -35,7 +35,7 @@ all values, since this ensures that for each multiplication the \ac{CPU}
 (theoretically) does always the exact same amount of work, thus ensuring
 it always takes the exact same amount of time. This size increase by $2 *
 256b = 512$ bytes (compared to the suggested implementation with only one
-row) is negligible for our target of x86-CPU-systems, which today
+row) is negligible for our target of \ac{x86}-\ac{CPU}-systems, which today
 typically feature memory sizes in the gigabyte range.
 
 \cite{rijndael} did not
@@ -45,7 +45,7 @@ small lookup table variant was only suggested for memory constrained
 extensive use of lookup tables than the present implementation does
 (compare ch. 4.2). This variant has not been used, since it reduces the
 steps of the algorithm for each column in each round into four table
-lookups accessing large tables crafted for this purpose, and four XOR
+lookups accessing large tables crafted for this purpose, and four \ac{XOR}
 operations concatenating the lookup-results. This obscures the original
 layout of the algorithm heavily and it was decided, that it should it to be recognizable
 in the present implementation.
@@ -65,7 +65,7 @@ m, while the second dimension accesses the result for the value wanted.
 The program needs to compute the multiplication of two times 114. This
 means it has to access \lstinline|gal_mult_lookup[2-1]|. For the result it
 simply needs to use the second factor as the array index for the second
-dimension. Thus the final array access to calculate 2 * 114 in $GF(2^{8})$ is
+dimension. Thus the final array access to calculate 2 * 114 in \ac{$GF(2^{8})$} is
 \lstinline|gal_mult_lookup[1][114]|. For $3 * 86$ it would be
 \lstinline|gal_mult_lookup[2][86]| etc.
 \end{quote}
@@ -95,7 +95,7 @@ def mult_gal(a, b):
     return p
 \end{lstlisting}
 
-This implementation of multiplication in $GF(2^{8})$ modulo $m(x) = x^8 + x^4 +
+This implementation of multiplication in \ac{$GF(2^{8})$} modulo $m(x) = x^8 + x^4 +
 x^3 + x + 1$ is an adapted version from the `peasant's algorithm' as
 described in
 \cite{peasants}.
@@ -103,21 +103,21 @@ It takes two integers with values in range of 0-255 `a' and `b'. First
 the variable `p' gets initialized with 0. The following loop gets
 repeated at most eight times: If one of the two factors is 0 the
 algorithm terminates. After that, `mult\_gal' evaluates, whether `b' is
-odd by performing a bitwise AND-operation with `b' and 1. If the least
-significant bit of `b' was toggled `p' gets XORed with `a' and the
+odd by performing a bitwise \ac{AND}-operation with `b' and 1. If the least
+significant bit of `b' was toggled `p' gets \ac{XOR}ed with `a' and the
 result is stored in p. After that `b' gets bitshifted one to the right,
 which equals division by two while ignoring the remainder. The last step
 has two components.
 The first component shifts 'a' to the right by one and cuts off any byte overflow
 by using the modulo function. If such overflow occured, the modulo operation has to be
-applied to the shifted 'a' in order to keep in in $GF(2^{8})$. This is done by XORing it
+applied to the shifted 'a' in order to keep in in \ac{$GF(2^{8})$}. This is done by \ac{XOR}ing it
 with m(x) which is 100011011 in binary and 1b in hexadecimal, when fit into a byte (because
 this removes the most significant digit of m(x)). To detect overflow 'a' is shifted to the right by 7
-and then negated. If the most significant bit of 'a' was set (which means overflow), 1b gets ANDed
-with -1 or 11111111 in binary (due to the two's complement), thus resulting in the modulo being applied to the doubled 'a'. In the other case 1b gets ANDed with 0, which results in the second term getting cancelled out, resulting in a simple doubling of 'a'.
+and then negated. If the most significant bit of 'a' was set (which means overflow), 1b gets \ac{AND}ed
+with -1 or 11111111 in binary (due to the two's complement), thus resulting in the modulo being applied to the doubled 'a'. In the other case 1b gets \ac{AND}ed with 0, which results in the second term getting cancelled out, resulting in a simple doubling of 'a'.
 
 'gen\_mult\_lookup()' then uses the function to generate the values for
-multiplication of all numbers in $GF(2^{8})$ with two and three.
+multiplication of all numbers in \ac{$GF(2^{8})$} with two and three.
 
 The results (\ref{t:GFMLT}) were spot-checked against
 \cite{galcalc} with P(x) = 100011011.
@@ -131,7 +131,7 @@ The results (\ref{t:GFMLT}) were spot-checked against
 The S-box generator is used to generate the S-box needed in the
 SubBytes-function.
 The values of the AES S-box are computed by taking the value of the byte
-that needs to be substituted, finding its inverse in $GF(2^{8})$ with the
+that needs to be substituted, finding its inverse in \ac{$GF(2^{8})$} with the
 irreducible polynomial $m(x) = x^8 + x^4 + x^3 + x + 1$ and applying an
 affine transformation to that inverse. (\cite[ch 3.4.1]{rijndael})
 
@@ -179,18 +179,18 @@ def mult_inv_gal():
     return bytearray(list_res)
 \end{lstlisting}
 
-This function generates the inverses for all values in $GF(2^{8})$. First it
+This function generates the inverses for all values in \ac{$GF(2^{8})$}. First it
 generates a list with the values from 1 to 255. After that it creates
 another list containing the element 0 (since 0 has no inverse). Now it
 iterates through all 256 possible values p. For each p it goes through
-`list\_start' and multiplies them in $GF(2^{8})$ modulo m(x) using the
+`list\_start' and multiplies them in \ac{$GF(2^{8})$} modulo m(x) using the
 previously mentioned `mult\_gal' function. Since multiplying a number x
 with its inverse always results in the multiplicative identity 1, the
-present implementation simply tries to multiply all elements in $GF(2^{8})$
+present implementation simply tries to multiply all elements in \ac{$GF(2^{8})$}
 with each other (basically a brute-force approach) to see if the product
 equals 1. In that case the value r from `list\_start' is appended to
 `list\_res' at the index of the current value of p. After that r is
-removed from list\_start, since every p has only one inverse in $GF(2^{8})$
+removed from list\_start, since every p has only one inverse in \ac{$GF(2^{8})$}
 modulo m(x). In the
 end the function returns `list\_res' converted to a byte array,
 containing numbers that are the inverses of the values of their indices
@@ -236,13 +236,13 @@ def gen_sbox():
 
 This function generates the S-box array. First it uses the
 `mult\_inv\_gal' function to generate a list containing all
-multiplicative inverse of the elements in $GF(2^{8})$. After that it
+multiplicative inverse of the elements in \ac{$GF(2^{8})$}. After that it
 allocates a byte array with length 256 called `sbox' and initializes the
 variable `j' with zero. Then it iterates through the array of inverses,
 applying the affine transformation and storing the result in sbox. The
-affine transformation is computed by XORing the list element with
+affine transformation is computed by \ac{XOR}ing the list element with
 versions of itself that have been shifted left via circular byteshift
-one, two, three and four times. Finally the result gets XORed with 99 to
+one, two, three and four times. Finally the result gets \ac{XOR}ed with 99 to
 obtain the result of the transformation.
 (https://en.wikipedia.org/wiki/Rijndael\_S-box\#forward\_s-box) The
 function finishes by returning the S-box-byte-array.

@@ -15,11 +15,11 @@ knowledge/opinions, if not mentioned otherwise.
 \begin{figure}
 \centering
 \includegraphics[scale = 0.3]{data/figures/addroundkey.png}
-\caption{Addition of the round key to to the state via bitwise XOR. $a_{0,0}$ xor $k_{0,0} = b_{0,0}$ etc. \cite[p. 41]{rijndael}}
+\caption{Addition of the round key to to the state via bitwise \ac{XOR}. $a_{0,0}$ xor $k_{0,0} = b_{0,0}$ etc. \cite[p. 41]{rijndael}}
 \end{figure}
 
 In this transformation a round key is
-XORed with the current values of the bytes making up a block (also called state). The round key array is
+\ac{XOR}ed with the current values of the bytes making up a block (also called state). The round key array is
 derived from the initial cipher key using the key schedule. Containing
 16 bytes, each round key is equally long to a block. Since there are N+1
 round keys generated (where N is the number of rounds), each round uses
@@ -47,9 +47,9 @@ is currently operating on and a restricted pointer to a constant, which
 points to the first byte of the round key, that is supposed to be used
 currently. It proceeds to combine each of the sixteen bytes of the block
 with a corresponding byte of the round key designated to the current
-round using the bitwise XOR. The result is then stored in the block byte
-used in the XOR operation, meaning that first byte one of the block will
-be XORed with byte one of the round key and then the result will be
+round using the bitwise \ac{XOR}. The result is then stored in the block byte
+used in the \ac{XOR} operation, meaning that first byte one of the block will
+be \ac{XOR}ed with byte one of the round key and then the result will be
 stored in place of byte one and so forth for all sixteen bytes.
 
 Since the function is relatively short the `inline'-keyword is used to
@@ -147,7 +147,7 @@ The MixColumns-transformation, a so-called bricklayer permutation, had to fulfil
   support the `Wide Tail Strategy'.
 \item
   \emph{The authors put emphasis on the performance of this step on 8-bit
-  CPUs.} They deemed this necessary, as they feared that the MixColumns
+  \ac{CPU}s.} They deemed this necessary, as they feared that the MixColumns
   transformation would be ``the only step that good performance on 8-bit
   processors is not trivial to obtain for.''(p.39)
 \end{enumerate}
@@ -163,7 +163,7 @@ The MixColumns-transformation, a so-called bricklayer permutation, had to fulfil
 The transformation itself partitions the
 state-matrix into four columns. Each of those columns is transformed
 independently from the other three. A single column acts as a polynomial
-over $GF(2^{8})$, which is multiplied modulo $x^4 + 1$ with a fixed polynomial. In
+over \ac{$GF(2^{8})$}, which is multiplied modulo $x^4 + 1$ with a fixed polynomial. In
 order to meet the aforementioned criteria regarding performance,
 diffusion and to fulfill the additional condition of creating an
 invertible transformation (in regards to encryption) the authors were
@@ -183,13 +183,13 @@ The function \lstinline|MixColumns| takes multiple arguments. First it takes a
 restricted pointer to the first byte of the block the cipher is
 currently operating on, followed by a restricted pointer to a temporary
 block and lastly the function gets a restricted pointer to the constant,
-multi-dimensional GFMLT. \lstinline|MixColumns| starts by copying the current state
+multi-dimensional \ac{GFMLT}. \lstinline|MixColumns| starts by copying the current state
 from \lstinline|block| into \lstinline|tempblock|. After that it iterates through every row
 by processing 4 consecutive bytes at a time, before it moves to the
-following for consecutive bytes of `block'. Each Byte in `block' becomes
+following for consecutive bytes of `block'. Each byte in `block' becomes
 the result of four Galois field multiplications combined through the
-bitwise XOR-operation, which represents the Galois field addition. The
-multiplications are implemented as lookups in the GFMLT and combine the
+bitwise \ac{XOR}-operation, which represents the Galois field addition. The
+multiplications are implemented as lookups in the \ac{GFMLT} and combine the
 coefficients of the fixed polynomial c(x) with the bytes of the current
 row. After processing all four rows and returning, \lstinline|MixColumns| has
 written the results of this transformation in place of the current block
@@ -198,7 +198,7 @@ being processed.
 \begin{lstlisting}
 /*
  * Achieves the AES-MixColumns by representing each result byte as a series of
- * table-lookups XORed with each other.
+ * table-lookups \ac{XOR}ed with each other.
  */
 void MixColumns(uint8_t * restrict block, uint8_t * restrict tempblock,
                 const uint8_t (* restrict gal_mult_lookup)[256])
@@ -366,7 +366,7 @@ of rounds minus one. Every round consists of the following steps:
 SubBytes is called with a pointer to the current state and a pointer to
 the sbox, followed by a call of ShiftRows with a pointer to the current
 state and the tempblock, then a call of MixColumns with pointers to the
-current state, the temporary block and the GFMLT. Now comes a call to
+current state, the temporary block and the \ac{GFMLT}. Now comes a call to
 AddRoundKey with a pointer to the current state and the memory address
 `keys' would point towards, if it was increased by the amount stored in
 `ikeys'. The latter passes on the starting address of the bytearray of
@@ -410,11 +410,11 @@ a whole gets analyzed, patterns may emerge. Those patterns leak
 information about what parts of the plaintext contain the same 128-bit
 sequence, because those parts also share a bit sequence in
 the corresponding ciphertext. Furthermore, a third party watching an
-exchange encrypted in ECB can tell, when the same
+exchange encrypted in \ac{ECB} can tell, when the same
 message is send twice, or if the header of different messages is the
 same, for example if each message was using the same salutation. \cite{paar}
-demonstrates two attack avenues, that are a direct result of ECB. The
-first one exploits the ECB-encrypted communication channel between two
+demonstrates two attack avenues, that are a direct result of \ac{ECB}. The
+first one exploits the \ac{ECB}-encrypted communication channel between two
 banks. Here the attacker A just needs to open one account on both banks
 and review the communication channel for patterns from test transactions
 he is sending between the two accounts. If the banks do not rotate keys
@@ -437,22 +437,22 @@ with an algorithm considered secure, shows a clear and readable pattern.
 For comparison we used the `pyaes'-library to encrypt the image in the
 same way with the same key\footnote{Encrypted with the following settings for key generation: key = "passwort", iterations = 20, salt = "aeskurs"} and preservation method of the header, but
 applied the Counter Mode of Operation. The result, displayed in \ref{fig:aesctrpng}, demonstrates, that any visible pattern resulting from
-ECB-encryption disappears with the right Block Cipher Mode of Operation.
+\ac{ECB}-encryption disappears with the right Block Cipher Mode of Operation.
 \cite[ch. 5.1.5]{paar} describes how the Counter Mode is an example of block
 cipher modes of operation that avoids such patterns. First an
 initialization vector IV gets chosen. This ensures that every
 encryption pass is as unique as the IV. Due to this fact it is
 recommended to never reuse the IV. This IV is then concatenated with a counter.
 This combination with the length of 128 bits is then encrypted with AES
-and the password. The result is XORed with 128 bits of plaintext to
+and the password. The result is \ac{XOR}ed with 128 bits of plaintext to
 create the ciphertext. The counter is increased for each consecutive
 block that needs to be encrypted. This way each block of plaintext is
-XORed with an unique combination of IV, nonce and key. This makes it
+\ac{XOR}ed with an unique combination of IV, nonce and key. This makes it
 highly unlikely for two identical blocks of plaintext to be encrypted
 into two identical blocks of ciphertext, thus avoiding leakage of
 information.
 
-The present implementation is required to use ECB, since it has to be
+The present implementation is required to use \ac{ECB}, since it has to be
 able to reproduce the test-vectors from \cite[Ap. B, Ap. C.1]{aes2001}. Due to time constraints
 it was decided not to implement two different block cipher modes of
 operation.
@@ -460,13 +460,13 @@ operation.
 \begin{figure}
 \centering
 \includegraphics[scale = 0.25]{data/figures/ECB_encryption.png}
-\caption{ECB: Every block of plaintext is simply encrypted with a key.\cite{wikiecb}}
+\caption{\ac{ECB}: Every block of plaintext is simply encrypted with a key.\cite{wikiecb}}
 \end{figure}
 
 \begin{figure}
 \centering
 \includegraphics[scale = 0.25]{data/figures/CTR_encryption.png}
-\caption{CTR: Every block of plaintext is XORed with a combination of initialization vector (here: Nonce) and counter, encrypted by the key to form the ciphertext. \cite{wikictr}
+\caption{CTR: Every block of plaintext is \ac{XOR}ed with a combination of initialization vector (here: Nonce) and counter, encrypted by the key to form the ciphertext. \cite{wikictr}
 \end{figure}
 
 In order for Electronic Codebook Mode to work correctly the bye array
@@ -537,9 +537,9 @@ The function takes four arguments. The first one is a restricted pointer
 to an array containing the bytes that need to be encrypted. The second
 argument is a restricted pointer to an array containing the
 initialization values: first the elements of the S-box, followed by the
-bytes of the GFMLT, while the rest are the bytes of the round keys. The
+bytes of the \ac{GFMLT}, while the rest are the bytes of the round keys. The
 third is a constant unsigned variable which width equals the word width
-of the CPU architecture the source code gets compiled on. The last
+of the \ac{CPU} architecture the source code gets compiled on. The last
 argument is a constant byte containing the number of rounds. The
 function starts by allocation an array of 256 unsigned bytes called
 `sbox'. After that another array named `gal\_mult\_lookup' is allocated,
@@ -549,7 +549,7 @@ bytes. The name is derived from `\textbf{Gal}ois field
 the three following for-loops. The first loop reads the first 256 bytes
 from `initvar' and assigns them to `sbox'. The following two nested
 for-loops iterate through the two dimensions of `gal\_mult\_lookup' and
-assign the results of the Galois field multiplications in $GF(2^{8})$ to the
+assign the results of the Galois field multiplications in \ac{$GF(2^{8})$} to the
 respective dimensions of the array.
 
 After populating the arrays the pointer has moved far enough through
@@ -566,7 +566,7 @@ processed. In every iteration of this loop the function `enrcryptBlock'
 is called with the address of the current block to encrypt, a pointer to
 the temporary block, a pointer to the array containing the round keys, a
 variable containing the number of rounds, a pointer to the S-box and a
-pointer to the GFMLT.
+pointer to the \ac{GFMLT}.
 
 Since parallelization of the de- and encryption routine seems to be a
 worthwhile endeavor for the future, this function was already designed

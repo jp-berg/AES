@@ -123,7 +123,7 @@ while avoiding the shortcomings of the language:
   those back into the Python code. The calculation intensive part of our
   project is clearly the AES encryption itself, especially with growing
   file size. Additionally the architecture of our program allows the C-core to take advantage of '-march=native',
-  a compiler-flag that enables tailoring the binary to the features of the underlying CPU,
+  a compiler-flag that enables tailoring the binary to the features of the underlying \ac{CPU},
   resulting in even more performance. This happens automatically without any input required from the user.
 \item
   \emph{no memory management necessary}: Due to the fact that the C-core
@@ -169,6 +169,6 @@ while avoiding the shortcomings of the language:
   targeting specific compilers, it should not be the limiting factor in
   terms of portability, especially since the reference implementation of
   Python is written partially in C (\cite{pyref}),
-  which means Python is not able to target CPU architectures or
+  which means Python is not able to target \ac{CPU} architectures or
   operating systems C cannot run on.
 \end{itemize}

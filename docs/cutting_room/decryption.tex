@@ -21,7 +21,7 @@ The \lstinline|decryptBlocks| function is used when an input of more than 16 byt
 \end{itemize}
 
 \subsection{Order of Operations}
-The function simply loops over the data in 16 byte steps and calls the \lstinline{decryptBlock} function on each of the blocks. This mode of operation of encrypting and decrypting multiple blocks each by itself is (as previously mentioned) called \enquote{Electronic Code Book Mode} (ECB).
+The function simply loops over the data in 16 byte steps and calls the \lstinline{decryptBlock} function on each of the blocks. This mode of operation of encrypting and decrypting multiple blocks each by itself is (as previously mentioned) called \enquote{Electronic Code Book Mode} (\ac{ECB}).
 
 \section{Decrypt Block}
 \label{ch:dec_block}
@@ -55,7 +55,7 @@ The function strictly follows the order of the inverse cipher given in the FIPS 
 
 \section{Add Round Key}
 \label{ch:dec_addroundkey}
-For adding the current round-key to the data the \lstinline{addRoundKey} function is used. As all mathematical operations of the AES take place in the GF(256) addition is represented by bitwise XOR.
+For adding the current round-key to the data the \lstinline{addRoundKey} function is used. As all mathematical operations of the AES take place in the GF(256) addition is represented by bitwise \ac{XOR}.
 
 \textbf{Args:}
 \begin{itemize}
@@ -69,7 +69,7 @@ For adding the current round-key to the data the \lstinline{addRoundKey} functio
 \end{itemize}
 
 \subsection{Order of Operations}
-A for-loop over the 16 bytes of the block and key is being initiated at the start of the function. The byte at the place of the counter is then rewritten to be itself XOR the corresponding byte of the current round-key:
+A for-loop over the 16 bytes of the block and key is being initiated at the start of the function. The byte at the place of the counter is then rewritten to be itself \ac{XOR} the corresponding byte of the current round-key:
 
 \begin{lstlisting}
 for(uint8_t i = 0; i < 16; i++)
@@ -132,7 +132,7 @@ uint8_t multiply(uint8_t a, uint8_t b)
 }
 \end{lstlisting}
 
-The \lstinline{product} variable has to be \lstinline{uint16_t} in order to save overflows when they occur. The algorithm then proceeds in a for-loop of length eight. This can be done because it is known that the inputs are always bytes. If the factor "b" is odd, then the corresponding a is added to the product. Addition in the GF(256) is equal to bitwise XOR. The factor "b" is then shifted to the right, corresponding to dividing the factor by two. The boolean \lstinline{carry} holds whether or not the factor "a" is larger than 255, which would constitute an overflow in the GF(256). The factor "a" is then shifted to the left, corresponding to multiplication by two. If there was an overflow bit, factor "a" is rewritten to be itself XOR the irreducible polynomial represented by \lstinline{0x1B}. At the end of the eight loop iterations, the variable \lstinline{product} contains the final result and can be returned. The product is represented as sum of all a's where the corresponding b was odd.
+The \lstinline{product} variable has to be \lstinline{uint16_t} in order to save overflows when they occur. The algorithm then proceeds in a for-loop of length eight. This can be done because it is known that the inputs are always bytes. If the factor "b" is odd, then the corresponding a is added to the product. Addition in the GF(256) is equal to bitwise \ac{XOR}. The factor "b" is then shifted to the right, corresponding to dividing the factor by two. The boolean \lstinline{carry} holds whether or not the factor "a" is larger than 255, which would constitute an overflow in the GF(256). The factor "a" is then shifted to the left, corresponding to multiplication by two. If there was an overflow bit, factor "a" is rewritten to be itself \ac{XOR} the irreducible polynomial represented by \lstinline{0x1B}. At the end of the eight loop iterations, the variable \lstinline{product} contains the final result and can be returned. The product is represented as sum of all a's where the corresponding b was odd.
 
 \section{Inverse Mix Columns}
 \label{ch:dec_inversemixcolumns}
@@ -157,4 +157,4 @@ const uint8_t state_matrix_flipped[16] = {
 \end{itemize}
 
 \subsection{Order of Operations}
-The function first creates a copy of the state to read from during the operations. It then initiates a for-loop that steps through the four first elements of the columns. Inside of the loop it is a normal matrix multiplication with the \lstinline{multiply} function and XOR being used for the atomic operations of * and + in the GF(256).
+The function first creates a copy of the state to read from during the operations. It then initiates a for-loop that steps through the four first elements of the columns. Inside of the loop it is a normal matrix multiplication with the \lstinline{multiply} function and \ac{XOR} being used for the atomic operations of * and + in the GF(256).
