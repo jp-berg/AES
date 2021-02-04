@@ -15,11 +15,11 @@ knowledge/opinions, if not mentioned otherwise.
 \begin{figure}
 \centering
 \includegraphics[scale = 0.3]{data/figures/addroundkey.png}
-\caption{Addition of the round key to to the state via bitwise XOR. $a_{0,0}$ xor $k_{0,0} = b_{0,0}$ etc.}
+\caption{Addition of the round key to to the state via bitwise XOR. $a_{0,0}$ xor $k_{0,0} = b_{0,0}$ etc. \cite[p. 41]{rijndael}}
 \end{figure}
 
 In this transformation a round key is
-XORed with the state. The round key array is
+XORed with the current values of the bytes making up a block (also called state). The round key array is
 derived from the initial cipher key using the key schedule. Containing
 16 bytes, each round key is equally long to a block. Since there are N+1
 round keys generated (where N is the number of rounds), each round uses
@@ -65,10 +65,10 @@ bigger binary.
 \begin{figure}
 \centering
 \includegraphics[scale = 0.3]{data/figures/shiftrows.png}
-\caption{The ShiftRows-transformation "rotates" the rows of the state (left) by different offsets, resulting in the state on the right}
+\caption{The ShiftRows-transformation "rotates" the rows of the state (left) by different offsets, resulting in the state on the right \cite[ch. 5.1.2]{aes2001}}
 \end{figure}
 
-\cite[p. 37]{rijndael} states, that this transformation of the state represents a byte transposition, using
+\cite[p. 37]{rijndael} explains, that this transformation of the state represents a byte transposition, using
 cyclical shifts with different offsets. The first row of the 4x4-Matrix
 of 16 bytes that constitutes the so called state is not shifted at all,
 the second row by one step to the left, the third row uses two steps and
@@ -156,7 +156,7 @@ The MixColumns-transformation, a so-called bricklayer permutation, had to fulfil
 \begin{figure}
 \centering
 \includegraphics[scale = 0.2]{data/figures/mixcolumn.png}
-\caption{The MixColumns-transformation, represented as matrix multiplication.}
+\caption{The MixColumns-transformation, represented as matrix multiplication.\cite[p. 40]{rijndael}}
 \label{fig:mixcolumn}
 \end{figure}
 
@@ -242,7 +242,7 @@ void MixColumns(uint8_t * restrict block, uint8_t * restrict tempblock,
 \centering
 \includegraphics[scale = 0.3]{data/figures/subbytes.png}
 \caption{SubBytes applies the S-box substitution to every byte of the
-state}
+state. \cite[ch. 5.1.1.]{aes2001}}
 \end{figure}
 
 Being the only non linear transformation, SubBytes is labeled a
@@ -460,13 +460,13 @@ operation.
 \begin{figure}
 \centering
 \includegraphics[scale = 0.25]{data/figures/ECB_encryption.png}
-\caption{ECB: Every block of plaintext is simply encrypted with a key.}
+\caption{ECB: Every block of plaintext is simply encrypted with a key.\cite{wikiecb}}
 \end{figure}
 
 \begin{figure}
 \centering
 \includegraphics[scale = 0.25]{data/figures/CTR_encryption.png}
-\caption{CTR: Every block of plaintext is XORed with a combination of initialization vector (here: Nonce) and counter, encrypted by the key to form the ciphertext.}
+\caption{CTR: Every block of plaintext is XORed with a combination of initialization vector (here: Nonce) and counter, encrypted by the key to form the ciphertext. \cite{wikictr}
 \end{figure}
 
 In order for Electronic Codebook Mode to work correctly the bye array

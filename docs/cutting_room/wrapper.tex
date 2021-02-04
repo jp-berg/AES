@@ -2,11 +2,7 @@
 \hypertarget{the-wrapper}{%
 \section{The wrapper}\label{the-wrapper}}
 
-This chapter describes the Python-wrapper \lstinline|wrapper.py| in more detail.
-Since it is not the focus of the present paper this chapter is kept
-shorter than the documentation about the C-core implementing AES.
-
-In general the wrapper is supposed to prepare data and to provide an
+In general, the wrapper is supposed to prepare data and to provide an
 interface for the C-core. It is the entry point to the program. The
 basic functionality from a user perspective can be broken down into 3
 components.
@@ -14,7 +10,7 @@ components.
 \hypertarget{compiling-the-c-core}{%
 \subsection{Compiling the C-core}\label{compiling-the-c-core}}
 
-To guarantee optimal performance and portability the present
+To guarantee optimal performance and portability, the present
 implementation compiles the C-source code into linkable binaries on
 first startup. During compilation, the \enquote{lib/} folder is created.
 On startup, the program tries to link the libraries containing the AES
@@ -30,7 +26,7 @@ since one only has to delete the old library files and run the program
 again to trigger a recompile.
 
 \hypertarget{En--and-Decryption}{%
-\subsection{en- and decryption}\label{en--and-decryption}}
+\subsection{En- and Decryption}\label{en--and-decryption}}
 
 The C-code, once it is compiled to a .so-file, can be dynamically linked
 via the Python standard-library \enquote{ctypes}. This allows calling C functions
@@ -62,7 +58,7 @@ both of those arrays and return either the encrypted text in hex or the
 decrypted text in utf-8 encoding.
 
 The file functions, called `fe' for `\textbf{f}ile \textbf{e}ncrypt" and
-'fd' for `\textbf{f}ext \textbf{d}ecrypt' via the command line, work in
+'fd' for `\textbf{f}ile \textbf{d}ecrypt' via the command line, work in
 a similar way. They also expand the key, but additionally prepare an
 outputfile, by either adding or removing the ``.enc''-file-ending. They
 open both the input and output file simultaneously. This helps with very
@@ -70,9 +66,9 @@ large files, since they can process them chunk by chunk. This allows for
 (theoretically) processing files of unbounded file sizes, since the
 program is not limited by the systems RAM. For every chunk the program
 reads, it checks if the read length is shorter than the defined length
-of a chunk. If that is the case, the program knows, that this is the
+of a chunk. If that is the case, the program knows that this is the
 last chunk of the file. It either pads the last chunk (in case of
 encryption) or removes the padding (in case of decryption), terminates
-the read-loop and writes them to disk with the other chunks. During the
+the read-loop and writes the last chunk to disk with the other chunks. During the
 process the chunks themselves get passed on to the respective en- or
 decryption function, along with the expanded keys.

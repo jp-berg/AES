@@ -4,7 +4,7 @@
 
 We chose to implement the algorithm itself in C, while Python handles
 the input and output of our program. This allows us to use both
-languages to their full potential, while avoiding problems of both.
+languages to their full potential while avoiding problems of both.
 
 \hypertarget{python}{%
 \subsection{Python}\label{python}}
@@ -14,7 +14,7 @@ programming language. According to \cite{wikipython} it is interpreted,
 high-level and general purpose. Combining its high usage with its thirty
 years of age it can be considered a mature language and as such boasts a
 fair share of success stories (\cite{pythonsuccess}, \cite[p. 9 - 10]{learningpython}. With
-over 280000 Packages available via the Python package manager pip it
+over 280.000 Packages available via the Python package manager pip it
 offers a healthy and extensive ecosystem (\cite{pythonpackages}).
 
 With our design we are able to make use of Pythons advantages:
@@ -31,28 +31,27 @@ With our design we are able to make use of Pythons advantages:
   to read Python.
 \item
   \emph{Memory safety}: All memory used by our program is allocated by
-  python. Since it is a garbage-collected language, the program does not
-  have to worry about freeing unused memory. This avoids memory leaks in
+  python. Since it is a garbage-collected language, the programmer is not required to free unused memory. This avoids memory leaks in
   the program. (\cite[p. 18]{learningpython})
 \item
   \emph{Performance}: Python is on the slow end of programming
-  languages, but that is nearly irrelevant for the purpose it is used in
-  the application. The main task is handling input/output and on modern
+  languages, but that is nearly irrelevant regarding the purpose it is used for in
+  the application. The main task is handling input/output, and on modern
   computers it should be fast enough to read/write from/to the command
   line or disk, without becoming a bottleneck.
 \item
   \emph{Robustness}: The programming language itself is considered
   robust and stable  input in Python is relatively
   simple and straightforward (\cite[p. 9]{learningpython}). There is no undefined behavior, input
-  length or encoding issues the programmer has to worry about (compare
+  length; or encoding issues the programmer has to worry about (compare
   to \cite{scanf}).
 \item
   \emph{Extensibility}: Pythons package manager, import system and large
   standard library makes it easy to add new features to our program.
   Adding password hashing for example could be accomplished by simply
   importing a new package from the standard library and adding a few
-  lines of code. This opens up a lot of possibilities for extending the
-  functionality of our program in the future. Here Python helps the
+  lines of code. This presents a lot of ways the functionality of the program could be extended in the future.
+   In this aspect Python can help the
   present implementation to cover up for the lack of a package manager
   and a less comprehensive standard library in C(compare
   \cite{clib} to \cite{pybib}).
@@ -68,7 +67,7 @@ With our design we are able to make use of Pythons advantages:
 \item
   \emph{Portability}: Most Python code is able to run unmodified on
   ``all major computer platforms''(\cite[p. 4, 17-18]{learningpython}). Combined
-  with the portability of C our program is only limited by its ability
+  with the portability of C, our program is only limited by its ability
   to execute the compilation of the C-core, which for now is bound by
   the ability of Python dispatching the compile command to GCC or Clang,
   which for now was only tested on Ubuntu, but should theoretically work
@@ -80,7 +79,7 @@ With our design we are able to make use of Pythons advantages:
 
 C is, like Python, one of the most popular programming languages today
 (\cite{instack}, \cite{octgit}). It is close to 20 years older than Python though,
-dating back to the early 1970s (\cite[p. 2]{cmodern}). It is statically typed
+dating back to the early 1970s (\cite[p. 2]{cmodern}). C is statically typed
 (\cite[p. 40]{modernc}), compiled (\cite[p. 2]{cmodern}), low-level (meaning providing
 access to concepts more commonly found on the machine level) (\cite[p. 4]{cmodern}) and provides interfaces for manual memory management, but no build in
 garbage collection (\cite[p. 55]{cpointers}). One of the more notable projects
@@ -125,25 +124,25 @@ while avoiding the shortcomings of the language:
   project is clearly the AES encryption itself, especially with growing
   file size. Additionally the architecture of our program allows the C-core to take advantage of '-march=native',
   a compiler-flag that enables tailoring the binary to the features of the underlying CPU,
-  resulting in even more performance. And this happens automatically without any input required from the user.
+  resulting in even more performance. This happens automatically without any input required from the user.
 \item
   \emph{no memory management necessary}: Due to the fact that the C-core
-  operates on byte-arrays allocated by Python, nothing needs to be
+  operates on byte-arrays allocated by Python, nothing is required to be
   allocated on heap. Since the rest of the data needed is allocated on
-  the stack all memory used is automatically freed after the encryption
+  the stack, all memory used is automatically freed after the encryption
   function returns, without the need for the programmer to intervene.
   This avoids memory leaks occurring when allocations on heap are not
   met with a call to free() after the allocated memory is not needed
   anymore. So called double free errors are also made impossible (since
   there is nothing to call `free()' on), meaning there is no risk of
   freeing the same area of memory twice. This error could potentially
-  corrupt the programs memory management data structures and lead to a
+  corrupt the program's memory management data structures and lead to a
   crash(\cite[p. 49]{cpointers}).
 \item
   \emph{straightforward implementation}: The algorithm described in
   \cite{aes2001} translates well to C code. No special imports are needed, no
   hard-to-understand operations are required to be executed and the
-  depicetd pseudocode functions map reasonably cleanly to C functions.
+  depicted pseudocode functions map reasonably cleanly to C functions.
   The AES-algorithm itself makes extensive use of
   Galois-Field-operations in $2^8$. Those can be easily expressed
   through the native uint8\_t C-data-type, which represents an unsigned
@@ -155,12 +154,12 @@ while avoiding the shortcomings of the language:
   handling and thus keeping the C-core simple.
 \item
   \emph{fast compile times}: Since the C-core encompasses only a few
-  hundred lines of code it compiles in subsecond time on our development
-  machines, even with optimization enabled. This encourages trying new
-  things and helps to get quick feedback even for small changes, either
+  hundred lines of code, it compiles in subsecond time on the development
+  machines used, even with optimization enabled. This encourages trying new
+  things and helps to get quick feedback even on small changes, either
   through the static analyzer of the compiler itself or through the
   included testing libraries. The small and thus fast-compiling C-core
-  is only possible by outsourcing all less calculation intensive tasks to
+  is only possible by outsourcing all tasks with low calculation intensity to
   the wrapper.
 \item
   \emph{portability}: C compiles to numerous platforms and operating
