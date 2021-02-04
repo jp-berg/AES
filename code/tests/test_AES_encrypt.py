@@ -114,6 +114,10 @@ def test_EncryptBlockRandom():
 
 
 def test_encrypt_file():
+    """Tests the file-encryption-function from the wrapper by using a replica to encrypt
+        the testfile in the files folder and comparing it to an encrypted reference
+        of the testfile.   
+    """
     filepath_in = join(getcwd(), "tests", "files", "plain")
     key = "f" * 32
     keys = prep_password(key, 0)
