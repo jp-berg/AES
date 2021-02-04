@@ -1,9 +1,9 @@
 %!TEX root = thesis.tex
 \hypertarget{functions---constant-generators}{%
-\chapter{Functions - constant
-generators}\label{functions---constant-generators}}
+\chapter{Functions - Constant
+Generators}\label{functions---constant-generators}}
 
-The following functions are from `AES\_encrypt\_generator.py' No
+The following functions are from \lstinline{AES\_encrypt\_generator.py} No
 function in the following chapter does error checking, since they are
 only intended for use inside a static, unchanging setting.
 
@@ -15,8 +15,8 @@ generator}\label{galois-field-multiplication-lookup-table-generator}}
 \subsection{Description}\label{description}}
 
 As \cite{rijndael} recommends in chapter 4.1.1 Galois field multiplications
-used in MixColumns were implemented as lookup tables in the Galois field multiplication lookup table (GFMLT). Since the
-number of possible multiplication results is highly restricted in $GF(2^{8})$
+used in MixColumns were implemented as lookup tables in the \ac{GFMLT}. Since the
+number of possible multiplication results is highly restricted in \ac{$GF(2^{8})$}
 the table storing all results uses negligible memory. This avoids computing
 the multiplications over and over. Furthermore in chapter 10.8.1 the
 authors suggest, that implementing the multiplications as table lookups
@@ -24,17 +24,17 @@ makes the algorithm more resistant to timing attacks, since the finite
 field multiplication performed in MixColumns is the only operation in
 Rijndael that is not computed in constant time. In their 8-bit
 implementation in chapter 4.1.1 they suggest only generating a table t
-where table t[a] = 02 * a, since multiplication with one is the factor
+where table $t[a] = 02 * a$, since multiplication with one is the factor
 itself and multiplication with three can be efficiently archived by
 XORing the result of the multiplication with two with the original
-number: 03 * a = (02 * a) xor a
+number: $03 * a = (02 * a)$ xor $a$
 
 To avoid leaking more timing data than
 absolutely necessary the present implementation uses a lookup table for
-all values, since this ensures that for each multiplication the CPU
+all values, since this ensures that for each multiplication the \ac{CPU}
 (theoretically) does always the exact same amount of work, thus ensuring
-it always takes the exact same amount of time. This size increase by 2 *
-256b = 512 bytes (compared to the suggested implementation with only one
+it always takes the exact same amount of time. This size increase by $2 *
+256b = 512$ bytes (compared to the suggested implementation with only one
 row) is negligible for our target of x86-CPU-systems, which today
 typically feature memory sizes in the gigabyte range.
 
@@ -63,11 +63,11 @@ m, while the second dimension accesses the result for the value wanted.
 
 \begin{quote}
 The program needs to compute the multiplication of two times 114. This
-means it has to access gal\_mult\_lookup[2-1]. For the result it
+means it has to access \lstinline|gal_mult_lookup[2-1]|. For the result it
 simply needs to use the second factor as the array index for the second
 dimension. Thus the final array access to calculate 2 * 114 in $GF(2^{8})$ is
-gal\_mult\_lookup[1][114]. For 3 * 86 it would be
-gal\_mult\_lookup[2][86] etc.
+\lstinline|gal_mult_lookup[1][114]|. For $3 * 86$ it would be
+\lstinline|gal_mult_lookup[2][86]| etc.
 \end{quote}
 
 \hypertarget{implementation}{%
@@ -197,6 +197,8 @@ containing numbers that are the inverses of the values of their indices
 (eg. element at list index 37 is the inverse to the number 37).
 The result of the function was compared against \cite[Table A.5.]{rijndael} to verify
 correctness.
+
+\pagebreak
 
 \begin{lstlisting}
 def shift_left(byte, rot):
