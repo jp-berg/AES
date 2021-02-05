@@ -1,5 +1,4 @@
 
-
 def mult_gal(a, b):
     """
     Multiplicates two numbers in the Galois Field specified by the AES-Standard.
@@ -52,16 +51,6 @@ def mult_inv_gal():
                 list_res.append(j)
                 list_start.remove(j)
     return bytearray(list_res)
-
-
-# #https://en.wikipedia.org/wiki/Itoh%E2%80%93Tsujii_inversion_algorithm
-# def inv_gal_IT(a):
-#     r = ((2**8)-1)
-#     ArMin1 = 1
-#     for i in range(r-1):
-#         ArMin1 = mult_gal(prod, a)
-#     Ar = mult_gal(ArMin1, a)
-
 
 def shift_left(byte, rot):
     """Implements a left bitwise circular shift for bytes."""

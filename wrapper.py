@@ -15,12 +15,15 @@ mult_lookup = gen_mult_lookup()
 
 
 def setup():
+    """Compiles the C-core (if necessary) and links the encryption and decryption
+    libraries.
+    """
     if not exists("lib"):
         mkdir("lib")
 
-    compile_gcc_encrypt = """gcc -O2 -w -shared -fpic -fstrict-aliasing -Wl,-soname,AES_encrypt -o lib/libaes_encrypt.so src/AES_encrypt.c -fopenmp -march=native""".split()
-    compile_clang_encrypt = """clang-O2 -w -shared -fpic -fstrict-aliasing -Wl,
-                    -soname,AES_encrypt -o ../lib/libaes_encrypt.so src/AES_encrypt.c -fopenmp""".split()
+    compile_gcc_encrypt = """gcc -O3 -w -shared -fpic -fstrict-aliasing -Wl,-soname,AES_encrypt -o lib/libaes_encrypt.so src/AES_encrypt.c -march=native""".split()
+    compile_clang_encrypt = """clang -O3 -w -shared -fpic -fstrict-aliasing -Wl,
+                    -soname,AES_encrypt -o ../lib/libaes_encrypt.so src/AES_encrypt.c -march=native""".split()
 
     src_dir = join(getcwd(), "src")
     lib_dir = join(getcwd(), "lib")
@@ -50,7 +53,7 @@ def setup():
 
 
     compile_gcc_decrypt = """gcc -O2 -w -shared -fpic -Wl,-soname,AES_decrypt -o lib/libaes_decrypt.so src/AES_decrypt.c -march=native""".split()
-    compile_clang_decrypt = """clang -O2 -w -shared -fpic -Wl,-soname,AES_decrypt -o lib/libaes_decrypt.so src/AES_decrypt.c""".split()
+    compile_clang_decrypt = """clang -O2 -w -shared -fpic -Wl,-soname,AES_decrypt -o lib/libaes_decrypt.so src/AES_decrypt.c" -march=native""".split()
 
     if not isfile(join(lib_dir, "libaes_decrypt.so")):
         if not isfile(join(src_dir,"AES_decrypt.c")):
@@ -84,12 +87,16 @@ def cli():
 def pad_input(ba):
     """pads bytearray to have a length % 16 = 0"""
     topad = 16 - len(ba) % 16
-    padding = bytearray([topad] * topad) # PKCS 5, 7
+    padding = bytearray([topad] * topad) # PKCS 7
     return ba + padding
 
 
 def remove_padding(decrypted):
-    # PKCS 5, 7
+    """Removes padding from decrypted byte array.
+
+    In case of a byte array encrypted with -h flag and length = 16 no padding gets removed.
+    """
+    # PKCS 7
     padding_amount = decrypted[-1]
     padding = bytearray([padding_amount] * padding_amount)
     if decrypted[-padding_amount:] != padding:
@@ -101,6 +108,7 @@ def remove_padding(decrypted):
 
 
 def validate_key(key):
+    """Checks, if a valid 16-byte hex key is used."""
     try:
         # check for valid hex
         int(key, 16)
@@ -113,6 +121,7 @@ def validate_key(key):
 
 
 def validate_chunksize(ctx, param, chunksize):
+    """Checks, if the passed chunksize is divisible by 16."""
     try:
         if chunksize % 16 != 0:
             raise ValueError
@@ -138,6 +147,12 @@ def prep_password(key, iterations):
 
 
 def encrypt(byte_array, keys):
+    """Wrapper for the C-encryption function.
+
+    Prepares the byte array and keys to pass them on for
+    encryption to the C-function encryptAES() along with the
+    multiplication lookup table and the precomputed S-box.
+    """
     initvals = sbox + mult_lookup + keys
     byte_array = bytearray(byte_array)
     byte_array_initvals = ctypes.c_ubyte * len(initvals)
@@ -152,6 +167,12 @@ def encrypt(byte_array, keys):
 
 
 def decrypt(byte_array, keys):
+    """Wrapper for the C-decryption function.
+
+    Prepares the byte array and keys to pass them on for
+    decryption to the C-function decryptBlocks() along with
+    the precomputed inverse S-box.
+    """
     byte_array = bytearray(byte_array)
     byte_array_keys = ctypes.c_ubyte * len(keys)
     byte_array_file = ctypes.c_ubyte * len(byte_array)

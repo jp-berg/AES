@@ -9,9 +9,7 @@
  */
 
 #include "AES_decrypt.h"
-#include <omp.h>
 #include <string.h>
-#include <stdio.h>
 #include <stdbool.h>
 
 
