@@ -430,7 +430,7 @@ implementations file encryption mode \footnote{Encrypted with the following sett
 before the while-loop) ensures that the header of the .bmp-file is
 preserved and not corrupted by the encryption. It reads the first 55
 bytes (since the header is 54 bytes long
-(https://www.daubnet.com/en/file-format-bmp)) and writes them to the
+(\cite{bmpheader}) and writes them to the
 encrypted file without encrypting them. After that, the rest of \ref{fig:aespng}
 is read, encrypted and appended. The result \ref{fig:aesecbpng}, albeit encrypted
 with an algorithm considered secure, shows a clear and readable pattern.
@@ -478,8 +478,6 @@ be implemented in multiple ways, this implementation does it as follows:
 def pad_input(ba):
     """pads bytearray to have a length % 16 = 0"""
     topad = 16 - len(ba) % 16
-    if topad == 0:
-        topad = 16 #ensures that last byte is always padding
     padding = bytearray([topad] * topad) # PKCS 5, 7
     return ba + padding
 \end{lstlisting}
